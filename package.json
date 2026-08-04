@@ -1,0 +1,24 @@
+{
+  "name": "picasso-restaurant",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "dev": "concurrently --names frontend,backend --prefix-colors cyan,magenta \"npm run dev --workspace @picasso/frontend\" \"npm run start:dev --workspace @picasso/backend\"",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "npm run test --workspaces --if-present",
+    "test:ci": "npm run test:ci --workspaces --if-present"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.4",
+    "jsdom": "^29.1.1",
+    "prettier": "^3.9.6"
+  }
+}
