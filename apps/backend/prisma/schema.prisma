@@ -16,3 +16,26 @@ model SystemSetting {
 
   @@map("system_settings")
 }
+
+model CategoriaMenu {
+  id          Int        @id @default(autoincrement()) @map("CategoriaID")
+  nombre      String     @map("Nombre") @db.VarChar(255)
+  descripcion String?    @map("Descripcion") @db.Text
+  items       ItemMenu[]
+
+  @@map("CategoriasMenu")
+}
+
+model ItemMenu {
+  id           Int           @id @default(autoincrement()) @map("ItemID")
+  nombre       String        @map("Nombre") @db.VarChar(255)
+  imagen       String?       @map("Imagen") @db.VarChar(255)
+  descripcion  String?       @map("Descripcion") @db.Text
+  precio       Decimal       @map("Precio") @db.Decimal(10, 2)
+  categoriaId  Int           @map("CategoriaID")
+  disponible   Boolean       @default(true) @map("Disponible")
+  categoria    CategoriaMenu @relation(fields: [categoriaId], references: [id])
+
+  @@index([categoriaId])
+  @@map("ItemsMenu")
+}

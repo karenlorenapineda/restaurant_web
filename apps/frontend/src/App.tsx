@@ -1,17 +1,18 @@
 import { useEffect, useState } from "react";
+import type { MouseEvent } from "react";
 
-type HealthStatus = "checking" | "online" | "offline";
-
-interface HealthResponse {
-  status: "ok";
-  services: {
-    database: "up";
-  };
-  timestamp: string;
-}
+import { Footer } from "./components/Footer";
+import { Header } from "./components/Header";
+import type { HealthResponse, HealthStatus } from "./health";
+import { getPageFromPath } from "./navigation";
+import type { Page } from "./navigation";
+import { EmployeePanelPage } from "./pages/EmployeePanelPage";
+import { HomePage } from "./pages/HomePage";
+import { MenuPage } from "./pages/MenuPage";
 
 export function App() {
   const [status, setStatus] = useState<HealthStatus>("checking");
+  const [page, setPage] = useState<Page>(getPageFromPath);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -44,46 +45,52 @@ export function App() {
     return () => controller.abort();
   }, []);
 
+  useEffect(() => {
+    function syncPage() {
+      setPage(getPageFromPath());
+    }
+
+    window.addEventListener("popstate", syncPage);
+    return () => window.removeEventListener("popstate", syncPage);
+  }, []);
+
+  function navigate(path: string, event: MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+    window.history.pushState({}, "", path);
+    setPage(getPageFromPath());
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function goToContact(event: MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+
+    if (window.location.pathname !== "/") {
+      window.history.pushState({}, "", "/");
+      setPage("home");
+    }
+
+    window.setTimeout(() => {
+      document.getElementById("contacto")?.scrollIntoView({ behavior: "smooth" });
+    }, 0);
+  }
+
   const statusText = {
-    checking: "Checking services",
+    checking: "Comprobando servicios",
     online: "Application and database are online",
-    offline: "Services are currently unavailable",
+    offline: "Servicios no disponibles",
   }[status];
 
   return (
-    <main className="min-h-screen bg-picasso-cream px-6 py-12 text-picasso-ink">
-      <section className="mx-auto flex min-h-[70vh] max-w-5xl items-center">
-        <div className="w-full rounded-3xl border border-black/10 bg-white/70 p-8 shadow-xl shadow-black/5 backdrop-blur sm:p-12">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-picasso-terracotta">
-            Restaurant platform
-          </p>
-          <h1 className="font-display text-5xl font-bold sm:text-7xl">
-            Picasso
-          </h1>
-          <p className="mt-5 max-w-2xl text-lg leading-8 text-black/65">
-            The shared foundation for ordering, kitchen operations and
-            restaurant management.
-          </p>
-
-          <div
-            aria-live="polite"
-            className="mt-10 flex items-center gap-3 rounded-2xl border border-black/10 bg-white p-4"
-            role="status"
-          >
-            <span
-              aria-hidden="true"
-              className={`h-3 w-3 rounded-full ${
-                status === "online"
-                  ? "bg-picasso-olive"
-                  : status === "offline"
-                    ? "bg-picasso-terracotta"
-                    : "animate-pulse bg-picasso-gold"
-              }`}
-            />
-            <span className="font-medium">{statusText}</span>
-          </div>
-        </div>
-      </section>
+    <main className="min-h-screen bg-zinc-950 text-zinc-100 selection:bg-red-950 selection:text-white">
+      <Header navigate={navigate} goToContact={goToContact} />
+      {page === "employees" ? (
+        <EmployeePanelPage navigate={navigate} />
+      ) : page === "menu" ? (
+        <MenuPage navigate={navigate} />
+      ) : (
+        <HomePage navigate={navigate} goToContact={goToContact} />
+      )}
+      <Footer status={status} statusText={statusText} />
     </main>
   );
 }

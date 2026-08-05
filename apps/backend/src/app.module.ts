@@ -3,6 +3,7 @@ import { ConfigModule } from "@nestjs/config";
 
 import { DatabaseModule } from "./database/database.module";
 import { HealthModule } from "./health/health.module";
+import { MenuModule } from "./menu/menu.module";
 
 function validateEnvironment(config: Record<string, unknown>) {
   const databaseUrl = config.DATABASE_URL;
@@ -23,6 +24,7 @@ function validateEnvironment(config: Record<string, unknown>) {
     }),
     DatabaseModule,
     HealthModule,
+    MenuModule,
   ],
 })
 export class AppModule {}
