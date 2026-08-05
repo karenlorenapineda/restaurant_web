@@ -81,7 +81,7 @@ export function App() {
   }[status];
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-100 selection:bg-red-950 selection:text-white">
+    <main className="min-h-screen bg-[#242424] text-zinc-100 selection:bg-[#e8b45f] selection:text-zinc-950">
       <Header navigate={navigate} goToContact={goToContact} />
       {page === "employees" ? (
         <EmployeePanelPage navigate={navigate} />
