@@ -1,3 +1,6 @@
+-- CreateEnum
+CREATE TYPE "EstadosSolicitud" AS ENUM ('pending', 'approved', 'rejected');
+
 -- CreateTable
 CREATE TABLE "system_settings" (
     "key" VARCHAR(100) NOT NULL,
@@ -11,7 +14,7 @@ CREATE TABLE "system_settings" (
 CREATE TABLE "RolesUsuario" (
     "RolID" SERIAL NOT NULL,
     "NombreRol" VARCHAR(255) NOT NULL,
-    "Descripcion" TEXT NOT NULL,
+    "Descripcion" TEXT,
 
     CONSTRAINT "RolesUsuario_pkey" PRIMARY KEY ("RolID")
 );
@@ -32,12 +35,12 @@ CREATE TABLE "Usuarios" (
     "PasswordHash" VARCHAR(255),
     "ProveedorOAuth" VARCHAR(50),
     "OAuthID" VARCHAR(255),
-    "FotoPerfil" VARCHAR(255) NOT NULL,
+    "FotoPerfil" VARCHAR(255),
     "RolID" INTEGER NOT NULL,
     "IdiomaID" INTEGER NOT NULL,
-    "Activo" BOOLEAN NOT NULL,
-    "EmailVereficado" BOOLEAN NOT NULL,
-    "UlitmoAcceso" TIMESTAMP NOT NULL,
+    "Activo" BOOLEAN NOT NULL DEFAULT true,
+    "EmailVereficado" BOOLEAN NOT NULL DEFAULT false,
+    "UlitmoAcceso" TIMESTAMP,
     "FechaCreacion" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Usuarios_pkey" PRIMARY KEY ("UsuarioID")
@@ -49,8 +52,8 @@ CREATE TABLE "Direcciones" (
     "ClienteID" INTEGER NOT NULL,
     "Calle" VARCHAR(255) NOT NULL,
     "Numero" VARCHAR(10) NOT NULL,
-    "Puerta" VARCHAR(10) NOT NULL,
-    "Piso" VARCHAR(10) NOT NULL,
+    "Puerta" VARCHAR(10),
+    "Piso" VARCHAR(10),
     "Localidad" VARCHAR(255) NOT NULL,
 
     CONSTRAINT "Direcciones_pkey" PRIMARY KEY ("DireccionID")
@@ -62,7 +65,7 @@ CREATE TABLE "Clientes" (
     "UsuarioID" INTEGER NOT NULL,
     "Nombre" VARCHAR(255) NOT NULL,
     "Apellido" VARCHAR(255) NOT NULL,
-    "Telefono" VARCHAR(255) NOT NULL,
+    "Telefono" VARCHAR(255),
     "FechaNacimiento" DATE NOT NULL,
     "FechaPrimerPedido" TIMESTAMP,
 
@@ -74,8 +77,8 @@ CREATE TABLE "DireccionesRestaurante" (
     "DireccionID" SERIAL NOT NULL,
     "Calle" VARCHAR(255) NOT NULL,
     "Numero" VARCHAR(10) NOT NULL,
-    "Puerta" VARCHAR(10) NOT NULL,
-    "Piso" VARCHAR(10) NOT NULL,
+    "Puerta" VARCHAR(10),
+    "Piso" VARCHAR(10),
     "Localidad" VARCHAR(255) NOT NULL,
     "CodigoPostal" VARCHAR(10),
 
@@ -87,7 +90,7 @@ CREATE TABLE "Restaurantes" (
     "RestauranteID" SERIAL NOT NULL,
     "Nombre" VARCHAR(255) NOT NULL,
     "DireccionID" INTEGER NOT NULL,
-    "Activo" BOOLEAN NOT NULL,
+    "Activo" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "Restaurantes_pkey" PRIMARY KEY ("RestauranteID")
 );
@@ -96,7 +99,7 @@ CREATE TABLE "Restaurantes" (
 CREATE TABLE "CargosEmpleado" (
     "CargoEmpleadoID" SERIAL NOT NULL,
     "NombreCargo" VARCHAR(255) NOT NULL,
-    "Descripcion" TEXT NOT NULL,
+    "Descripcion" TEXT,
 
     CONSTRAINT "CargosEmpleado_pkey" PRIMARY KEY ("CargoEmpleadoID")
 );
@@ -107,13 +110,13 @@ CREATE TABLE "Empleados" (
     "UsuarioID" INTEGER NOT NULL,
     "Nombre" VARCHAR(255) NOT NULL,
     "Apellido" VARCHAR(255) NOT NULL,
-    "Telefono" VARCHAR(255) NOT NULL,
+    "Telefono" VARCHAR(255),
     "RestuaranteID" INTEGER NOT NULL,
     "CargoEmpleadoID" INTEGER NOT NULL,
     "FechaNacimiento" DATE NOT NULL,
     "FechaIngreso" TIMESTAMP NOT NULL,
     "FechaDespido" TIMESTAMP,
-    "Activo" BOOLEAN NOT NULL,
+    "Activo" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "Empleados_pkey" PRIMARY KEY ("EmpleadoID")
 );
@@ -122,7 +125,7 @@ CREATE TABLE "Empleados" (
 CREATE TABLE "CategoriasMenus" (
     "CategoriaID" SERIAL NOT NULL,
     "Nombre" VARCHAR(255) NOT NULL,
-    "Descripcion" TEXT NOT NULL,
+    "Descripcion" TEXT,
 
     CONSTRAINT "CategoriasMenus_pkey" PRIMARY KEY ("CategoriaID")
 );
@@ -131,11 +134,11 @@ CREATE TABLE "CategoriasMenus" (
 CREATE TABLE "ItemsMenu" (
     "ItemID" SERIAL NOT NULL,
     "Nombre" VARCHAR(255) NOT NULL,
-    "Imagen" TEXT NOT NULL,
-    "Descripcion" TEXT NOT NULL,
+    "Imagen" TEXT,
+    "Descripcion" TEXT,
     "Precio" DECIMAL(10,2) NOT NULL,
     "CategoriaID" INTEGER NOT NULL,
-    "Disponible" BOOLEAN NOT NULL,
+    "Disponible" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "ItemsMenu_pkey" PRIMARY KEY ("ItemID")
 );
@@ -155,7 +158,7 @@ CREATE TABLE "Insumos" (
     "Nombre" VARCHAR(255) NOT NULL,
     "UnidadID" INTEGER NOT NULL,
     "CostoUnidad" DECIMAL(10,2) NOT NULL,
-    "StockActual" DECIMAL(10,3) NOT NULL,
+    "StockActual" DECIMAL(10,3) NOT NULL DEFAULT 0,
 
     CONSTRAINT "Insumos_pkey" PRIMARY KEY ("InsumosID")
 );
@@ -196,7 +199,7 @@ CREATE TABLE "Pedidos" (
     "EmpleadoID" INTEGER NOT NULL,
     "EstadoID" INTEGER NOT NULL,
     "FechaHora" TIMESTAMP NOT NULL,
-    "Total" DECIMAL(10,2) NOT NULL,
+    "Total" DECIMAL(10,2) NOT NULL DEFAULT 0,
 
     CONSTRAINT "Pedidos_pkey" PRIMARY KEY ("PedidoID")
 );
@@ -206,7 +209,7 @@ CREATE TABLE "DetallePedidos" (
     "DetallePedidoID" SERIAL NOT NULL,
     "PedidoID" INTEGER NOT NULL,
     "ItemID" INTEGER NOT NULL,
-    "Cantidad" INTEGER NOT NULL,
+    "Cantidad" INTEGER NOT NULL DEFAULT 1,
     "PrecioUnitario" DECIMAL(10,2) NOT NULL,
     "Notas" TEXT,
 
@@ -218,7 +221,7 @@ CREATE TABLE "HistorialEstadoPedido" (
     "HistorialID" SERIAL NOT NULL,
     "PedidoID" INTEGER NOT NULL,
     "EstadoID" INTEGER NOT NULL,
-    "FechaHora" TIMESTAMP NOT NULL,
+    "FechaHora" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "HistorialEstadoPedido_pkey" PRIMARY KEY ("HistorialID")
 );
@@ -237,7 +240,7 @@ CREATE TABLE "Pagos" (
     "PedidoID" INTEGER NOT NULL,
     "MetodoID" INTEGER NOT NULL,
     "Monto" DECIMAL(10,2) NOT NULL,
-    "FechaHora" TIMESTAMP NOT NULL,
+    "FechaHora" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Pagos_pkey" PRIMARY KEY ("PagoID")
 );
@@ -247,10 +250,10 @@ CREATE TABLE "Facturas" (
     "FacturaID" SERIAL NOT NULL,
     "PedidoId" INTEGER NOT NULL,
     "NumeroFactura" VARCHAR(50) NOT NULL,
-    "FechaEmision" TIMESTAMP NOT NULL,
-    "ClienteDocumento" VARCHAR(50) NOT NULL,
-    "ClienteNombre" VARCHAR(255) NOT NULL,
-    "ClienteDireccion" TEXT NOT NULL,
+    "FechaEmision" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "ClienteDocumento" VARCHAR(50),
+    "ClienteNombre" VARCHAR(255),
+    "ClienteDireccion" TEXT,
     "BaseImponible" DECIMAL(10,2) NOT NULL,
     "PorcentajeIVA" DECIMAL(10,2) NOT NULL,
     "MontoIVA" DECIMAL(10,2) NOT NULL,
@@ -264,8 +267,8 @@ CREATE TABLE "Amigos" (
     "AmistadID" SERIAL NOT NULL,
     "UsuarioSolicitudID" INTEGER NOT NULL,
     "UsuarioReceptorID" INTEGER NOT NULL,
-    "Estado" VARCHAR(20) NOT NULL,
-    "FechaCreacion" TIMESTAMP NOT NULL,
+    "Estado" "EstadosSolicitud" NOT NULL DEFAULT 'pending',
+    "FechaCreacion" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Amigos_pkey" PRIMARY KEY ("AmistadID")
 );
@@ -277,8 +280,8 @@ CREATE TABLE "MensajeChat" (
     "ReceptorID" INTEGER NOT NULL,
     "PedidoID" INTEGER,
     "Mensaje" TEXT NOT NULL,
-    "FechaHora" TIMESTAMP NOT NULL,
-    "Leido" BOOLEAN NOT NULL,
+    "FechaHora" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "Leido" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "MensajeChat_pkey" PRIMARY KEY ("MensajeID")
 );
@@ -287,10 +290,10 @@ CREATE TABLE "MensajeChat" (
 CREATE TABLE "Notificaciones" (
     "NotificacionID" SERIAL NOT NULL,
     "UsuarioID" INTEGER NOT NULL,
-    "TipoAccion" VARCHAR(50) NOT NULL,
+    "TipoAccion" VARCHAR(50),
     "Mensaje" TEXT NOT NULL,
     "Leido" BOOLEAN NOT NULL DEFAULT false,
-    "FechaHora" TIMESTAMP NOT NULL,
+    "FechaHora" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Notificaciones_pkey" PRIMARY KEY ("NotificacionID")
 );
@@ -301,8 +304,8 @@ CREATE TABLE "ResenasRestaurante" (
     "ClienteID" INTEGER NOT NULL,
     "RestauranteID" INTEGER NOT NULL,
     "Calificacion" SMALLINT NOT NULL,
-    "Comentario" TEXT NOT NULL,
-    "FechaHora" TIMESTAMP NOT NULL,
+    "Comentario" TEXT,
+    "FechaHora" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "ResenasRestaurante_pkey" PRIMARY KEY ("ResenaID")
 );

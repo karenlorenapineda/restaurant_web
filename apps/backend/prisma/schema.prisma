@@ -18,9 +18,9 @@ model SystemSetting {
 }
 
 model RolesUsuario {
-  RolID       Int    @id @default(autoincrement())
-  NombreRol   String @db.VarChar(255)
-  Descripcion String @db.Text
+  RolID       Int     @id @default(autoincrement())
+  NombreRol   String  @db.VarChar(255)
+  Descripcion String? @db.Text
 
   usuarios Usuarios[]
 }
@@ -34,18 +34,18 @@ model Idiomas {
 }
 
 model Usuarios {
-  UsuarioID       Int      @id @default(autoincrement())
-  Email           String   @unique @db.VarChar(255)
-  PasswordHash    String?  @db.VarChar(255)
-  ProveedorOAuth  String?  @db.VarChar(50)
-  OAuthID         String?  @db.VarChar(255)
-  FotoPerfil      String   @db.VarChar(255)
+  UsuarioID       Int       @id @default(autoincrement())
+  Email           String    @unique @db.VarChar(255)
+  PasswordHash    String?   @db.VarChar(255)
+  ProveedorOAuth  String?   @db.VarChar(50)
+  OAuthID         String?   @db.VarChar(255)
+  FotoPerfil      String?   @db.VarChar(255)
   RolID           Int
   IdiomaID        Int
-  Activo          Boolean  @default(true)
-  EmailVereficado Boolean  @default(false)
-  UlitmoAcceso    DateTime @db.Timestamp
-  FechaCreacion   DateTime @default(now()) @db.Timestamp
+  Activo          Boolean   @default(true)
+  EmailVereficado Boolean   @default(false)
+  UlitmoAcceso    DateTime? @db.Timestamp
+  FechaCreacion   DateTime  @default(now()) @db.Timestamp
 
   rol    RolesUsuario @relation(fields: [RolID], references: [RolID])
   idioma Idiomas      @relation(fields: [IdiomaID], references: [IdiomaID])
@@ -60,13 +60,13 @@ model Usuarios {
 }
 
 model Direcciones {
-  DireccionID Int    @id @default(autoincrement())
+  DireccionID Int     @id @default(autoincrement())
   ClienteID   Int
-  Calle       String @db.VarChar(255)
-  Numero      String @db.VarChar(10)
-  Puerta      String @db.VarChar(10)
-  Piso        String @db.VarChar(10)
-  Localidad   String @db.VarChar(255)
+  Calle       String  @db.VarChar(255)
+  Numero      String  @db.VarChar(10)
+  Puerta      String? @db.VarChar(10)
+  Piso        String? @db.VarChar(10)
+  Localidad   String  @db.VarChar(255)
 
   cliente Clientes @relation(fields: [ClienteID], references: [ClienteID])
 }
@@ -76,7 +76,7 @@ model Clientes {
   UsuarioID         Int       @unique
   Nombre            String    @db.VarChar(255)
   Apellido          String    @db.VarChar(255)
-  Telefono          String    @db.VarChar(255)
+  Telefono          String?   @db.VarChar(255)
   FechaNacimiento   DateTime  @db.Date
   FechaPrimerPedido DateTime? @db.Timestamp
 
@@ -91,8 +91,8 @@ model DireccionesRestaurante {
   DireccionID  Int     @id @default(autoincrement())
   Calle        String  @db.VarChar(255)
   Numero       String  @db.VarChar(10)
-  Puerta       String  @db.VarChar(10)
-  Piso         String  @db.VarChar(10)
+  Puerta       String? @db.VarChar(10)
+  Piso         String? @db.VarChar(10)
   Localidad    String  @db.VarChar(255)
   CodigoPostal String? @db.VarChar(10)
 
@@ -113,9 +113,9 @@ model Restaurantes {
 }
 
 model CargosEmpleado {
-  CargoEmpleadoID Int    @id @default(autoincrement())
-  NombreCargo     String @db.VarChar(255)
-  Descripcion     String @db.Text
+  CargoEmpleadoID Int     @id @default(autoincrement())
+  NombreCargo     String  @db.VarChar(255)
+  Descripcion     String? @db.Text
 
   empleados Empleados[]
 }
@@ -125,7 +125,7 @@ model Empleados {
   UsuarioID       Int       @unique
   Nombre          String    @db.VarChar(255)
   Apellido        String    @db.VarChar(255)
-  Telefono        String    @db.VarChar(255)
+  Telefono        String?   @db.VarChar(255)
   RestuaranteID   Int
   CargoEmpleadoID Int
   FechaNacimiento DateTime  @db.Date
@@ -141,9 +141,9 @@ model Empleados {
 }
 
 model CategoriasMenus {
-  CategoriaID Int    @id @default(autoincrement())
-  Nombre      String @db.VarChar(255)
-  Descripcion String @db.Text
+  CategoriaID Int     @id @default(autoincrement())
+  Nombre      String  @db.VarChar(255)
+  Descripcion String? @db.Text
 
   itemsMenu ItemsMenu[]
 }
@@ -151,8 +151,8 @@ model CategoriasMenus {
 model ItemsMenu {
   ItemID      Int     @id @default(autoincrement())
   Nombre      String  @db.VarChar(255)
-  Imagen      String  @db.Text
-  Descripcion String  @db.Text
+  Imagen      String? @db.Text
+  Descripcion String? @db.Text
   Precio      Decimal @db.Decimal(10, 2)
   CategoriaID Int
   Disponible  Boolean @default(true)
@@ -285,9 +285,9 @@ model Facturas {
   PedidoId         Int      @unique
   NumeroFactura    String   @unique @db.VarChar(50)
   FechaEmision     DateTime @default(now()) @db.Timestamp
-  ClienteDocumento String   @db.VarChar(50)
-  ClienteNombre    String   @db.VarChar(255)
-  ClienteDireccion String   @db.Text
+  ClienteDocumento String?  @db.VarChar(50)
+  ClienteNombre    String?  @db.VarChar(255)
+  ClienteDireccion String?  @db.Text
   BaseImponible    Decimal  @db.Decimal(10, 2)
   PorcentajeIVA    Decimal  @db.Decimal(10, 2)
   MontoIVA         Decimal  @db.Decimal(10, 2)
@@ -334,7 +334,7 @@ model MensajeChat {
 model Notificaciones {
   NotificacionID Int      @id @default(autoincrement())
   UsuarioID      Int
-  TipoAccion     String   @db.VarChar(50)
+  TipoAccion     String?  @db.VarChar(50)
   Mensaje        String   @db.Text
   Leido          Boolean  @default(false)
   FechaHora      DateTime @default(now()) @db.Timestamp
