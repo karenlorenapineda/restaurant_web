@@ -5,7 +5,11 @@ import { ChatWidget } from "../components/ChatWidget";
 import { ContactSection } from "../components/ContactSection";
 import { menuSections } from "../data/menu";
 import type { MenuSection } from "../data/menu";
-import { getFeaturedDishes, getGalleryDishes, loadStoredMenu } from "../menuStore";
+import {
+  getFeaturedDishes,
+  getGalleryDishes,
+  loadStoredMenu,
+} from "../menuStore";
 import type { NavigationHandlers } from "../navigation";
 
 export function HomePage({ navigate, goToContact }: NavigationHandlers) {

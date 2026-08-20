@@ -70,7 +70,9 @@ export function App() {
     }
 
     window.setTimeout(() => {
-      document.getElementById("contacto")?.scrollIntoView({ behavior: "smooth" });
+      document
+        .getElementById("contacto")
+        ?.scrollIntoView({ behavior: "smooth" });
     }, 0);
   }
 

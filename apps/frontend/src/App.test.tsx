@@ -28,4 +28,37 @@ describe("App", () => {
       await screen.findByText("Application and database are online"),
     ).toBeInTheDocument();
   });
+
+  it("shows an unavailable status when the health request fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValue(new Error("Network unavailable")),
+    );
+
+    render(<App />);
+
+    expect(
+      await screen.findByText("Servicios no disponibles"),
+    ).toBeInTheDocument();
+  });
+
+  it("shows an unavailable status when the database is down", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          status: "ok",
+          services: { database: "down" },
+          timestamp: new Date().toISOString(),
+        }),
+      }),
+    );
+
+    render(<App />);
+
+    expect(
+      await screen.findByText("Servicios no disponibles"),
+    ).toBeInTheDocument();
+  });
 });

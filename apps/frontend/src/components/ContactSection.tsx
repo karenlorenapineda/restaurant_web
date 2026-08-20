@@ -1,8 +1,8 @@
-const contactHighlights = [
-  { label: "Direccion", value: "Carrera 7 #72-41, Bogota" },
-  { label: "Horario", value: "Mar-Dom, 12:00 p.m. - 10:00 p.m." },
-  { label: "Reservas", value: "+57 300 123 4567" },
-];
+import {
+  MOCK_ADDRESS_LABEL,
+  MOCK_CONTACT_HIGHLIGHTS,
+  MOCK_LOCATION_LABEL,
+} from "../mocks/restaurantContent";
 
 export function ContactSection() {
   return (
@@ -24,7 +24,7 @@ export function ContactSection() {
           </p>
 
           <div className="mt-8 grid gap-4">
-            {contactHighlights.map((item) => (
+            {MOCK_CONTACT_HIGHLIGHTS.map((item) => (
               <div
                 className="rounded-sm bg-[#333333] p-5 sm:p-7"
                 key={item.label}
@@ -42,7 +42,7 @@ export function ContactSection() {
           <div className="mt-7 flex flex-wrap gap-3">
             <a
               className="inline-flex rounded-sm bg-[#e8b45f] px-5 py-3 font-bold text-zinc-950 transition hover:bg-white"
-              href="https://www.google.com/maps/search/?api=1&query=Carrera+7+72+41+Bogota+Colombia"
+              href="#contacto"
               rel="noreferrer"
               target="_blank"
             >
@@ -50,7 +50,7 @@ export function ContactSection() {
             </a>
             <a
               className="inline-flex rounded-sm border border-[#e8b45f] px-5 py-3 font-bold text-white transition hover:bg-[#e8b45f] hover:text-zinc-950"
-              href="https://wa.me/573001234567"
+              href="#contacto"
               rel="noreferrer"
               target="_blank"
             >
@@ -69,9 +69,9 @@ export function ContactSection() {
                 <p className="mt-2 text-sm font-semibold uppercase text-red-200">
                   Restaurante y asadero familiar
                 </p>
-                <p className="mt-3 text-zinc-200">Bogota, Colombia</p>
+                <p className="mt-3 text-zinc-200">{MOCK_LOCATION_LABEL}</p>
                 <p className="mt-6 rounded-md border border-white/20 px-4 py-3 text-sm font-semibold text-white">
-                  Carrera 7 #72-41
+                  {MOCK_ADDRESS_LABEL}
                 </p>
               </div>
             </div>
@@ -93,7 +93,7 @@ export function ContactSection() {
                 <input
                   className="mt-2 w-full rounded-md border border-zinc-700 bg-zinc-900 px-4 py-3 text-white outline-none transition focus:border-red-900"
                   name="phone"
-                  placeholder="+57 300 123 4567"
+                  placeholder="Phone number"
                   type="tel"
                 />
               </label>

@@ -14,8 +14,12 @@ export function Footer({ status, statusText }: FooterProps) {
           <p className="mt-3 text-xs">Restaurante y asadero familiar</p>
         </div>
         <div className="grid gap-3">
-          <a className="transition hover:text-[#e8b45f]" href="/">Home</a>
-          <a className="transition hover:text-[#e8b45f]" href="/menu">Menu</a>
+          <a className="transition hover:text-[#e8b45f]" href="/">
+            Home
+          </a>
+          <a className="transition hover:text-[#e8b45f]" href="/menu">
+            Menu
+          </a>
           <a className="transition hover:text-[#e8b45f]" href="/#contacto">
             Reservas
           </a>
@@ -25,7 +29,11 @@ export function Footer({ status, statusText }: FooterProps) {
           <span>Instagram</span>
           <span>WhatsApp</span>
         </div>
-        <div aria-live="polite" className="flex items-center gap-3" role="status">
+        <div
+          aria-live="polite"
+          className="flex items-center gap-3"
+          role="status"
+        >
           <span
             aria-hidden="true"
             className={`h-2.5 w-2.5 rounded-full ${

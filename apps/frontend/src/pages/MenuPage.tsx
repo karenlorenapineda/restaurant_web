@@ -10,17 +10,15 @@ function getDishKey(dish: Dish) {
   return getEditableDishKey(dish);
 }
 
-export function MenuPage({
-  navigate,
-}: Pick<NavigationHandlers, "navigate">) {
+export function MenuPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
   const [sections, setSections] = useState<MenuSection[]>(
     loadStoredMenu() ?? menuSections,
   );
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [selectedDishKey, setSelectedDishKey] = useState<string | null>(null);
-  const [menuStatus, setMenuStatus] = useState<"loading" | "ready" | "fallback">(
-    "loading",
-  );
+  const [menuStatus, setMenuStatus] = useState<
+    "loading" | "ready" | "fallback"
+  >("loading");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -104,7 +102,7 @@ export function MenuPage({
             caseras y bebidas para acompanar la mesa.
           </p>
           {menuStatus === "fallback" ? (
-              <p className="mt-4 text-sm font-semibold text-[#e8b45f]">
+            <p className="mt-4 text-sm font-semibold text-[#e8b45f]">
               Mostrando menu de ejemplo mientras se conecta la base de datos.
             </p>
           ) : null}

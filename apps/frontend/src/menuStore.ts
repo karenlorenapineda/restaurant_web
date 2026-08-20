@@ -1,9 +1,9 @@
 import { menuSections } from "./data/menu";
 import type { Dish, MenuSection } from "./data/menu";
 
-const MENU_STORAGE_KEY = "picasso.employeeMenu";
-const FEATURED_STORAGE_KEY = "picasso.featuredDishes";
-const GALLERY_STORAGE_KEY = "picasso.galleryDishes";
+let previewMenu: MenuSection[] | null = null;
+let previewFeaturedKeys: string[] = [];
+let previewGalleryKeys: string[] = [];
 const DEFAULT_FEATURED_KEYS = ["201", "202", "203"];
 const DEFAULT_FEATURED_NAMES = [
   "Bandeja paisa familiar",
@@ -40,62 +40,29 @@ export function flattenMenu(sections: MenuSection[]) {
 }
 
 export function loadStoredMenu() {
-  const storedMenu = window.localStorage.getItem(MENU_STORAGE_KEY);
-
-  if (!storedMenu) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(storedMenu) as MenuSection[];
-  } catch {
-    window.localStorage.removeItem(MENU_STORAGE_KEY);
-    return null;
-  }
+  return previewMenu;
 }
 
 export function loadFeaturedDishKeys() {
-  const storedKeys = window.localStorage.getItem(FEATURED_STORAGE_KEY);
-
-  if (!storedKeys) {
-    return [];
-  }
-
-  try {
-    return JSON.parse(storedKeys) as string[];
-  } catch {
-    window.localStorage.removeItem(FEATURED_STORAGE_KEY);
-    return [];
-  }
+  return previewFeaturedKeys;
 }
 
 export function loadGalleryDishKeys() {
-  const storedKeys = window.localStorage.getItem(GALLERY_STORAGE_KEY);
-
-  if (!storedKeys) {
-    return [];
-  }
-
-  try {
-    return JSON.parse(storedKeys) as string[];
-  } catch {
-    window.localStorage.removeItem(GALLERY_STORAGE_KEY);
-    return [];
-  }
+  return previewGalleryKeys;
 }
 
 export function saveFeaturedDishKeys(keys: string[]) {
-  window.localStorage.setItem(FEATURED_STORAGE_KEY, JSON.stringify(keys));
+  previewFeaturedKeys = keys;
   window.dispatchEvent(new Event("picasso-menu-updated"));
 }
 
 export function saveGalleryDishKeys(keys: string[]) {
-  window.localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(keys));
+  previewGalleryKeys = keys;
   window.dispatchEvent(new Event("picasso-menu-updated"));
 }
 
 export function saveStoredMenu(sections: MenuSection[]) {
-  window.localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(sections));
+  previewMenu = sections;
   window.dispatchEvent(new Event("picasso-menu-updated"));
 }
 
