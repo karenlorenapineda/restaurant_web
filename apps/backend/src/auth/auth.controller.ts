@@ -7,21 +7,16 @@ import {
   Req,
   Res,
 } from "@nestjs/common";
-import { CookieOptions, Request, Response } from "express";
+import { Request, Response } from "express";
 
 import { AuthService, PublicAuthUser } from "./auth.service";
 import { LoginDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
 import { AuthSessionService } from "./session/auth-session.service";
-
-const SESSION_COOKIE_NAME = "picasso_session";
-
-const SESSION_COOKIE_OPTIONS: CookieOptions = {
-  httpOnly: true,
-  path: "/",
-  sameSite: "lax",
-  secure: true,
-};
+import {
+  SESSION_COOKIE_NAME,
+  SESSION_COOKIE_OPTIONS,
+} from "./session/session-cookie";
 
 @Controller("auth")
 export class AuthController {
