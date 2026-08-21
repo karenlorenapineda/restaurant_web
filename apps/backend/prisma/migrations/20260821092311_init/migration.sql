@@ -200,18 +200,18 @@ CREATE TABLE "payments" (
 );
 
 -- CreateTable
-CREATE TABLE "invoices" (
-    "invoice_id" SERIAL NOT NULL,
+CREATE TABLE "bills" (
+    "bill_id" SERIAL NOT NULL,
     "order_id" INTEGER NOT NULL,
-    "invoice_number" VARCHAR(50),
+    "bill_number" VARCHAR(50),
     "issue_date" TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "customer_tax_id" VARCHAR(50),
     "taxable_base" DECIMAL(10,2) NOT NULL,
     "vat_percentage" DECIMAL(10,2) NOT NULL,
     "vat_amount" DECIMAL(10,2) NOT NULL,
-    "total_invoice" DECIMAL(10,2) NOT NULL,
+    "total_bill" DECIMAL(10,2) NOT NULL,
 
-    CONSTRAINT "invoices_pkey" PRIMARY KEY ("invoice_id")
+    CONSTRAINT "bills_pkey" PRIMARY KEY ("bill_id")
 );
 
 -- CreateTable
@@ -271,10 +271,10 @@ CREATE INDEX "order_details_item_id_idx" ON "order_details"("item_id");
 CREATE INDEX "order_status_history_order_id_idx" ON "order_status_history"("order_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "invoices_order_id_key" ON "invoices"("order_id");
+CREATE UNIQUE INDEX "bills_order_id_key" ON "bills"("order_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "invoices_invoice_number_key" ON "invoices"("invoice_number");
+CREATE UNIQUE INDEX "bills_bill_number_key" ON "bills"("bill_number");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "friendships_requester_id_addressee_id_key" ON "friendships"("requester_id", "addressee_id");
@@ -340,7 +340,7 @@ ALTER TABLE "payments" ADD CONSTRAINT "payments_order_id_fkey" FOREIGN KEY ("ord
 ALTER TABLE "payments" ADD CONSTRAINT "payments_payment_method_id_fkey" FOREIGN KEY ("payment_method_id") REFERENCES "payment_methods"("payment_method_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "invoices" ADD CONSTRAINT "invoices_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "orders"("order_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "bills" ADD CONSTRAINT "bills_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "orders"("order_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "friendships" ADD CONSTRAINT "friendships_requester_id_fkey" FOREIGN KEY ("requester_id") REFERENCES "users"("user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
