@@ -9,351 +9,315 @@ datasource db {
 
 // A minimal real model keeps the first Prisma client and migration path valid.
 // Domain entities will be added after the restaurant workflows are approved.
-model SystemSetting {
-  key       String   @id @db.VarChar(100)
-  value     String
-  updatedAt DateTime @updatedAt @map("updated_at")
+// ---------------- USER & AUTHENTICATION ----------------
+model UserRole {
+  id          Int     @id @default(autoincrement()) @map("role_id")
+  name        String  @map("role_name") @db.VarChar(255)
+  description String? @db.Text
+  users       User[]
 
-  @@map("system_settings")
+  @@map("user_roles")
 }
 
-model RolesUsuario {
-  RolID       Int     @id @default(autoincrement())
-  NombreRol   String  @db.VarChar(255)
-  Descripcion String? @db.Text
+model Language {
+  id    Int    @id @default(autoincrement()) @map("language_id")
+  code  String @map("language_code") @db.VarChar(10)
+  name  String @map("language_name") @db.VarChar(255)
+  users User[]
 
-  usuarios Usuarios[]
+  @@map("languages")
 }
 
-model Idiomas {
-  IdiomaID     Int    @id @default(autoincrement())
-  CodigoIdioma String @db.VarChar(10)
-  Idioma       String @db.VarChar(255)
+model User {
+  id             Int       @id @default(autoincrement()) @map("user_id")
+  email          String    @unique @db.VarChar(255)
+  passwordHash   String?   @map("password_hash") @db.VarChar(255)
+  oauthProvider  String?   @map("oauth_provider") @db.VarChar(50)
+  oauthId        String?   @map("oauth_id") @db.VarChar(255)
+  profilePicture String?   @map("profile_picture") @db.VarChar(255)
+  roleId         Int       @map("role_id")
+  languageId     Int       @map("language_id")
+  isActive       Boolean   @default(true) @map("is_active")
+  emailVerified  Boolean   @default(false) @map("email_verified")
+  lastLogin      DateTime? @map("last_login") @db.Timestamp(6)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
 
-  usuarios Usuarios[]
+  role     UserRole  @relation(fields: [roleId], references: [id])
+  language Language  @relation(fields: [languageId], references: [id])
+  employee Employee?
+
+  sentFriendships     Friendship[]   @relation("FriendshipRequester")
+  receivedFriendships Friendship[]   @relation("FriendshipAddressee")
+  sentMessages        ChatMessage[]  @relation("MessageSender")
+  receivedMessages    ChatMessage[]  @relation("MessageReceiver")
+  notifications       Notification[]
+
+  @@map("users")
 }
 
-model Usuarios {
-  UsuarioID       Int       @id @default(autoincrement())
-  Email           String    @unique @db.VarChar(255)
-  PasswordHash    String?   @db.VarChar(255)
-  ProveedorOAuth  String?   @db.VarChar(50)
-  OAuthID         String?   @db.VarChar(255)
-  FotoPerfil      String?   @db.VarChar(255)
-  RolID           Int
-  IdiomaID        Int
-  Activo          Boolean   @default(true)
-  EmailVereficado Boolean   @default(false)
-  UlitmoAcceso    DateTime? @db.Timestamp
-  FechaCreacion   DateTime  @default(now()) @db.Timestamp
+// ---------------- RESTAURANT & EMPLOYEES ----------------
 
-  rol    RolesUsuario @relation(fields: [RolID], references: [RolID])
-  idioma Idiomas      @relation(fields: [IdiomaID], references: [IdiomaID])
+model Restaurant {
+  id       Int     @id @default(autoincrement()) @map("restaurant_id")
+  name     String  @db.VarChar(255)
+  address  String  @db.Text
+  isActive Boolean @default(true) @map("is_active")
 
-  clientes             Clientes?
-  empleados            Empleados?
-  mensajeChatReceptor  MensajeChat[]    @relation("MensajesRecibidos")
-  mensajeChatRemitente MensajeChat[]    @relation("MensajesEnviados")
-  amigosSolcitud       Amigos[]         @relation("SolicitudesEnviadas")
-  amigosReceptor       Amigos[]         @relation("SolicitudesRecibidas")
-  notificaciones       Notificaciones[]
+  employees Employee[]
+  orders    Order[]
+
+  @@map("restaurants")
 }
 
-model Direcciones {
-  DireccionID Int     @id @default(autoincrement())
-  ClienteID   Int
-  Calle       String  @db.VarChar(255)
-  Numero      String  @db.VarChar(10)
-  Puerta      String? @db.VarChar(10)
-  Piso        String? @db.VarChar(10)
-  Localidad   String  @db.VarChar(255)
+model EmployeePosition {
+  id          Int        @id @default(autoincrement()) @map("position_id")
+  name        String     @map("position_name") @db.VarChar(255)
+  description String?    @db.Text
+  employees   Employee[]
 
-  cliente Clientes @relation(fields: [ClienteID], references: [ClienteID])
+  @@map("employee_positions")
 }
 
-model Clientes {
-  ClienteID         Int       @id @default(autoincrement())
-  UsuarioID         Int       @unique
-  Nombre            String    @db.VarChar(255)
-  Apellido          String    @db.VarChar(255)
-  Telefono          String?   @db.VarChar(255)
-  FechaNacimiento   DateTime  @db.Date
-  FechaPrimerPedido DateTime? @db.Timestamp
+model Employee {
+  id              Int       @id @default(autoincrement()) @map("employee_id")
+  userId          Int       @unique @map("user_id")
+  firstName       String    @map("first_name") @db.VarChar(255)
+  lastName        String    @map("last_name") @db.VarChar(255)
+  phone           String?   @db.VarChar(255)
+  restaurantId    Int       @map("restaurant_id")
+  positionId      Int       @map("position_id")
+  birthDate       DateTime  @map("birth_date") @db.Date
+  hireDate        DateTime  @default(now()) @map("hire_date") @db.Timestamp(6)
+  terminationDate DateTime? @map("termination_date") @db.Timestamp(6)
+  isActive        Boolean   @default(true) @map("is_active")
 
-  usuario Usuarios @relation(fields: [UsuarioID], references: [UsuarioID])
+  user       User             @relation(fields: [userId], references: [id])
+  restaurant Restaurant       @relation(fields: [restaurantId], references: [id])
+  position   EmployeePosition @relation(fields: [positionId], references: [id])
+  orders     Order[]
 
-  direcciones        Direcciones[]
-  pedidos            Pedidos[]
-  resenasRestaurante ResenasRestaurante[]
+  @@map("employees")
 }
 
-model DireccionesRestaurante {
-  DireccionID  Int     @id @default(autoincrement())
-  Calle        String  @db.VarChar(255)
-  Numero       String  @db.VarChar(10)
-  Puerta       String? @db.VarChar(10)
-  Piso         String? @db.VarChar(10)
-  Localidad    String  @db.VarChar(255)
-  CodigoPostal String? @db.VarChar(10)
+// ---------------- MENU & RECIPES ----------------
 
-  restaurantes Restaurantes?
+model MenuCategory {
+  id          Int        @id @default(autoincrement()) @map("category_id")
+  name        String     @db.VarChar(255)
+  description String?    @db.Text
+  items       MenuItem[]
+
+  @@map("menu_categories")
 }
 
-model Restaurantes {
-  RestauranteID Int     @id @default(autoincrement())
-  Nombre        String  @db.VarChar(255)
-  DireccionID   Int     @unique
-  Activo        Boolean @default(true)
+model MenuItem {
+  id          Int     @id @default(autoincrement()) @map("item_id")
+  name        String  @db.VarChar(255)
+  imageUrl    String? @map("image_url") @db.VarChar(255)
+  description String? @db.Text
+  price       Decimal @db.Decimal(10, 2)
+  categoryId  Int     @map("category_id")
+  isAvailable Boolean @default(true) @map("is_available")
 
-  direccion DireccionesRestaurante @relation(fields: [DireccionID], references: [DireccionID])
+  category     MenuCategory  @relation(fields: [categoryId], references: [id])
+  recipes      Recipe[]
+  orderDetails OrderDetail[]
 
-  empleados          Empleados[]
-  pedidos            Pedidos[]
-  resenasRestaurante ResenasRestaurante[]
+  @@index([categoryId])
+  @@map("menu_items")
 }
 
-model CargosEmpleado {
-  CargoEmpleadoID Int     @id @default(autoincrement())
-  NombreCargo     String  @db.VarChar(255)
-  Descripcion     String? @db.Text
+model UnitOfMeasure {
+  id           Int          @id @default(autoincrement()) @map("unit_id")
+  abbreviation String       @db.VarChar(10)
+  name         String       @db.VarChar(50)
+  ingredients  Ingredient[]
 
-  empleados Empleados[]
+  @@map("units_of_measure")
 }
 
-model Empleados {
-  EmpleadoID      Int       @id @default(autoincrement())
-  UsuarioID       Int       @unique
-  Nombre          String    @db.VarChar(255)
-  Apellido        String    @db.VarChar(255)
-  Telefono        String?   @db.VarChar(255)
-  RestuaranteID   Int
-  CargoEmpleadoID Int
-  FechaNacimiento DateTime  @db.Date
-  FechaIngreso    DateTime  @db.Timestamp
-  FechaDespido    DateTime? @db.Timestamp
-  Activo          Boolean   @default(true)
+model Ingredient {
+  id           Int     @id @default(autoincrement()) @map("ingredient_id")
+  name         String  @db.VarChar(255)
+  unitId       Int     @map("unit_id")
+  unitCost     Decimal @map("unit_cost") @db.Decimal(10, 2)
+  currentStock Decimal @default(0.000) @map("current_stock") @db.Decimal(10, 3)
 
-  usuario     Usuarios       @relation(fields: [UsuarioID], references: [UsuarioID])
-  cargo       CargosEmpleado @relation(fields: [CargoEmpleadoID], references: [CargoEmpleadoID])
-  restaurante Restaurantes   @relation(fields: [RestuaranteID], references: [RestauranteID])
+  unit    UnitOfMeasure @relation(fields: [unitId], references: [id])
+  recipes Recipe[]
 
-  pedidos Pedidos[]
+  @@map("ingredients")
 }
 
-model CategoriasMenus {
-  CategoriaID Int     @id @default(autoincrement())
-  Nombre      String  @db.VarChar(255)
-  Descripcion String? @db.Text
+model Recipe {
+  id           Int     @id @default(autoincrement()) @map("recipe_id")
+  itemId       Int     @map("item_id")
+  ingredientId Int     @map("ingredient_id")
+  quantity     Decimal @db.Decimal(10, 3)
 
-  itemsMenu ItemsMenu[]
+  item       MenuItem   @relation(fields: [itemId], references: [id])
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+
+  @@index([itemId])
+  @@map("recipes")
 }
 
-model ItemsMenu {
-  ItemID      Int     @id @default(autoincrement())
-  Nombre      String  @db.VarChar(255)
-  Imagen      String? @db.Text
-  Descripcion String? @db.Text
-  Precio      Decimal @db.Decimal(10, 2)
-  CategoriaID Int
-  Disponible  Boolean @default(true)
+// ---------------- ORDERS & BILLING ----------------
 
-  categoria CategoriasMenus @relation(fields: [CategoriaID], references: [CategoriaID])
+model OrderStatus {
+  id            Int                  @id @default(autoincrement()) @map("status_id")
+  name          String               @db.VarChar(50)
+  orders        Order[]
+  statusHistory OrderStatusHistory[]
 
-  recetas        Recetas[]
-  detallesPedido DetallePedidos[]
-
-  @@index([CategoriaID])
+  @@map("order_statuses")
 }
 
-model UnidadesMedida {
-  UnidadID    Int    @id @default(autoincrement())
-  Abreviatura String @db.VarChar(10)
-  Nombre      String @db.VarChar(255)
+model Table {
+  id          Int     @id @default(autoincrement()) @map("table_id")
+  tableNumber String  @map("table_number") @db.VarChar(10)
+  capacity    Int
+  orders      Order[]
 
-  insumos Insumos[]
+  @@map("tables")
 }
 
-model Insumos {
-  InsumosID   Int     @id @default(autoincrement())
-  Nombre      String  @db.VarChar(255)
-  UnidadID    Int
-  CostoUnidad Decimal @db.Decimal(10, 2)
-  StockActual Decimal @default(0) @db.Decimal(10, 3)
+model Order {
+  id              Int      @id @default(autoincrement()) @map("order_id")
+  tableId         Int?     @map("table_id")
+  customerName    String?  @map("customer_name") @db.VarChar(255)
+  customerAddress String?  @map("customer_address") @db.Text
+  customerPhone   String?  @map("customer_phone") @db.VarChar(255)
+  restaurantId    Int      @map("restaurant_id")
+  employeeId      Int?     @map("employee_id")
+  statusId        Int      @map("status_id")
+  orderDate       DateTime @default(now()) @map("order_date") @db.Timestamp(6)
+  total           Decimal  @default(0.00) @db.Decimal(10, 2)
 
-  unidad UnidadesMedida @relation(fields: [UnidadID], references: [UnidadID])
+  table         Table?               @relation(fields: [tableId], references: [id])
+  restaurant    Restaurant           @relation(fields: [restaurantId], references: [id])
+  employee      Employee?            @relation(fields: [employeeId], references: [id])
+  status        OrderStatus          @relation(fields: [statusId], references: [id])
+  orderDetails  OrderDetail[]
+  statusHistory OrderStatusHistory[]
+  payments      Payment[]
+  invoice       Invoice?
 
-  recetas Recetas[]
+  @@map("orders")
 }
 
-model Recetas {
-  RecetaID  Int     @id @default(autoincrement())
-  ItemID    Int
-  InsumosID Int
-  Cantidad  Decimal @db.Decimal(10, 3)
+model OrderDetail {
+  id        Int     @id @default(autoincrement()) @map("order_detail_id")
+  orderId   Int     @map("order_id")
+  itemId    Int     @map("item_id")
+  quantity  Int     @default(1)
+  unitPrice Decimal @map("unit_price") @db.Decimal(10, 2)
+  notes     String? @db.Text
 
-  item   ItemsMenu @relation(fields: [ItemID], references: [ItemID])
-  insumo Insumos   @relation(fields: [InsumosID], references: [InsumosID])
+  order Order    @relation(fields: [orderId], references: [id])
+  item  MenuItem @relation(fields: [itemId], references: [id])
 
-  @@index([ItemID])
+  @@index([orderId])
+  @@index([itemId])
+  @@map("order_details")
 }
 
-model EstadosPedido {
-  EstadoID Int    @id @default(autoincrement())
-  Nombre   String @db.VarChar(50)
+model OrderStatusHistory {
+  id         Int      @id @default(autoincrement()) @map("history_id")
+  orderId    Int      @map("order_id")
+  statusId   Int      @map("status_id")
+  statusDate DateTime @default(now()) @map("status_date") @db.Timestamp(6)
 
-  pedidos               Pedidos[]
-  historialEstadoPedido HistorialEstadoPedido[]
+  order  Order       @relation(fields: [orderId], references: [id])
+  status OrderStatus @relation(fields: [statusId], references: [id])
+
+  @@index([orderId])
+  @@map("order_status_history")
 }
 
-model Mesas {
-  MesaID    Int    @id @default(autoincrement())
-  Numero    String @db.VarChar(10)
-  Capacidad Int
+model PaymentMethod {
+  id       Int       @id @default(autoincrement()) @map("payment_method_id")
+  name     String    @db.VarChar(50)
+  payments Payment[]
 
-  pedidos Pedidos[]
+  @@map("payment_methods")
 }
 
-model Pedidos {
-  PedidoID      Int      @id @default(autoincrement())
-  MesaID        Int?
-  ClienteID     Int
-  RestauranteID Int
-  EmpleadoID    Int
-  EstadoID      Int
-  FechaHora     DateTime @db.Timestamp
-  Total         Decimal  @default(0) @db.Decimal(10, 2)
+model Payment {
+  id              Int      @id @default(autoincrement()) @map("payment_id")
+  orderId         Int      @map("order_id")
+  paymentMethodId Int      @map("payment_method_id")
+  amount          Decimal  @db.Decimal(10, 2)
+  paymentDate     DateTime @default(now()) @map("payment_date") @db.Timestamp(6)
 
-  mesa        Mesas?        @relation(fields: [MesaID], references: [MesaID])
-  cliente     Clientes      @relation(fields: [ClienteID], references: [ClienteID])
-  restaurante Restaurantes  @relation(fields: [RestauranteID], references: [RestauranteID])
-  empleado    Empleados     @relation(fields: [EmpleadoID], references: [EmpleadoID])
-  estado      EstadosPedido @relation(fields: [EstadoID], references: [EstadoID])
+  order         Order         @relation(fields: [orderId], references: [id])
+  paymentMethod PaymentMethod @relation(fields: [paymentMethodId], references: [id])
 
-  detallePedidos        DetallePedidos[]
-  pagos                 Pagos[]
-  facturas              Facturas?
-  historialEstadoPedido HistorialEstadoPedido[]
-  mensajeChat           MensajeChat[]
+  @@map("payments")
 }
 
-model DetallePedidos {
-  DetallePedidoID Int     @id @default(autoincrement())
-  PedidoID        Int
-  ItemID          Int
-  Cantidad        Int     @default(1)
-  PrecioUnitario  Decimal @db.Decimal(10, 2)
-  Notas           String? @db.Text
+model Invoice {
+  id            Int      @id @default(autoincrement()) @map("invoice_id")
+  orderId       Int      @unique @map("order_id")
+  invoiceNumber String?  @unique @map("invoice_number") @db.VarChar(50)
+  issueDate     DateTime @default(now()) @map("issue_date") @db.Timestamp(6)
+  customerTaxId String?  @map("customer_tax_id") @db.VarChar(50)
+  taxableBase   Decimal  @map("taxable_base") @db.Decimal(10, 2)
+  vatPercentage Decimal  @map("vat_percentage") @db.Decimal(10, 2)
+  vatAmount     Decimal  @map("vat_amount") @db.Decimal(10, 2)
+  totalInvoice  Decimal  @map("total_invoice") @db.Decimal(10, 2)
 
-  pedido Pedidos   @relation(fields: [PedidoID], references: [PedidoID])
-  item   ItemsMenu @relation(fields: [ItemID], references: [ItemID])
+  order Order @relation(fields: [orderId], references: [id])
 
-  @@index([PedidoID, ItemID])
+  @@map("invoices")
 }
 
-model HistorialEstadoPedido {
-  HistorialID Int      @id @default(autoincrement())
-  PedidoID    Int
-  EstadoID    Int
-  FechaHora   DateTime @default(now()) @db.Timestamp
+// ---------------- SOCIAL & REAL-TIME ----------------
 
-  pedido Pedidos       @relation(fields: [PedidoID], references: [PedidoID])
-  estado EstadosPedido @relation(fields: [EstadoID], references: [EstadoID])
-
-  @@index([PedidoID])
-}
-
-model MetodosPago {
-  MetodoID Int    @id @default(autoincrement())
-  Nombre   String @db.VarChar(50)
-
-  pagos Pagos[]
-}
-
-model Pagos {
-  PagoID    Int      @id @default(autoincrement())
-  PedidoID  Int
-  MetodoID  Int
-  Monto     Decimal  @db.Decimal(10, 2)
-  FechaHora DateTime @default(now()) @db.Timestamp
-
-  pedido Pedidos     @relation(fields: [PedidoID], references: [PedidoID])
-  metodo MetodosPago @relation(fields: [MetodoID], references: [MetodoID])
-}
-
-model Facturas {
-  FacturaID        Int      @id @default(autoincrement())
-  PedidoId         Int      @unique
-  NumeroFactura    String   @unique @db.VarChar(50)
-  FechaEmision     DateTime @default(now()) @db.Timestamp
-  ClienteDocumento String?  @db.VarChar(50)
-  ClienteNombre    String?  @db.VarChar(255)
-  ClienteDireccion String?  @db.Text
-  BaseImponible    Decimal  @db.Decimal(10, 2)
-  PorcentajeIVA    Decimal  @db.Decimal(10, 2)
-  MontoIVA         Decimal  @db.Decimal(10, 2)
-  TotalFactura     Decimal  @db.Decimal(10, 2)
-
-  pedido Pedidos @relation(fields: [PedidoId], references: [PedidoID])
-}
-
-enum EstadosSolicitud {
+enum RequestStatus {
   pending
   approved
   rejected
 }
 
-model Amigos {
-  AmistadID          Int              @id @default(autoincrement())
-  UsuarioSolicitudID Int
-  UsuarioReceptorID  Int
-  Estado             EstadosSolicitud @default(pending)
-  FechaCreacion      DateTime         @default(now()) @db.Timestamp
+model Friendship {
+  id          Int           @id @default(autoincrement()) @map("friendship_id")
+  requesterId Int           @map("requester_id")
+  addresseeId Int           @map("addressee_id")
+  status      RequestStatus @default(pending)
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamp(6)
 
-  usuarioSolcitud Usuarios @relation("SolicitudesEnviadas", fields: [UsuarioSolicitudID], references: [UsuarioID])
-  usuarioReceptor Usuarios @relation("SolicitudesRecibidas", fields: [UsuarioReceptorID], references: [UsuarioID])
+  requester User @relation("FriendshipRequester", fields: [requesterId], references: [id])
+  addressee User @relation("FriendshipAddressee", fields: [addresseeId], references: [id])
 
-  @@unique([UsuarioSolicitudID, UsuarioReceptorID])
+  @@unique([requesterId, addresseeId])
+  @@map("friendships")
 }
 
-model MensajeChat {
-  MensajeID    Int      @id @default(autoincrement())
-  RemintenteID Int
-  ReceptorID   Int
-  PedidoID     Int?
-  Mensaje      String   @db.Text
-  FechaHora    DateTime @default(now()) @db.Timestamp
-  Leido        Boolean  @default(false)
+model ChatMessage {
+  id         Int      @id @default(autoincrement()) @map("message_id")
+  senderId   Int      @map("sender_id")
+  receiverId Int      @map("receiver_id")
+  message    String   @db.Text
+  sentAt     DateTime @default(now()) @map("sent_at") @db.Timestamp(6)
+  isRead     Boolean  @default(false) @map("is_read")
 
-  remitente Usuarios @relation("MensajesEnviados", fields: [RemintenteID], references: [UsuarioID])
-  receptor  Usuarios @relation("MensajesRecibidos", fields: [ReceptorID], references: [UsuarioID])
-  pedido    Pedidos? @relation(fields: [PedidoID], references: [PedidoID])
+  sender   User @relation("MessageSender", fields: [senderId], references: [id])
+  receiver User @relation("MessageReceiver", fields: [receiverId], references: [id])
 
-  @@index([PedidoID])
+  @@map("chat_messages")
 }
 
-model Notificaciones {
-  NotificacionID Int      @id @default(autoincrement())
-  UsuarioID      Int
-  TipoAccion     String?  @db.VarChar(50)
-  Mensaje        String   @db.Text
-  Leido          Boolean  @default(false)
-  FechaHora      DateTime @default(now()) @db.Timestamp
+model Notification {
+  id         Int      @id @default(autoincrement()) @map("notification_id")
+  userId     Int      @map("user_id")
+  actionType String?  @map("action_type") @db.VarChar(50)
+  message    String   @db.Text
+  isRead     Boolean  @default(false) @map("is_read")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamp(6)
 
-  usuario Usuarios @relation(fields: [UsuarioID], references: [UsuarioID])
+  user User @relation(fields: [userId], references: [id])
 
-  @@index([UsuarioID])
-}
-
-model ResenasRestaurante {
-  ResenaID      Int      @id @default(autoincrement())
-  ClienteID     Int
-  RestauranteID Int
-  Calificacion  Int      @db.SmallInt
-  Comentario    String?  @db.Text
-  FechaHora     DateTime @default(now()) @db.Timestamp
-
-  cliente     Clientes     @relation(fields: [ClienteID], references: [ClienteID])
-  restaurante Restaurantes @relation(fields: [RestauranteID], references: [RestauranteID])
-
-  @@unique([ClienteID, RestauranteID])
+  @@index([userId])
+  @@map("notifications")
 }
