@@ -19,6 +19,8 @@ describe("AuthService", () => {
 
   beforeEach(() => {
     repository = {
+      findByOAuthIdentity: jest.fn(),
+      createOAuthUser: jest.fn(),
       findById: jest.fn(),
       findByEmail: jest.fn(),
       createLocalUser: jest.fn(),
@@ -118,6 +120,51 @@ describe("AuthService", () => {
       await expect(service.authenticate(input)).rejects.toEqual(
         new UnauthorizedException("Invalid email or password"),
       );
+    });
+  });
+
+  describe("authenticateWithOAuth", () => {
+    const identity = {
+      provider: "google" as const,
+      subject: "google-subject-42",
+      email: "user@example.com",
+    };
+
+    it("returns a user already linked to the Google subject", async () => {
+      repository.findByOAuthIdentity.mockResolvedValue(existingUser);
+
+      await expect(service.authenticateWithOAuth(identity)).resolves.toEqual({
+        id: existingUser.id,
+        email: existingUser.email,
+      });
+      expect(repository.findByEmail).not.toHaveBeenCalled();
+      expect(repository.createOAuthUser).not.toHaveBeenCalled();
+    });
+
+    it("creates a user when the Google identity and email are new", async () => {
+      repository.findByOAuthIdentity.mockResolvedValue(null);
+      repository.findByEmail.mockResolvedValue(null);
+      repository.createOAuthUser.mockResolvedValue({
+        id: "google-user-42",
+        email: identity.email,
+        passwordHash: null,
+      });
+
+      await expect(service.authenticateWithOAuth(identity)).resolves.toEqual({
+        id: "google-user-42",
+        email: identity.email,
+      });
+      expect(repository.createOAuthUser).toHaveBeenCalledWith(identity);
+    });
+
+    it("does not automatically link Google to an existing email account", async () => {
+      repository.findByOAuthIdentity.mockResolvedValue(null);
+      repository.findByEmail.mockResolvedValue(existingUser);
+
+      await expect(service.authenticateWithOAuth(identity)).rejects.toEqual(
+        new ConflictException("An account with this email already exists"),
+      );
+      expect(repository.createOAuthUser).not.toHaveBeenCalled();
     });
   });
   describe("getCurrentUser", () => {

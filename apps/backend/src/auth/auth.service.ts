@@ -5,14 +5,16 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 
-import { LoginDto } from "./dto/login.dto";
-import { RegisterDto } from "./dto/register.dto";
-import { PasswordHasher } from "./password/password-hasher";
 import {
   AUTH_USER_REPOSITORY,
   AuthUser,
   AuthUserRepository,
+  OAuthIdentity,
 } from "./users/auth-user.repository";
+
+import { LoginDto } from "./dto/login.dto";
+import { RegisterDto } from "./dto/register.dto";
+import { PasswordHasher } from "./password/password-hasher";
 
 const INVALID_CREDENTIALS_MESSAGE = "Invalid email or password";
 
@@ -59,6 +61,29 @@ export class AuthService {
     if (!user || !user.passwordHash || !passwordIsValid) {
       throw new UnauthorizedException(INVALID_CREDENTIALS_MESSAGE);
     }
+
+    return this.toPublicUser(user);
+  }
+
+  async authenticateWithOAuth(
+    identity: OAuthIdentity,
+  ): Promise<PublicAuthUser> {
+    const linkedUser = await this.users.findByOAuthIdentity(
+      identity.provider,
+      identity.subject,
+    );
+
+    if (linkedUser) {
+      return this.toPublicUser(linkedUser);
+    }
+
+    const userWithSameEmail = await this.users.findByEmail(identity.email);
+
+    if (userWithSameEmail) {
+      throw new ConflictException("An account with this email already exists");
+    }
+
+    const user = await this.users.createOAuthUser(identity);
 
     return this.toPublicUser(user);
   }
