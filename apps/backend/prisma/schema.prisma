@@ -201,7 +201,7 @@ model Order {
   orderDetails  OrderDetail[]
   statusHistory OrderStatusHistory[]
   payments      Payment[]
-  invoice       Invoice?
+  bill          Bill?
 
   @@map("orders")
 }
