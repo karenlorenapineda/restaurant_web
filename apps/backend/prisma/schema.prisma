@@ -256,20 +256,20 @@ model Payment {
   @@map("payments")
 }
 
-model Invoice {
-  id            Int      @id @default(autoincrement()) @map("invoice_id")
+model Bill {
+  id            Int      @id @default(autoincrement()) @map("bill_id")
   orderId       Int      @unique @map("order_id")
-  invoiceNumber String?  @unique @map("invoice_number") @db.VarChar(50)
+  billNumber    String?  @unique @map("bill_number") @db.VarChar(50)
   issueDate     DateTime @default(now()) @map("issue_date") @db.Timestamp(6)
   customerTaxId String?  @map("customer_tax_id") @db.VarChar(50)
   taxableBase   Decimal  @map("taxable_base") @db.Decimal(10, 2)
   vatPercentage Decimal  @map("vat_percentage") @db.Decimal(10, 2)
   vatAmount     Decimal  @map("vat_amount") @db.Decimal(10, 2)
-  totalInvoice  Decimal  @map("total_invoice") @db.Decimal(10, 2)
+  totalBill     Decimal  @map("total_bill") @db.Decimal(10, 2)
 
   order Order @relation(fields: [orderId], references: [id])
 
-  @@map("invoices")
+  @@map("bills")
 }
 
 // ---------------- SOCIAL & REAL-TIME ----------------
