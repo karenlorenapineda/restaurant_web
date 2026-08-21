@@ -10,6 +10,7 @@ export interface CreateLocalAuthUser {
 }
 
 export interface AuthUserRepository {
+  findById(id: string): Promise<AuthUser | null>;
   findByEmail(email: string): Promise<AuthUser | null>;
   createLocalUser(input: CreateLocalAuthUser): Promise<AuthUser>;
 }

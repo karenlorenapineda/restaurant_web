@@ -14,7 +14,7 @@ export interface RequestAuthentication {
 }
 
 export interface AuthenticatedRequest extends Request {
-  auth?: RequestAuthentication;
+  auth: RequestAuthentication;
 }
 
 @Injectable()

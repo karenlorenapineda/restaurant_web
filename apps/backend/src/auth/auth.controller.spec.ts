@@ -4,6 +4,7 @@ import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { LoginDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
+import { AuthenticatedRequest } from "./guard/session-auth.guard";
 import { AuthSessionService } from "./session/auth-session.service";
 
 describe("AuthController", () => {
@@ -22,6 +23,7 @@ describe("AuthController", () => {
     auth = {
       register: jest.fn(),
       authenticate: jest.fn(),
+      getCurrentUser: jest.fn(),
     } as unknown as jest.Mocked<AuthService>;
 
     sessions = {
@@ -122,5 +124,16 @@ describe("AuthController", () => {
         secure: true,
       }),
     );
+  });
+  it("returns the currently authenticated user", async () => {
+    const request = {
+      auth: {
+        userId: "user-42",
+      },
+    } as unknown as AuthenticatedRequest;
+    auth.getCurrentUser.mockResolvedValue(publicUser);
+
+    await expect(controller.me(request)).resolves.toEqual(publicUser);
+    expect(auth.getCurrentUser).toHaveBeenCalledWith("user-42");
   });
 });

@@ -63,6 +63,16 @@ export class AuthService {
     return this.toPublicUser(user);
   }
 
+  async getCurrentUser(userId: string): Promise<PublicAuthUser> {
+    const user = await this.users.findById(userId);
+
+    if (!user) {
+      throw new UnauthorizedException("Authentication required");
+    }
+
+    return this.toPublicUser(user);
+  }
+
   private toPublicUser(user: AuthUser): PublicAuthUser {
     return {
       id: user.id,

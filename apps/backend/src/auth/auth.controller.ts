@@ -3,11 +3,18 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
+  UseGuards,
   Post,
   Req,
   Res,
+  Get,
 } from "@nestjs/common";
 import { Request, Response } from "express";
+
+import {
+  AuthenticatedRequest,
+  SessionAuthGuard,
+} from "./guard/session-auth.guard";
 
 import { AuthService, PublicAuthUser } from "./auth.service";
 import { LoginDto } from "./dto/login.dto";
@@ -48,6 +55,12 @@ export class AuthController {
     await this.createSessionCookie(user.id, response);
 
     return user;
+  }
+
+  @Get("me")
+  @UseGuards(SessionAuthGuard)
+  async me(@Req() request: AuthenticatedRequest): Promise<PublicAuthUser> {
+    return this.auth.getCurrentUser(request.auth.userId);
   }
 
   @Post("logout")

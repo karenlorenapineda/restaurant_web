@@ -19,6 +19,7 @@ describe("AuthService", () => {
 
   beforeEach(() => {
     repository = {
+      findById: jest.fn(),
       findByEmail: jest.fn(),
       createLocalUser: jest.fn(),
     };
@@ -116,6 +117,25 @@ describe("AuthService", () => {
 
       await expect(service.authenticate(input)).rejects.toEqual(
         new UnauthorizedException("Invalid email or password"),
+      );
+    });
+  });
+  describe("getCurrentUser", () => {
+    it("returns the public data of the authenticated user", async () => {
+      repository.findById.mockResolvedValue(existingUser);
+
+      await expect(service.getCurrentUser(existingUser.id)).resolves.toEqual({
+        id: existingUser.id,
+        email: existingUser.email,
+      });
+      expect(repository.findById).toHaveBeenCalledWith(existingUser.id);
+    });
+
+    it("rejects a session whose user no longer exists", async () => {
+      repository.findById.mockResolvedValue(null);
+
+      await expect(service.getCurrentUser("deleted-user")).rejects.toEqual(
+        new UnauthorizedException("Authentication required"),
       );
     });
   });
