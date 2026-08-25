@@ -111,13 +111,16 @@ model MenuCategory {
 }
 
 model MenuItem {
-  id          Int     @id @default(autoincrement()) @map("item_id")
-  name        String  @db.VarChar(255)
-  imageUrl    String? @map("image_url") @db.VarChar(255)
-  description String? @db.Text
-  price       Decimal @db.Decimal(10, 2)
-  categoryId  Int     @map("category_id")
-  isAvailable Boolean @default(true) @map("is_available")
+  id                 Int     @id @default(autoincrement()) @map("item_id")
+  name               String  @db.VarChar(255)
+  imageUrl           String? @map("image_url") @db.VarChar(255)
+  description        String? @db.Text
+  price              Decimal @db.Decimal(10, 2)
+  categoryId         Int     @map("category_id")
+  isAvailable        Boolean @default(true) @map("is_available")
+  internalRecipe     String? @map("internal_recipe") @db.Text
+  isFavorite         Boolean @default(false) @map("is_favorite")
+  showImageInGallery Boolean @default(false) @map("show_image_in_gallery")
 
   category     MenuCategory  @relation(fields: [categoryId], references: [id])
   recipes      Recipe[]
