@@ -142,10 +142,24 @@ model UnitOfMeasure {
   name         String   @db.VarChar(50)
   type         UnitType
 
-  ingredients Ingredient[]
-  recipes     Recipe[]
+  ingredients    Ingredient[]
+  recipes        Recipe[]
+  inventoryItems InventoryItem[]
 
   @@map("units_of_measure")
+}
+
+model InventoryItem {
+  id           Int     @id @default(autoincrement()) @map("item_id")
+  name         String  @db.VarChar(255)
+  unitId       Int     @map("unit_id")
+  unitCost     Decimal @map("unit_cost") @db.Decimal(10, 2)
+  currentStock Decimal @default(0.000) @map("current_stock") @db.Decimal(10, 3)
+  minimumStock Decimal @default(0.000) @map("minimum_stock") @db.Decimal(10, 3)
+
+  unit UnitOfMeasure @relation(fields: [unitId], references: [id])
+
+  @@map("inventory_items")
 }
 
 model Ingredient {
@@ -154,6 +168,7 @@ model Ingredient {
   unitId       Int     @map("unit_id")
   unitCost     Decimal @map("unit_cost") @db.Decimal(10, 2)
   currentStock Decimal @default(0.000) @map("current_stock") @db.Decimal(10, 3)
+  minimumStock Decimal @default(0.000) @map("minimum_stock") @db.Decimal(10, 3)
 
   unit    UnitOfMeasure @relation(fields: [unitId], references: [id])
   recipes Recipe[]
