@@ -26,4 +26,13 @@ export class UpdateRecipeItemDto{
 	})
 	@IsOptional()
 	quantity?: number;
+
+	@IsInt({
+		message: "Unit ID must be an integer",
+	})
+	@IsPositive({
+		message: "Unit ID must be greater than 0",
+	})
+	@IsOptional()
+	unitId?: number;
 }

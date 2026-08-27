@@ -130,11 +130,20 @@ model MenuItem {
   @@map("menu_items")
 }
 
+enum UnitType {
+  weight
+  volume
+  count
+}
+
 model UnitOfMeasure {
-  id           Int          @id @default(autoincrement()) @map("unit_id")
-  abbreviation String       @db.VarChar(10)
-  name         String       @db.VarChar(50)
-  ingredients  Ingredient[]
+  id           Int      @id @default(autoincrement()) @map("unit_id")
+  abbreviation String   @db.VarChar(10)
+  name         String   @db.VarChar(50)
+  type         UnitType
+
+  ingredients Ingredient[]
+  recipes     Recipe[]
 
   @@map("units_of_measure")
 }
@@ -157,11 +166,15 @@ model Recipe {
   itemId       Int     @map("item_id")
   ingredientId Int     @map("ingredient_id")
   quantity     Decimal @db.Decimal(10, 3)
+  unitId       Int     @map("unit_id")
 
-  item       MenuItem   @relation(fields: [itemId], references: [id])
-  ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+  item       MenuItem      @relation(fields: [itemId], references: [id])
+  ingredient Ingredient    @relation(fields: [ingredientId], references: [id])
+  unit       UnitOfMeasure @relation(fields: [unitId], references: [id])
 
   @@index([itemId])
+  @@index([ingredientId])
+  @@index([unitId])
   @@map("recipes")
 }
 

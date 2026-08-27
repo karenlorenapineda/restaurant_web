@@ -16,4 +16,12 @@ export class CreateRecipeItemDto{
 		message: "Quantity must be greater than 0",
 	})
 	quantity: number;
+
+	@IsInt({
+		message: "Unit ID must be an integer",
+	})
+	@IsPositive({
+		message: "Unit ID must be greater than 0",
+	})
+	unitId: number;
 }

@@ -10,12 +10,17 @@ export class MenuController {
 	constructor(private readonly menuService: MenuService) {}
 	
 	@Get()
-	getMenu(){
+	getMenuData(){
 		return this.menuService.getMenuData();
 	}
 
+	@Get('favorite')
+	getFavoriteMenuItems(){
+		return this.menuService.getFavoriteMenuItems();
+	}
+
 	@Get('management')
-	getManagement(){
+	getManagementMenuData(){
 		return this.menuService.getManagementMenuData();
 	}
 
