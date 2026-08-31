@@ -7,6 +7,7 @@ import { MenuModule } from './menu/menu.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { SuppliesModule } from './supplies/supplies.module';
 import { UnitsModule } from './units/units.module';
+import { RecipesModule } from './recipes/recipes.module';
 
 function validateEnvironment(config: Record<string, unknown>) {
   const databaseUrl = config.DATABASE_URL;
@@ -31,6 +32,7 @@ function validateEnvironment(config: Record<string, unknown>) {
     InventoryModule,
     SuppliesModule,
     UnitsModule,
+    RecipesModule,
   ],
 })
 export class AppModule {}
