@@ -1,22 +1,20 @@
-import { Body, Controller, Get, Post, Patch, Param, Delete } from '@nestjs/common';
+import { Body, Controller, Get, Post, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
 import { MenuService } from './menu.service';
 import { CreateMenuItemDto } from './dto/create-menu-item.dto';
 import { UpdateMenuItemDto } from './dto/update-menu-item.dto';
-import { CreateCategoryDto } from './dto/create-category.dto';
-import { UpdateCategoryDto } from './dto/update-category.dto';
 
 @Controller('menu')
 export class MenuController {
 	constructor(private readonly menuService: MenuService) {}
 	
 	@Get()
-	getMenuData(){
-		return this.menuService.getMenuData();
+	getMenuSections(){
+		return this.menuService.getMenuSections();
 	}
 
-	@Get('favorite')
-	getFavoriteMenuItems(){
-		return this.menuService.getFavoriteMenuItems();
+	@Get('featured')
+	getFeaturedMenuItems(){
+		return this.menuService.getFeaturedMenuItems();
 	}
 
 	@Get('management')
@@ -30,32 +28,12 @@ export class MenuController {
 	}
 
 	@Patch(':id')
-	updateMenuItem(@Param('id') id: string, @Body() updateData: UpdateMenuItemDto){
-		return this.menuService.updateMenuItem(Number(id), updateData);
+	updateMenuItem(@Param('id', ParseIntPipe) id: number, @Body() updateData: UpdateMenuItemDto){
+		return this.menuService.updateMenuItem(id, updateData);
 	}
 
 	@Delete(':id')
-	deleteMenuItem(@Param('id') id: string){
-		return this.menuService.deleteMenuItem(Number(id));
-	}
-
-	@Get('category')
-	getCategories(){
-		return this.menuService.getCategories();
-	}
-
-	@Post('category')
-	createCategory(@Body() newCategoryData: CreateCategoryDto){
-		return this.menuService.createCategory(newCategoryData);
-	}
-
-	@Patch('category/:id')
-	updateCategory(@Param('id') id: string, @Body() updateData: UpdateCategoryDto){
-		return this.menuService.updateCategory(Number(id), updateData);
-	}
-
-	@Delete('category/:id')
-	deleteCategory(@Param('id') id: string){
-		return this.menuService.deleteCategory(Number(id));
+	deleteMenuItem(@Param('id', ParseIntPipe) id: number){
+		return this.menuService.deleteMenuItem(id);
 	}
 }
