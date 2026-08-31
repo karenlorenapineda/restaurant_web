@@ -1,48 +1,29 @@
-import { IsInt, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, Min } from "class-validator";
+import { IsInt, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, MaxLength, Min } from "class-validator";
 
 export class UpdateInventoryItemDto {
-	@IsString({
-		message: "Name must be a string.",
-	})
-	@IsNotEmpty({
-		message: "Name cannot be empty."
-	})
 	@IsOptional()
+	@IsString({ message: "name must be a string." })
+	@IsNotEmpty({ message: "name cannot be empty." })
+	@MaxLength(255, {message: "name must not exceed 255 characters" })
 	name?: string;
 
-	@IsInt({
-		message: "Unit ID must be an integer.",
-	})
-	@IsPositive({
-		message: "Unit ID must be greater than 0."
-	})
 	@IsOptional()
+	@IsInt({ message: "unitId must be an integer." })
+	@IsPositive({ message: "unitId must be greater than 0." })
 	unitId?: number;
 
-	@IsNumber({ maxDecimalPlaces: 2 }, {
-		message: "Unit cost must be a number.",
-	})
-	@IsPositive({
-		message: "Unit cost must be greater than 0.",
-	})
 	@IsOptional()
+	@IsNumber({ maxDecimalPlaces: 2 }, { message: "unitCost cost must be a number.", })
+	@Min(0, { message: "unitCost cannot be negative." })
 	unitCost?: number;
 
-	@IsNumber({ maxDecimalPlaces: 3 }, {
-		message: "Current stock must be a number.",
-	})
-	@Min(0, {
-		message: "Current stock cannot be negative.",
-	})
 	@IsOptional()
+	@IsNumber({ maxDecimalPlaces: 3 }, { message: "currentStock must be a number." })
+	@Min(0, { message: "currentStock cannot be negative." })
 	currentStock?: number;
 
-	@IsNumber({ maxDecimalPlaces: 3 }, {
-		message: "Minimum stock must be a number.",
-	})
-	@Min(0, {
-		message: "Minimum stock cannot be negative.",
-	})
 	@IsOptional()
+	@IsNumber({ maxDecimalPlaces: 3 }, { message: "minimumStock must be a number." })
+	@Min(0, { message: "minimumStock cannot be negative." })
 	minimumStock?: number;
 }
