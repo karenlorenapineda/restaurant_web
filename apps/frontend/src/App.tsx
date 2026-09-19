@@ -3,14 +3,17 @@ import type { MouseEvent } from "react";
 
 import { Footer } from "./components/Footer";
 import { Header } from "./components/Header";
+import { t, useLocale } from "./i18n";
 import type { HealthResponse, HealthStatus } from "./health";
 import { getPageFromPath } from "./navigation";
 import type { Page } from "./navigation";
 import { EmployeePanelPage } from "./pages/EmployeePanelPage";
 import { HomePage } from "./pages/HomePage";
 import { MenuPage } from "./pages/MenuPage";
+import { OrderPage } from "./pages/OrderPage";
 
 export function App() {
+  useLocale();
   const [status, setStatus] = useState<HealthStatus>("checking");
   const [page, setPage] = useState<Page>(getPageFromPath);
 
@@ -58,6 +61,7 @@ export function App() {
     event.preventDefault();
     window.history.pushState({}, "", path);
     setPage(getPageFromPath());
+    window.dispatchEvent(new Event("picasso-navigation"));
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -76,11 +80,13 @@ export function App() {
     }, 0);
   }
 
-  const statusText = {
-    checking: "Comprobando servicios",
-    online: "Application and database are online",
-    offline: "Servicios no disponibles",
-  }[status];
+  const statusText = t(
+    {
+      checking: "Comprobando servicios",
+      online: "Application and database are online",
+      offline: "Servicios no disponibles",
+    }[status],
+  );
 
   return (
     <main className="min-h-screen bg-[#242424] text-zinc-100 selection:bg-[#e8b45f] selection:text-zinc-950">
@@ -89,6 +95,8 @@ export function App() {
         <EmployeePanelPage navigate={navigate} />
       ) : page === "menu" ? (
         <MenuPage navigate={navigate} />
+      ) : page === "order" ? (
+        <OrderPage navigate={navigate} />
       ) : (
         <HomePage navigate={navigate} goToContact={goToContact} />
       )}

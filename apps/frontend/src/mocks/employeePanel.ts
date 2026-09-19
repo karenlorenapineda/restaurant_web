@@ -125,6 +125,16 @@ export const MOCK_RECIPE_BY_DISH: Record<
     recipe:
       "Rellenar la masa con carne y papa, cerrar, freir hasta dorar y servir con aji aparte.",
   },
+  "Entrada criolla": {
+    ingredients: [
+      { quantity: "80", supplyName: "Masa de maiz", unit: "g" },
+      { quantity: "55", supplyName: "Carne desmechada", unit: "g" },
+      { quantity: "45", supplyName: "Papa criolla", unit: "g" },
+      { quantity: "25", supplyName: "Aji", unit: "g" },
+    ],
+    recipe:
+      "Rellenar la masa con carne y papa, cerrar, freir hasta dorar y servir con aji aparte.",
+  },
 };
 
 export const MOCK_PREVIEW_SESSIONS: EmployeeSession[] = [

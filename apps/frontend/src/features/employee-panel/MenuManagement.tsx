@@ -1,3 +1,4 @@
+import { T, t } from "../../i18n";
 import type { FormEvent } from "react";
 
 import type { RecipeSupply } from "../../data/menu";
@@ -77,17 +78,17 @@ export function MenuManagement({
   return (
     <>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Metric label="Platos" value={String(dishes.length)} />
+        <Metric label={t("Platos")} value={String(dishes.length)} />
         <Metric
-          label="Disponibles"
+          label={t("Disponibles")}
           value={String(dishes.filter((dish) => dish.available).length)}
         />
         <Metric
-          label="Favoritos"
+          label={t("Favoritos")}
           value={String(countExistingSelectedDishes(featuredKeys, dishes))}
         />
         <Metric
-          label="Galeria"
+          label={t("Galeria")}
           value={String(countExistingSelectedDishes(galleryKeys, dishes))}
         />
       </div>
@@ -95,14 +96,16 @@ export function MenuManagement({
       <div className="mt-6 grid items-start gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <Panel>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <h3 className="font-display text-3xl font-bold">Platos</h3>
+            <h3 className="font-display text-3xl font-bold">
+              <T>Platos</T>
+            </h3>
             {canEdit ? (
               <button
                 className="rounded-sm bg-[#e8b45f] px-4 py-3 text-sm font-bold uppercase tracking-[0.1em] text-zinc-950 transition hover:bg-white"
                 onClick={startNewDish}
                 type="button"
               >
-                Anadir plato
+                <T>Anadir plato</T>
               </button>
             ) : null}
           </div>
@@ -155,14 +158,16 @@ export function MenuManagement({
           </h3>
           {!canEdit ? (
             <p className="mt-4 rounded-sm border border-white/10 bg-black/25 p-4 text-sm text-zinc-300">
-              Vista para cocina: puedes revisar platos, categorias,
-              disponibilidad y descripcion, pero la edicion queda para
-              administracion.
+              <T>
+                Vista para cocina: puedes revisar platos, categorias,
+                disponibilidad y descripcion, pero la edicion queda para
+                administracion.
+              </T>
             </p>
           ) : null}
           {draft ? (
             <form className="mt-6 grid gap-5">
-              <Field label="Nombre">
+              <Field label={t("Nombre")}>
                 <input
                   className={getInputClassName(canEdit)}
                   onChange={(event) => updateDraft("name", event.target.value)}
@@ -173,7 +178,7 @@ export function MenuManagement({
               </Field>
 
               <div className="grid gap-5 sm:grid-cols-2">
-                <Field label="Categoria">
+                <Field label={t("Categoria")}>
                   <select
                     className={getInputClassName(canEdit)}
                     disabled={!canEdit}
@@ -187,7 +192,7 @@ export function MenuManagement({
                     ))}
                   </select>
                 </Field>
-                <Field label="Precio">
+                <Field label={t("Precio")}>
                   <input
                     className={getInputClassName(canEdit)}
                     onChange={(event) =>
@@ -200,7 +205,7 @@ export function MenuManagement({
                 </Field>
               </div>
 
-              <Field label="Imagen">
+              <Field label={t("Imagen")}>
                 <input
                   className={getInputClassName(canEdit)}
                   onChange={(event) => updateDraft("image", event.target.value)}
@@ -211,7 +216,7 @@ export function MenuManagement({
                 />
               </Field>
 
-              <Field label="Descripcion">
+              <Field label={t("Descripcion")}>
                 <textarea
                   className={`${getInputClassName(canEdit)} min-h-36`}
                   onChange={(event) =>
@@ -222,7 +227,7 @@ export function MenuManagement({
                 />
               </Field>
 
-              <Field label="Receta interna">
+              <Field label={t("Receta interna")}>
                 <textarea
                   className={`${getInputClassName(canEdit)} min-h-36`}
                   onChange={(event) =>
@@ -246,17 +251,17 @@ export function MenuManagement({
                 <>
                   <Checkbox
                     checked={draft.available}
-                    label="Disponible en la carta"
+                    label={t("Disponible en la carta")}
                     onChange={(checked) => updateDraft("available", checked)}
                   />
                   <Checkbox
                     checked={isFeaturedDish(draft, featuredKeys)}
-                    label="Mostrar como favorito en la pagina principal"
+                    label={t("Mostrar como favorito en la pagina principal")}
                     onChange={toggleFeaturedDish}
                   />
                   <Checkbox
                     checked={isGalleryDish(draft, galleryKeys)}
-                    label="Mostrar imagen del plato en la galeria"
+                    label={t("Mostrar imagen del plato en la galeria")}
                     onChange={toggleGalleryDish}
                   />
                 </>
@@ -294,12 +299,14 @@ export function MenuManagement({
                   onClick={saveDish}
                   type="button"
                 >
-                  Guardar cambios
+                  <T>Guardar cambios</T>
                 </button>
               ) : null}
             </form>
           ) : (
-            <p className="mt-6 text-zinc-400">No hay platos para editar.</p>
+            <p className="mt-6 text-zinc-400">
+              <T>No hay platos para editar.</T>
+            </p>
           )}
         </Panel>
       </div>
@@ -355,7 +362,7 @@ function RecipeSuppliesEditor({
     <div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm font-semibold text-zinc-200">
-          Insumos de la receta
+          <T>Insumos de la receta</T>
         </p>
         {canEdit ? (
           <button
@@ -363,7 +370,7 @@ function RecipeSuppliesEditor({
             onClick={addRecipeSupply}
             type="button"
           >
-            Anadir insumo
+            <T>Anadir insumo</T>
           </button>
         ) : null}
       </div>
@@ -442,7 +449,7 @@ function RecipeSuppliesEditor({
           ))
         ) : (
           <p className="rounded-sm border border-white/10 bg-black/20 p-4 text-sm text-zinc-400">
-            No hay insumos asignados a esta receta.
+            <T>No hay insumos asignados a esta receta.</T>
           </p>
         )}
       </div>

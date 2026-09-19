@@ -1,6 +1,6 @@
+import { T, t } from "../i18n";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
-import { fetchMenu } from "../api/menu";
 import type { EditableDish } from "../menuStore";
 import {
   addDishToSections,
@@ -9,7 +9,6 @@ import {
   getMenuForEditing,
   loadFeaturedDishKeys,
   loadGalleryDishKeys,
-  loadStoredMenu,
   saveFeaturedDishKeys,
   saveGalleryDishKeys,
   saveStoredMenu,
@@ -18,6 +17,12 @@ import {
   updateDishInSections,
 } from "../menuStore";
 import type { NavigationHandlers } from "../navigation";
+import {
+  getOnlineOrders,
+  isOnlineOrder,
+  saveOnlineOrders,
+  subscribeOnlineOrders,
+} from "../onlineOrderStore";
 import type { RecipeSupply } from "../data/menu";
 import {
   ChatManagement,
@@ -134,12 +139,27 @@ export function EmployeePanelPage({
   const [selectedChatEmployeeId, setSelectedChatEmployeeId] = useState(
     MOCK_EMPLOYEES[0]?.id ?? 1,
   );
-  const [orders, setOrders] = useState(() => MOCK_ORDERS);
+  const [orders, setOrders] = useState<OrderRecord[]>(() => [
+    ...getOnlineOrders(),
+    ...MOCK_ORDERS,
+  ]);
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(
-    MOCK_ORDERS[0]?.id ?? null,
+    getOnlineOrders()[0]?.id ?? MOCK_ORDERS[0]?.id ?? null,
   );
   const [pendingOrder, setPendingOrder] = useState<OrderRecord | null>(null);
   const [saveMessage, setSaveMessage] = useState("");
+
+  useEffect(
+    () =>
+      subscribeOnlineOrders(() => {
+        const onlineOrders = getOnlineOrders();
+        setOrders((current) => [
+          ...onlineOrders,
+          ...current.filter((order) => !isOnlineOrder(order)),
+        ]);
+      }),
+    [],
+  );
 
   const isAdmin = session?.role === "admin";
   const canViewMenu = isAdmin || session?.role === "cocina";
@@ -175,34 +195,6 @@ export function EmployeePanelPage({
       }
     }
   }, [employees, selectedChatEmployeeId, session]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function loadMenu() {
-      if (loadStoredMenu()) {
-        return;
-      }
-
-      try {
-        const apiSections = await fetchMenu(controller.signal);
-
-        if (!controller.signal.aborted && apiSections.length > 0) {
-          setSections(apiSections);
-          const firstDish = flattenMenu(apiSections)[0];
-          if (firstDish) {
-            setSelectedDishKey(getEditableDishKey(firstDish));
-            setDraft(firstDish);
-          }
-        }
-      } catch {
-        // The panel keeps the local example menu when the backend is unavailable.
-      }
-    }
-
-    void loadMenu();
-    return () => controller.abort();
-  }, []);
 
   function startPreviewSession(nextSession: EmployeeSession) {
     setSession(nextSession);
@@ -412,6 +404,7 @@ export function EmployeePanelPage({
 
   function saveOrders(nextOrders: OrderRecord[]) {
     setOrders(nextOrders);
+    saveOnlineOrders(nextOrders.filter(isOnlineOrder));
   }
 
   function addOrder() {
@@ -478,7 +471,7 @@ export function EmployeePanelPage({
     const orderToDelete = orders.find((order) => order.id === orderId);
     const nextOrders = orders.filter((order) => order.id !== orderId);
 
-    if (orderToDelete) {
+    if (orderToDelete && !isOnlineOrder(orderToDelete)) {
       saveSupplies(
         updateSuppliesForOrderRemoval(supplies, orderToDelete, dishes),
       );
@@ -704,21 +697,23 @@ export function EmployeePanelPage({
         <div className="mx-auto grid w-full max-w-6xl gap-10 lg:grid-cols-[1fr_0.85fr] lg:items-center">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#e8b45f]">
-              Employee dashboard preview
+              <T>Employee dashboard preview</T>
             </p>
             <h1 className="mt-4 font-display text-5xl font-bold tracking-[0.04em] sm:text-7xl">
-              Frontend-only restaurant operations preview
+              <T>Frontend-only restaurant operations preview</T>
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-9 text-zinc-300">
-              Choose a role to preview the dashboard screens. This does not
-              authenticate users, grant real permissions, or replace backend
-              access control.
+              <T>
+                Choose a role to preview the dashboard screens. This does not
+                authenticate users, grant real permissions, or replace backend
+                access control.
+              </T>
             </p>
           </div>
 
           <div className="rounded-md border border-white/10 bg-[#333333] p-6 shadow-2xl shadow-black/40">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#e8b45f]">
-              Preview role
+              <T>Preview role</T>
             </p>
             <div className="mt-5 grid gap-3">
               {MOCK_PREVIEW_SESSIONS.map((previewSession) => (
@@ -732,14 +727,17 @@ export function EmployeePanelPage({
                     {previewSession.name}
                   </span>
                   <span className="mt-1 block text-sm text-zinc-400">
-                    Role: {previewSession.role}
+                    <T>Role: </T>
+                    {previewSession.role}
                   </span>
                 </button>
               ))}
             </div>
             <p className="mt-5 rounded-sm border border-[#e8b45f]/30 bg-black/25 p-4 text-sm leading-6 text-zinc-300">
-              Mock mode only: data changes stay in this browser and must be
-              replaced with real backend authentication before production.
+              <T>
+                Mock mode only: data changes stay in this browser and must be
+                replaced with real backend authentication before production.
+              </T>
             </p>
           </div>
         </div>
@@ -753,20 +751,21 @@ export function EmployeePanelPage({
         <div className="grid gap-7 lg:grid-cols-[320px_1fr] xl:grid-cols-[340px_1fr]">
           <aside className="rounded-md border border-[#e8b45f]/25 bg-[linear-gradient(180deg,#333333_0%,#242424_100%)] p-6 shadow-2xl shadow-black/35 lg:sticky lg:top-28 lg:self-start">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#e8b45f]">
-              Sesion activa
+              <T>Sesion activa</T>
             </p>
             <h1 className="mt-3 whitespace-normal break-normal font-display text-[1.7rem] font-bold leading-tight tracking-[0.015em] text-white xl:text-3xl">
               {session.name}
             </h1>
             <p className="mt-3 text-xs font-bold uppercase tracking-[0.12em] text-[#e8b45f]">
-              Rol: {session.role}
+              <T>Rol: </T>
+              {session.role}
             </p>
             <div className="mt-6 grid gap-2">
               {canViewMenu ? (
                 <>
                   <TabButton
                     active={activeTab === "menu"}
-                    label="Menu"
+                    label={t("Menu")}
                     onClick={() => setActiveTab("menu")}
                   />
                 </>
@@ -774,28 +773,28 @@ export function EmployeePanelPage({
               {isAdmin ? (
                 <TabButton
                   active={activeTab === "employees"}
-                  label="Empleados"
+                  label={t("Empleados")}
                   onClick={() => setActiveTab("employees")}
                 />
               ) : null}
               <TabButton
                 active={activeTab === "supplies"}
-                label="Insumos"
+                label={t("Insumos")}
                 onClick={() => setActiveTab("supplies")}
               />
               <TabButton
                 active={activeTab === "inventory"}
-                label="Inventario"
+                label={t("Inventario")}
                 onClick={() => setActiveTab("inventory")}
               />
               <TabButton
                 active={activeTab === "orders"}
-                label="Pedidos"
+                label={t("Pedidos")}
                 onClick={() => setActiveTab("orders")}
               />
               <TabButton
                 active={activeTab === "chat"}
-                label="Chat"
+                label={t("Chat")}
                 onClick={() => setActiveTab("chat")}
               />
             </div>
@@ -806,7 +805,7 @@ export function EmployeePanelPage({
                   href="/menu"
                   onClick={(event) => navigate("/menu", event)}
                 >
-                  Ver carta
+                  <T>Ver carta</T>
                 </a>
               ) : null}
               <button
@@ -814,7 +813,7 @@ export function EmployeePanelPage({
                 onClick={logout}
                 type="button"
               >
-                Salir
+                <T>Salir</T>
               </button>
             </div>
           </aside>
@@ -822,10 +821,10 @@ export function EmployeePanelPage({
           <div>
             <div className="rounded-md border border-white/10 bg-[#333333] p-5 shadow-2xl shadow-black/30 sm:p-7">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#e8b45f]">
-                Panel de empleados
+                <T>Panel de empleados</T>
               </p>
               <h2 className="mt-3 font-display text-4xl font-bold tracking-[0.035em] sm:text-6xl">
-                Gestion interna del asadero
+                <T>Gestion interna del asadero</T>
               </h2>
               <p className="mt-5 max-w-3xl text-lg leading-9 text-zinc-300">
                 {isAdmin
@@ -872,31 +871,39 @@ export function EmployeePanelPage({
 
             {activeTab === "supplies" ? (
               <SuppliesManagement
-                addLabel="Anadir insumo"
+                addLabel={t("Anadir insumo")}
                 canEdit={isAdmin}
-                description="Insumos listos para usar en recetas y pedidos. Estos si se descuentan cuando se confirma un pedido."
-                emptyReadOnlyMessage="Vista de consulta para empleados: puedes revisar existencias, costos y minimos, pero la edicion queda para administracion."
-                itemNameLabel="Insumo"
+                description={t(
+                  "Insumos listos para usar en recetas y pedidos. Estos si se descuentan cuando se confirma un pedido.",
+                )}
+                emptyReadOnlyMessage={t(
+                  "Vista de consulta para empleados: puedes revisar existencias, costos y minimos, pero la edicion queda para administracion.",
+                )}
+                itemNameLabel={t("Insumo")}
                 items={supplies}
                 onAdd={() => saveSupplies([...supplies, createEmptySupply()])}
                 onDelete={deleteSupply}
                 onUpdate={updateSupply}
-                title="Gestion de insumos"
+                title={t("Gestion de insumos")}
               />
             ) : null}
 
             {activeTab === "inventory" ? (
               <SuppliesManagement
-                addLabel="Anadir inventario"
+                addLabel={t("Anadir inventario")}
                 canEdit={isAdmin}
-                description="Inventario en bruto o pendiente de preparar. Por ahora es una lista independiente y no se conecta con recetas, pedidos ni descuentos de stock."
-                emptyReadOnlyMessage="Vista de consulta: este inventario todavia no afecta pedidos ni insumos preparados."
-                itemNameLabel="Articulo"
+                description={t(
+                  "Inventario en bruto o pendiente de preparar. Por ahora es una lista independiente y no se conecta con recetas, pedidos ni descuentos de stock.",
+                )}
+                emptyReadOnlyMessage={t(
+                  "Vista de consulta: este inventario todavia no afecta pedidos ni insumos preparados.",
+                )}
+                itemNameLabel={t("Articulo")}
                 items={inventory}
                 onAdd={() => saveInventory([...inventory, createEmptySupply()])}
                 onDelete={deleteInventoryItem}
                 onUpdate={updateInventoryItem}
-                title="Inventario"
+                title={t("Inventario")}
               />
             ) : null}
 

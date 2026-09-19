@@ -1,6 +1,6 @@
+import { T, t } from "../i18n";
 import { useEffect, useMemo, useState } from "react";
 
-import { fetchMenu } from "../api/menu";
 import { menuSections } from "../data/menu";
 import type { Dish, MenuSection } from "../data/menu";
 import { flattenMenu, getEditableDishKey, loadStoredMenu } from "../menuStore";
@@ -16,37 +16,8 @@ export function MenuPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
   );
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [selectedDishKey, setSelectedDishKey] = useState<string | null>(null);
-  const [menuStatus, setMenuStatus] = useState<
-    "loading" | "ready" | "fallback"
-  >("loading");
 
   useEffect(() => {
-    const controller = new AbortController();
-
-    async function loadMenu() {
-      const storedMenu = loadStoredMenu();
-
-      if (storedMenu) {
-        setSections(storedMenu);
-        setMenuStatus("ready");
-        return;
-      }
-
-      try {
-        const apiSections = await fetchMenu(controller.signal);
-        if (!controller.signal.aborted && apiSections.length > 0) {
-          setSections(apiSections);
-          setMenuStatus("ready");
-        }
-      } catch {
-        if (!controller.signal.aborted) {
-          setMenuStatus("fallback");
-        }
-      }
-    }
-
-    void loadMenu();
-
     function syncStoredMenu() {
       setSections(loadStoredMenu() ?? menuSections);
     }
@@ -54,7 +25,6 @@ export function MenuPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
     window.addEventListener("picasso-menu-updated", syncStoredMenu);
 
     return () => {
-      controller.abort();
       window.removeEventListener("picasso-menu-updated", syncStoredMenu);
     };
   }, []);
@@ -87,25 +57,29 @@ export function MenuPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
           href="/"
           onClick={(event) => navigate("/", event)}
         >
-          Volver al inicio
+          <T>Volver al inicio</T>
         </a>
 
         <div className="mt-8 max-w-4xl sm:mt-10">
           <p className="text-sm font-semibold uppercase tracking-wide text-[#e8b45f] sm:text-base">
-            Carta del asadero
+            <T>Carta del asadero</T>
           </p>
           <h1 className="mt-4 font-display text-5xl font-bold sm:mt-5 sm:text-8xl">
-            Menu familiar
+            <T>Menu familiar</T>
           </h1>
           <p className="mt-6 max-w-3xl text-base leading-8 text-zinc-300 sm:mt-8 sm:text-lg sm:leading-9">
-            Elige un plato para verlo en grande. Carnes al asador, entradas
-            caseras y bebidas para acompanar la mesa.
+            <T>
+              Elige un plato para verlo en grande. Carnes al asador, entradas
+              caseras y bebidas para acompanar la mesa.
+            </T>
           </p>
-          {menuStatus === "fallback" ? (
-            <p className="mt-4 text-sm font-semibold text-[#e8b45f]">
-              Mostrando menu de ejemplo mientras se conecta la base de datos.
-            </p>
-          ) : null}
+          <a
+            className="mt-6 inline-flex rounded-sm bg-[#e8b45f] px-5 py-3 font-bold text-zinc-950 transition hover:bg-white"
+            href="/pedido"
+            onClick={(event) => navigate("/pedido", event)}
+          >
+            {t("Pedir online")}
+          </a>
         </div>
 
         <div className="mt-10 flex flex-wrap gap-3 sm:mt-16 sm:gap-4">
@@ -120,7 +94,7 @@ export function MenuPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
               onClick={() => selectCategory(category)}
               type="button"
             >
-              {category}
+              {t(category)}
             </button>
           ))}
         </div>
@@ -138,27 +112,26 @@ export function MenuPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
               type="button"
             >
               <img
-                alt={dish.name}
+                alt={t(dish.name)}
                 className="h-64 w-full object-cover sm:h-80"
                 src={
-                  dish.image ??
-                  "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=900&q=85"
+                  dish.image ?? "/images/Plato01.png"
                 }
               />
               <div className="p-5 sm:p-7">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[#e8b45f] sm:text-sm">
-                  {dish.categoryTitle}
+                  {t(dish.categoryTitle)}
                 </p>
                 <div className="mt-2 flex items-start justify-between gap-4">
                   <h3 className="font-display text-2xl font-bold sm:text-3xl">
-                    {dish.name}
+                    {t(dish.name)}
                   </h3>
                   <span className="whitespace-nowrap text-sm font-bold text-[#e8b45f] sm:text-base">
                     {dish.price}
                   </span>
                 </div>
                 <p className="mt-3 line-clamp-3 text-sm leading-6 text-zinc-400 sm:mt-4 sm:text-base sm:leading-7">
-                  {dish.description}
+                  {t(dish.description)}
                 </p>
               </div>
             </button>
@@ -175,28 +148,27 @@ export function MenuPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
         >
           <article className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-sm border border-zinc-700 bg-[#242424] shadow-2xl shadow-black/60">
             <img
-              alt={selectedDish.name}
+              alt={t(selectedDish.name)}
               className="h-[min(44vh,420px)] w-full object-cover"
               src={
-                selectedDish.image ??
-                "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=1200&q=85"
+                selectedDish.image ?? "/images/Plato01.png"
               }
             />
             <div className="p-6 sm:p-8">
               <div className="flex items-start justify-between gap-5">
                 <div>
                   <p className="text-sm font-semibold uppercase text-[#e8b45f]">
-                    {selectedDish.categoryTitle}
+                    {t(selectedDish.categoryTitle)}
                   </p>
                   <h2
                     className="mt-3 font-display text-4xl font-bold sm:text-5xl"
                     id="selected-dish-title"
                   >
-                    {selectedDish.name}
+                    {t(selectedDish.name)}
                   </h2>
                 </div>
                 <button
-                  aria-label="Cerrar detalle del plato"
+                  aria-label={t("Cerrar detalle del plato")}
                   className="grid h-10 w-10 shrink-0 place-items-center rounded-sm border border-zinc-700 text-lg font-bold text-zinc-200 transition hover:border-[#e8b45f]"
                   onClick={() => setSelectedDishKey(null)}
                   type="button"
@@ -205,7 +177,7 @@ export function MenuPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
                 </button>
               </div>
               <p className="mt-5 max-w-2xl leading-8 text-zinc-300">
-                {selectedDish.description}
+                {t(selectedDish.description)}
               </p>
               <p className="mt-6 text-2xl font-bold text-[#e8b45f]">
                 {selectedDish.price}

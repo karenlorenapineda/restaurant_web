@@ -43,7 +43,9 @@ describe("EmployeePanelPage", () => {
   it("uses a role preview instead of a password login", async () => {
     renderEmployeePanel();
 
-    expect(screen.getByText("Employee dashboard preview")).toBeInTheDocument();
+    expect(
+      screen.getByText("Vista previa del panel de empleados"),
+    ).toBeInTheDocument();
     expect(screen.queryByPlaceholderText("Admin2026")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
 
@@ -59,7 +61,7 @@ describe("EmployeePanelPage", () => {
     renderEmployeePanel();
     startRolePreview("Admin preview");
 
-    ["Menu", "Empleados", "Insumos", "Inventario", "Pedidos", "Chat"].forEach(
+    ["Carta", "Empleados", "Insumos", "Inventario", "Pedidos", "Chat"].forEach(
       (tabName) => {
         expect(
           screen.getByRole("button", { name: tabName }),
@@ -82,7 +84,7 @@ describe("EmployeePanelPage", () => {
     startRolePreview("Service preview");
 
     expect(
-      screen.queryByRole("button", { name: "Menu" }),
+      screen.queryByRole("button", { name: "Carta" }),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Empleados" }),
@@ -103,7 +105,7 @@ describe("EmployeePanelPage", () => {
     renderEmployeePanel();
     startRolePreview("Kitchen preview");
 
-    expect(screen.getByRole("button", { name: "Menu" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Carta" })).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Empleados" }),
     ).not.toBeInTheDocument();

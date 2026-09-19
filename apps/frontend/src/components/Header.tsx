@@ -1,3 +1,5 @@
+import { T, t } from "../i18n";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 import { useState } from "react";
 
 import type { NavigationHandlers } from "../navigation";
@@ -8,7 +10,7 @@ export function Header({ navigate, goToContact }: NavigationHandlers) {
   return (
     <header className="fixed inset-x-0 top-0 z-20 bg-black/20 text-white backdrop-blur-sm">
       <nav
-        aria-label="Navegacion principal"
+        aria-label={t("Navegacion principal")}
         className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-6 sm:py-5"
       >
         <a
@@ -27,14 +29,14 @@ export function Header({ navigate, goToContact }: NavigationHandlers) {
               Picasso
             </span>
             <span className="block text-[10px] font-semibold uppercase tracking-[0.06em] text-zinc-300 sm:text-xs sm:tracking-[0.16em]">
-              Restaurante y asadero
+              <T>Restaurante y asadero</T>
             </span>
           </span>
         </a>
 
         <button
           aria-expanded={isMenuOpen}
-          aria-label="Abrir menu de navegacion"
+          aria-label={t("Abrir menu de navegacion")}
           className="grid h-11 w-11 place-items-center rounded-sm border border-white/30 bg-black/20 md:hidden"
           onClick={() => setIsMenuOpen((currentValue) => !currentValue)}
           type="button"
@@ -46,35 +48,43 @@ export function Header({ navigate, goToContact }: NavigationHandlers) {
           </span>
         </button>
 
-        <div className="hidden gap-5 text-sm font-semibold tracking-[0.14em] text-zinc-200 sm:gap-10 md:flex">
+        <div className="hidden items-center gap-3 text-sm font-semibold tracking-[0.14em] text-zinc-200 md:flex lg:gap-7">
           <a
             className="transition hover:text-[#e8b45f]"
             href="/"
             onClick={(event) => navigate("/", event)}
           >
-            HOME
+            <T>HOME</T>
           </a>
           <a
             className="transition hover:text-[#e8b45f]"
             href="/menu"
             onClick={(event) => navigate("/menu", event)}
           >
-            MENU
+            <T>MENU</T>
+          </a>
+          <a
+            className="transition hover:text-[#e8b45f]"
+            href="/pedido"
+            onClick={(event) => navigate("/pedido", event)}
+          >
+            <T>PEDIR ONLINE</T>
           </a>
           <a
             className="transition hover:text-[#e8b45f]"
             href="/#contacto"
             onClick={goToContact}
           >
-            CONTACTO
+            <T>CONTACTO</T>
           </a>
           <a
             className="transition hover:text-[#e8b45f]"
             href="/empleados"
             onClick={(event) => navigate("/empleados", event)}
           >
-            EMPLEADOS
+            <T>EMPLEADOS</T>
           </a>
+          <LanguageSwitcher />
         </div>
       </nav>
 
@@ -89,7 +99,7 @@ export function Header({ navigate, goToContact }: NavigationHandlers) {
                 navigate("/", event);
               }}
             >
-              Home
+              <T>Home</T>
             </a>
             <a
               className="py-2 transition hover:text-[#e8b45f]"
@@ -99,7 +109,17 @@ export function Header({ navigate, goToContact }: NavigationHandlers) {
                 navigate("/menu", event);
               }}
             >
-              Menu
+              <T>Menu</T>
+            </a>
+            <a
+              className="py-2 transition hover:text-[#e8b45f]"
+              href="/pedido"
+              onClick={(event) => {
+                setIsMenuOpen(false);
+                navigate("/pedido", event);
+              }}
+            >
+              <T>Pedir online</T>
             </a>
             <a
               className="py-2 transition hover:text-[#e8b45f]"
@@ -109,7 +129,7 @@ export function Header({ navigate, goToContact }: NavigationHandlers) {
                 goToContact(event);
               }}
             >
-              Contacto
+              <T>Contacto</T>
             </a>
             <a
               className="py-2 transition hover:text-[#e8b45f]"
@@ -119,8 +139,11 @@ export function Header({ navigate, goToContact }: NavigationHandlers) {
                 navigate("/empleados", event);
               }}
             >
-              Empleados
+              <T>Empleados</T>
             </a>
+            <div className="border-t border-white/10 pt-4">
+              <LanguageSwitcher />
+            </div>
           </div>
         </div>
       ) : null}

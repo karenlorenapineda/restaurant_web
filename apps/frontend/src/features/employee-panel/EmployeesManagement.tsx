@@ -1,3 +1,4 @@
+import { T, t } from "../../i18n";
 import type { FormEvent } from "react";
 
 import type { RecipeSupply } from "../../data/menu";
@@ -56,11 +57,13 @@ export function EmployeesManagement({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="font-display text-3xl font-bold">
-            Gestion de empleados
+            <T>Gestion de empleados</T>
           </h3>
           <p className="mt-3 text-sm leading-7 text-zinc-400">
-            Los roles siguen la idea de RolesUsuario y Empleados de la base de
-            datos. Solo admin puede cambiarlos.
+            <T>
+              Los roles siguen la idea de RolesUsuario y Empleados de la base de
+              datos. Solo admin puede cambiarlos.
+            </T>
           </p>
         </div>
         <button
@@ -68,14 +71,16 @@ export function EmployeesManagement({
           onClick={onAdd}
           type="button"
         >
-          Anadir empleado
+          <T>Anadir empleado</T>
         </button>
       </div>
 
       {!isAdmin ? (
         <p className="mt-5 rounded-sm border border-[#e8b45f]/60 bg-black/25 p-4 text-sm text-zinc-300">
-          Has entrado con rol empleado. Puedes consultar el equipo, pero el
-          cambio de roles queda reservado a administracion.
+          <T>
+            Has entrado con rol empleado. Puedes consultar el equipo, pero el
+            cambio de roles queda reservado a administracion.
+          </T>
         </p>
       ) : null}
 
@@ -85,7 +90,7 @@ export function EmployeesManagement({
             className="grid gap-4 rounded-sm border border-white/10 bg-zinc-950/60 p-4 lg:grid-cols-[1.1fr_1fr_0.85fr_0.7fr_0.6fr_auto]"
             key={employee.id}
           >
-            <Field label="Nombre">
+            <Field label={t("Nombre")}>
               <input
                 className={inputClassName}
                 onChange={(event) =>
@@ -94,7 +99,7 @@ export function EmployeesManagement({
                 value={employee.name}
               />
             </Field>
-            <Field label="Email">
+            <Field label={t("Email")}>
               <input
                 className={inputClassName}
                 onChange={(event) =>
@@ -104,7 +109,7 @@ export function EmployeesManagement({
                 value={employee.email}
               />
             </Field>
-            <Field label="Cargo">
+            <Field label={t("Cargo")}>
               <input
                 className={inputClassName}
                 onChange={(event) =>
@@ -113,7 +118,7 @@ export function EmployeesManagement({
                 value={employee.position}
               />
             </Field>
-            <Field label="Rol">
+            <Field label={t("Rol")}>
               <select
                 className={`${inputClassName} disabled:cursor-not-allowed disabled:opacity-55`}
                 disabled={!isAdmin}
@@ -122,9 +127,15 @@ export function EmployeesManagement({
                 }
                 value={employee.role}
               >
-                <option value="admin">admin</option>
-                <option value="empleado">empleado</option>
-                <option value="cocina">cocina</option>
+                <option value="admin">
+                  <T>admin</T>
+                </option>
+                <option value="empleado">
+                  <T>empleado</T>
+                </option>
+                <option value="cocina">
+                  <T>cocina</T>
+                </option>
               </select>
             </Field>
             <label className="flex items-end gap-3 pb-3 text-sm font-semibold text-zinc-200">
@@ -136,7 +147,7 @@ export function EmployeesManagement({
                 }
                 type="checkbox"
               />
-              Activo
+              <T>Activo</T>
             </label>
             <div className="flex items-end justify-end pb-2">
               <DeleteButton

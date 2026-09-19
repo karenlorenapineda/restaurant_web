@@ -1,104 +1,119 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { menuSections } from "../data/menu";
+import { saveStoredMenu } from "../menuStore";
+import { EmployeePanelPage } from "./EmployeePanelPage";
+import { HomePage } from "./HomePage";
 import { MenuPage } from "./MenuPage";
 
+beforeEach(() => {
+  saveStoredMenu(menuSections);
+});
+
 afterEach(() => {
+  saveStoredMenu(menuSections);
   vi.unstubAllGlobals();
 });
 
 describe("MenuPage", () => {
-  it("renders valid API dishes, hides unavailable dishes and filters categories", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => [
-          {
-            items: [
-              {
-                available: true,
-                description: "Available starter",
-                id: 901,
-                name: "API starter",
-                price: "$10",
-              },
-              {
-                available: false,
-                description: "Unavailable starter",
-                id: 902,
-                name: "Unavailable API dish",
-                price: "$11",
-              },
-            ],
-            title: "Starters",
-          },
-          {
-            items: [
-              {
-                available: true,
-                description: "Available main",
-                id: 903,
-                name: "API main",
-                price: "$20",
-              },
-            ],
-            title: "Mains",
-          },
-        ],
-      }),
-    );
+  it("shows the example menu without requesting the missing endpoint", () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
 
     render(<MenuPage navigate={vi.fn()} />);
 
     expect(
-      await screen.findByRole("img", { name: "API starter" }),
+      screen.getByRole("img", { name: "Entrada criolla" }),
+    ).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("filters available dishes from the in-memory menu", () => {
+    saveStoredMenu([
+      {
+        title: "Starters",
+        items: [
+          {
+            id: 901,
+            name: "Available starter",
+            description: "Starter",
+            price: "$10",
+          },
+          {
+            id: 902,
+            name: "Unavailable starter",
+            description: "Hidden",
+            price: "$11",
+            available: false,
+          },
+        ],
+      },
+      {
+        title: "Mains",
+        items: [
+          {
+            id: 903,
+            name: "Available main",
+            description: "Main",
+            price: "$20",
+          },
+        ],
+      },
+    ]);
+
+    render(<MenuPage navigate={vi.fn()} />);
+
+    expect(
+      screen.getByRole("img", { name: "Available starter" }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("img", { name: "Unavailable API dish" }),
+      screen.queryByRole("img", { name: "Unavailable starter" }),
     ).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Mains" }));
 
     expect(
-      screen.queryByRole("img", { name: "API starter" }),
+      screen.queryByRole("img", { name: "Available starter" }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "API main" })).toBeInTheDocument();
-  });
-
-  it("shows the example menu when the API request fails", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockRejectedValue(new Error("Network unavailable")),
-    );
-
-    render(<MenuPage navigate={vi.fn()} />);
-
     expect(
-      await screen.findByText(
-        "Mostrando menu de ejemplo mientras se conecta la base de datos.",
-      ),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("img", { name: "Empanadas vallunas" }),
+      screen.getByRole("img", { name: "Available main" }),
     ).toBeInTheDocument();
   });
 
-  it("shows the example menu when the API payload is invalid", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({ unexpected: "payload" }),
-      }),
-    );
-
+  it("updates when the employee preview changes the menu", () => {
     render(<MenuPage navigate={vi.fn()} />);
 
+    act(() => {
+      saveStoredMenu([
+        {
+          title: "Starters",
+          items: [
+            {
+              id: 904,
+              name: "New preview dish",
+              description: "New dish",
+              price: "$12",
+            },
+          ],
+        },
+      ]);
+    });
+
     expect(
-      await screen.findByText(
-        "Mostrando menu de ejemplo mientras se conecta la base de datos.",
-      ),
+      screen.getByRole("img", { name: "New preview dish" }),
     ).toBeInTheDocument();
+  });
+
+  it("keeps home and employee pages on local menu data too", () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const home = render(<HomePage navigate={vi.fn()} goToContact={vi.fn()} />);
+    home.unmount();
+    const employee = render(<EmployeePanelPage navigate={vi.fn()} />);
+    employee.unmount();
+
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

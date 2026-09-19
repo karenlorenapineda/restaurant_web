@@ -1,3 +1,4 @@
+import { T } from "../../i18n";
 import type { FormEvent } from "react";
 
 import type { RecipeSupply } from "../../data/menu";
@@ -71,9 +72,11 @@ export function ChatManagement({
   return (
     <Panel className="mt-6">
       <div>
-        <h3 className="font-display text-3xl font-bold">Chat interno</h3>
+        <h3 className="font-display text-3xl font-bold">
+          <T>Chat interno</T>
+        </h3>
         <p className="mt-3 text-sm leading-7 text-zinc-400">
-          Conversaciones directas entre empleados del restaurante.
+          <T>Conversaciones directas entre empleados del restaurante.</T>
         </p>
       </div>
 
@@ -101,7 +104,7 @@ export function ChatManagement({
         <div>
           <div className="rounded-sm border border-white/10 bg-black/20 p-4">
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#e8b45f]">
-              Conversacion
+              <T>Conversacion</T>
             </p>
             <h4 className="mt-2 font-display text-3xl font-bold">
               {selectedEmployee?.name ?? "Sin empleados disponibles"}
@@ -139,7 +142,7 @@ export function ChatManagement({
               })
             ) : (
               <p className="self-center text-center text-zinc-400">
-                No hay mensajes con esta persona.
+                <T>No hay mensajes con esta persona.</T>
               </p>
             )}
           </div>
@@ -158,7 +161,7 @@ export function ChatManagement({
                 className="rounded-sm bg-[#e8b45f] px-6 py-3 text-sm font-bold uppercase tracking-[0.12em] text-zinc-950 transition hover:bg-white"
                 type="submit"
               >
-                Enviar
+                <T>Enviar</T>
               </button>
             </form>
           ) : null}

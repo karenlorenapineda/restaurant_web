@@ -1,3 +1,5 @@
+import { T, t } from "../../i18n";
+import { isOnlineOrder } from "../../onlineOrderStore";
 import type { FormEvent } from "react";
 
 import type { RecipeSupply } from "../../data/menu";
@@ -90,6 +92,7 @@ export function OrdersManagement({
     orders.find((order) => order.id === selectedOrderId) ??
     orders[0] ??
     null;
+  const selectedIsOnline = selectedOrder ? isOnlineOrder(selectedOrder) : false;
   const selectedOrderDishes = selectedOrder
     ? getOrderDishes(selectedOrder, dishes)
     : [];
@@ -98,9 +101,13 @@ export function OrdersManagement({
     <Panel className="mt-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="font-display text-3xl font-bold">Pedidos</h3>
+          <h3 className="font-display text-3xl font-bold">
+            <T>Pedidos</T>
+          </h3>
           <p className="mt-3 text-sm leading-7 text-zinc-400">
-            Tablero visual basado en pedidos: cola, preparacion y terminado.
+            <T>
+              Tablero visual basado en pedidos: cola, preparacion y terminado.
+            </T>
           </p>
         </div>
         {canEdit ? (
@@ -117,15 +124,19 @@ export function OrdersManagement({
 
       {!canEdit ? (
         <p className="mt-5 rounded-sm border border-white/10 bg-black/25 p-4 text-sm text-zinc-300">
-          Cocina puede ver pedidos y cambiarlos de estado, pero crear pedidos
-          queda para sala y administracion.
+          <T>
+            Cocina puede ver pedidos y cambiarlos de estado, pero crear pedidos
+            queda para sala y administracion.
+          </T>
         </p>
       ) : null}
 
       {isPendingOrder ? (
         <p className="mt-5 rounded-sm border border-[#e8b45f]/60 bg-black/25 p-4 text-sm font-semibold text-zinc-200">
-          Pedido sin confirmar: puedes revisarlo y cambiar platos/opciones. Los
-          insumos se descontaran solo al confirmar.
+          <T>
+            Pedido sin confirmar: puedes revisarlo y cambiar platos/opciones.
+            Los insumos se descontaran solo al confirmar.
+          </T>
         </p>
       ) : null}
 
@@ -162,7 +173,14 @@ export function OrdersManagement({
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="font-bold text-white">{order.table}</p>
+                        <p className="font-bold text-white">
+                          {t(order.table)}
+                          {isOnlineOrder(order) ? (
+                            <span className="ml-2 rounded-sm border border-[#e8b45f]/50 px-1.5 py-0.5 text-[10px] text-[#e8b45f]">
+                              {t("Pedido online")}
+                            </span>
+                          ) : null}
+                        </p>
                         <p className="mt-1 text-sm text-zinc-400">
                           {order.customer}
                         </p>
@@ -172,7 +190,11 @@ export function OrdersManagement({
                       </span>
                     </div>
                     <p className="mt-3 text-sm leading-6 text-zinc-300">
-                      {order.items}
+                      {isOnlineOrder(order)
+                        ? order.cartItems
+                            .map((item) => `${item.quantity} × ${t(item.name)}`)
+                            .join(", ")
+                        : t(order.items)}
                     </p>
                     {order.notes ? (
                       <p className="mt-3 text-xs font-semibold uppercase tracking-[0.1em] text-[#e8b45f]">
@@ -192,10 +214,17 @@ export function OrdersManagement({
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <h4 className="font-display text-3xl font-bold">
-                {selectedOrder.table} · {selectedOrder.customer}
+                {t(selectedOrder.table)} · {selectedOrder.customer}
               </h4>
               <p className="mt-3 max-w-3xl leading-7 text-zinc-300">
-                {selectedOrder.items || "Selecciona platos para este pedido."}
+                {selectedIsOnline && isOnlineOrder(selectedOrder)
+                  ? selectedOrder.cartItems
+                      .map((item) => `${item.quantity} × ${t(item.name)}`)
+                      .join(", ")
+                  : t(
+                      selectedOrder.items ||
+                        "Selecciona platos para este pedido.",
+                    )}
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -221,14 +250,14 @@ export function OrdersManagement({
                     onClick={onConfirmPending}
                     type="button"
                   >
-                    Confirmar pedido
+                    <T>Confirmar pedido</T>
                   </button>
                   <button
                     className="rounded-sm border border-zinc-700 px-5 py-3 text-sm font-bold uppercase tracking-[0.1em] text-zinc-300 transition hover:border-[#e8b45f] hover:text-white"
                     onClick={onCancelPending}
                     type="button"
                   >
-                    Cancelar
+                    <T>Cancelar</T>
                   </button>
                 </>
               ) : canEdit ? (
@@ -240,9 +269,49 @@ export function OrdersManagement({
             </div>
           </div>
 
-          {canEdit ? (
+          {selectedIsOnline && isOnlineOrder(selectedOrder) ? (
+            <div className="mt-5 border-t border-white/15 pt-5 text-sm text-zinc-300">
+              <p className="font-semibold text-[#e8b45f]">
+                {t("Pedido online")} ·{" "}
+                {t(
+                  selectedOrder.fulfillment === "pickup"
+                    ? "Recogida"
+                    : "Domicilio",
+                )}
+              </p>
+              <p className="mt-2">
+                {t("Telefono")}: {selectedOrder.phone}
+              </p>
+              {selectedOrder.address ? (
+                <p className="mt-1">
+                  {t("Direccion")}: {selectedOrder.address}
+                </p>
+              ) : null}
+              <p className="mt-1">
+                {new Date(selectedOrder.createdAt).toLocaleString()}
+              </p>
+              <div className="mt-3 border-t border-white/10 pt-3">
+                {selectedOrder.cartItems.map((item) => (
+                  <p className="py-0.5" key={item.dishKey}>
+                    {item.quantity} × {t(item.name)} ·{" "}
+                    {new Intl.NumberFormat("es-CO").format(
+                      item.unitPrice * item.quantity,
+                    )}{" "}
+                    COP
+                  </p>
+                ))}
+              </div>
+              <p className="mt-3 text-xs text-zinc-500">
+                {t(
+                  "El pedido online es una vista previa local; no descuenta inventario ni procesa pagos.",
+                )}
+              </p>
+            </div>
+          ) : null}
+
+          {canEdit && !selectedIsOnline ? (
             <div className="mt-5 grid gap-4 md:grid-cols-4">
-              <Field label="Mesa">
+              <Field label={t("Mesa")}>
                 <input
                   className={inputClassName}
                   onChange={(event) =>
@@ -253,7 +322,7 @@ export function OrdersManagement({
                   value={selectedOrder.table}
                 />
               </Field>
-              <Field label="Cliente">
+              <Field label={t("Cliente")}>
                 <input
                   className={inputClassName}
                   onChange={(event) =>
@@ -268,7 +337,7 @@ export function OrdersManagement({
                   value={selectedOrder.customer}
                 />
               </Field>
-              <Field label="Total">
+              <Field label={t("Total")}>
                 <input
                   className={inputClassName}
                   onChange={(event) =>
@@ -279,7 +348,7 @@ export function OrdersManagement({
                   value={selectedOrder.total}
                 />
               </Field>
-              <Field label="Notas">
+              <Field label={t("Notas")}>
                 <input
                   className={inputClassName}
                   onChange={(event) =>
@@ -293,10 +362,10 @@ export function OrdersManagement({
             </div>
           ) : null}
 
-          {canEdit ? (
+          {canEdit && !selectedIsOnline ? (
             <div className="mt-6">
               <p className="text-sm font-bold uppercase tracking-[0.14em] text-[#e8b45f]">
-                Platos del pedido
+                <T>Platos del pedido</T>
               </p>
               <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {dishes
@@ -365,7 +434,7 @@ export function OrdersManagement({
                     </div>
                     {removedIngredients.length > 0 ? (
                       <span className="rounded-sm border border-[#e8b45f]/60 px-3 py-2 text-xs font-bold uppercase tracking-[0.1em] text-[#e8b45f]">
-                        Con cambios
+                        <T>Con cambios</T>
                       </span>
                     ) : null}
                   </div>
@@ -373,7 +442,7 @@ export function OrdersManagement({
                   {canViewRecipe ? (
                     <div className="mt-4 rounded-sm border border-white/10 bg-black/25 p-4">
                       <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#e8b45f]">
-                        Receta cocina
+                        <T>Receta cocina</T>
                       </p>
                       <p className="mt-2 leading-7 text-zinc-300">
                         {getDishRecipe(dish)}
@@ -384,7 +453,7 @@ export function OrdersManagement({
                   {recipeSupplies.length > 0 ? (
                     <div className="mt-4">
                       <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#e8b45f]">
-                        Insumos y opciones
+                        <T>Insumos y opciones</T>
                       </p>
                       <div className="mt-3 grid gap-2 sm:grid-cols-2">
                         {recipeSupplies.map((recipeSupply) => {
@@ -404,7 +473,7 @@ export function OrdersManagement({
                               <input
                                 checked={isRemoved}
                                 className="h-5 w-5 accent-[#e8b45f]"
-                                disabled={!canEdit}
+                                disabled={!canEdit || selectedIsOnline}
                                 onChange={(event) =>
                                   isPendingOrder
                                     ? onTogglePendingRemovedIngredient(
@@ -421,7 +490,8 @@ export function OrdersManagement({
                                 }
                                 type="checkbox"
                               />
-                              Sin {ingredient}
+                              <T>Sin </T>
+                              {ingredient}
                               <span className="ml-auto text-xs text-zinc-500">
                                 {recipeSupply.quantity} {recipeSupply.unit}
                               </span>
@@ -438,7 +508,7 @@ export function OrdersManagement({
         </div>
       ) : (
         <p className="mt-6 rounded-sm border border-white/10 bg-black/25 p-5 text-zinc-300">
-          No hay pedidos creados.
+          <T>No hay pedidos creados.</T>
         </p>
       )}
     </Panel>

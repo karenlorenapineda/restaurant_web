@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import type { FormEvent } from "react";
 
 import type { RecipeSupply } from "../../data/menu";
@@ -105,7 +106,7 @@ export function SuppliesManagement({
                 value={supply.name}
               />
             </Field>
-            <Field label="Unidad">
+            <Field label={t("Unidad")}>
               <input
                 className={getInputClassName(canEdit)}
                 onChange={(event) =>
@@ -115,7 +116,7 @@ export function SuppliesManagement({
                 value={supply.unit}
               />
             </Field>
-            <Field label="Stock">
+            <Field label={t("Stock")}>
               <input
                 className={getInputClassName(canEdit)}
                 onChange={(event) =>
@@ -125,7 +126,7 @@ export function SuppliesManagement({
                 value={supply.stock}
               />
             </Field>
-            <Field label="Costo">
+            <Field label={t("Costo")}>
               <input
                 className={getInputClassName(canEdit)}
                 onChange={(event) =>
@@ -135,7 +136,7 @@ export function SuppliesManagement({
                 value={supply.cost}
               />
             </Field>
-            <Field label="Minimo">
+            <Field label={t("Minimo")}>
               <input
                 className={getInputClassName(canEdit)}
                 onChange={(event) =>

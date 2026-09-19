@@ -6,18 +6,15 @@ let previewFeaturedKeys: string[] = [];
 let previewGalleryKeys: string[] = [];
 const DEFAULT_FEATURED_KEYS = ["201", "202", "203"];
 const DEFAULT_FEATURED_NAMES = [
-  "Bandeja paisa familiar",
-  "Pollo asado colombiano",
-  "Sancocho trifasico",
-  "Bandeja paisa",
-  "Sancocho de gallina",
-  "Empanadas vallunas",
+  "Plato especial de la casa",
+  "Parrillada familiar",
+  "Plato tradicional colombiano",
 ];
 const DEFAULT_GALLERY_NAMES = [
-  "Bandeja paisa familiar",
-  "Pollo asado colombiano",
-  "Sancocho trifasico",
-  "Empanadas vallunas",
+  "Plato especial de la casa",
+  "Parrillada familiar",
+  "Plato tradicional colombiano",
+  "Entrada criolla",
 ];
 
 export interface EditableDish extends Dish {

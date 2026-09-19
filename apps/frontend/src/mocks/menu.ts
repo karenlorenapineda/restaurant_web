@@ -4,30 +4,24 @@ import type { Dish, MenuSection } from "../data/menu";
 export const mockFeaturedDishes: Dish[] = [
   {
     id: 201,
-    name: "Bandeja paisa familiar",
-    description:
-      "Frijoles, arroz, chicharron, carne molida, chorizo, huevo, tajada, arepa y aguacate.",
+    name: "Plato especial de la casa",
+    description: "Receta principal del asadero preparada para compartir.",
     price: "$46.000 COP",
-    image:
-      "https://images.unsplash.com/photo-1559847844-5315695dadae?auto=format&fit=crop&w=900&q=85",
+    image: "/images/Plato01.png",
   },
   {
     id: 202,
-    name: "Pollo asado colombiano",
-    description:
-      "Pollo al carbon con papa salada, yuca, arepa, ensalada y ajies de la casa.",
+    name: "Parrillada familiar",
+    description: "Carnes de la casa con acompanamientos colombianos.",
     price: "$42.000 COP",
-    image:
-      "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?auto=format&fit=crop&w=900&q=85",
+    image: "/images/Plato02.png",
   },
   {
     id: 203,
-    name: "Sancocho trifasico",
-    description:
-      "Sopa abundante con res, pollo, cerdo, yuca, platano, papa, mazorca y cilantro.",
+    name: "Plato tradicional colombiano",
+    description: "Sabor casero con ingredientes frescos y porcion generosa.",
     price: "$38.000 COP",
-    image:
-      "https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=900&q=85",
+    image: "/images/Plato03.png",
   },
 ];
 
@@ -37,24 +31,24 @@ export const mockMenuSections: MenuSection[] = [
     items: [
       {
         id: 101,
-        name: "Empanadas vallunas",
-        description:
-          "Masa de maiz, carne desmechada, papa criolla y aji de la casa.",
+        name: "Entrada criolla",
+        description: "Bocado de la casa para abrir la mesa con sabor local.",
         price: "$14.000 COP",
+        image: "/images/Plato04.png",
       },
       {
         id: 102,
-        name: "Patacones con hogao",
-        description:
-          "Platano verde crocante con tomate, cebolla larga y cilantro.",
+        name: "Antojo del asadero",
+        description: "Preparacion crocante servida con salsa de la casa.",
         price: "$13.000 COP",
+        image: "/images/Plato05.png",
       },
       {
         id: 103,
-        name: "Aborrajado",
-        description:
-          "Platano maduro relleno de queso, dorado y servido caliente.",
+        name: "Entrada dulce y salada",
+        description: "Contraste colombiano servido caliente para compartir.",
         price: "$15.000 COP",
+        image: "/images/Plato06.png",
       },
     ],
   },
@@ -63,31 +57,31 @@ export const mockMenuSections: MenuSection[] = [
     items: [
       {
         id: 201,
-        name: "Bandeja paisa familiar",
-        description:
-          "Frijoles, arroz, chicharron, carne molida, chorizo, huevo, tajada, arepa y aguacate.",
+        name: "Plato especial de la casa",
+        description: "Receta principal del asadero preparada para compartir.",
         price: "$46.000 COP",
+        image: "/images/Plato01.png",
       },
       {
         id: 202,
-        name: "Pollo asado colombiano",
-        description:
-          "Pollo al carbon con papa salada, yuca, arepa, ensalada y ajies de la casa.",
+        name: "Parrillada familiar",
+        description: "Carnes de la casa con acompanamientos colombianos.",
         price: "$42.000 COP",
+        image: "/images/Plato02.png",
       },
       {
         id: 203,
-        name: "Sancocho trifasico",
-        description:
-          "Res, pollo, cerdo, yuca, platano, papa, mazorca y cilantro.",
+        name: "Plato tradicional colombiano",
+        description: "Sabor casero con ingredientes frescos y porcion generosa.",
         price: "$38.000 COP",
+        image: "/images/Plato03.png",
       },
       {
         id: 204,
-        name: "Chuleta valluna",
-        description:
-          "Cerdo apanado, arroz, papas a la francesa, ensalada y limon.",
+        name: "Especial a la brasa",
+        description: "Preparacion caliente con el toque ahumado de la cocina.",
         price: "$34.000 COP",
+        image: "/images/Plato07.png",
       },
     ],
   },

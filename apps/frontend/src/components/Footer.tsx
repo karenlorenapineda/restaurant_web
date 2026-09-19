@@ -1,3 +1,4 @@
+import { T } from "../i18n";
 import type { HealthStatus } from "../health";
 
 interface FooterProps {
@@ -11,17 +12,22 @@ export function Footer({ status, statusText }: FooterProps) {
       <div className="mx-auto grid max-w-5xl gap-10 text-sm text-zinc-500 md:grid-cols-4">
         <div>
           <p className="font-display text-xl font-bold text-white">Picasso</p>
-          <p className="mt-3 text-xs">Restaurante y asadero familiar</p>
+          <p className="mt-3 text-xs">
+            <T>Restaurante y asadero familiar</T>
+          </p>
         </div>
         <div className="grid gap-3">
           <a className="transition hover:text-[#e8b45f]" href="/">
-            Home
+            <T>Home</T>
           </a>
           <a className="transition hover:text-[#e8b45f]" href="/menu">
-            Menu
+            <T>Menu</T>
+          </a>
+          <a className="transition hover:text-[#e8b45f]" href="/pedido">
+            <T>Pedir online</T>
           </a>
           <a className="transition hover:text-[#e8b45f]" href="/#contacto">
-            Reservas
+            <T>Reservas</T>
           </a>
         </div>
         <div className="grid gap-3">

@@ -1,3 +1,4 @@
+import { T, t } from "../i18n";
 import {
   MOCK_ADDRESS_LABEL,
   MOCK_CONTACT_HIGHLIGHTS,
@@ -13,27 +14,29 @@ export function ContactSection() {
       <div className="mx-auto grid w-full max-w-7xl gap-10 sm:gap-16 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-[#e8b45f] sm:text-base">
-            Reservas y localizacion
+            <T>Reservas y localizacion</T>
           </p>
           <h2 className="mt-4 font-display text-4xl font-bold sm:mt-5 sm:text-6xl">
-            Ven con tu familia
+            <T>Ven con tu familia</T>
           </h2>
           <p className="mt-6 max-w-2xl text-base leading-8 text-zinc-300 sm:mt-8 sm:text-lg sm:leading-9">
-            Tenemos mesas para grupos, pedidos para recoger y atencion para
-            celebraciones familiares alrededor de la brasa.
+            <T>
+              Tenemos mesas para grupos, pedidos para recoger y atencion para
+              celebraciones familiares alrededor de la brasa.
+            </T>
           </p>
 
           <div className="mt-8 grid gap-4">
             {MOCK_CONTACT_HIGHLIGHTS.map((item) => (
               <div
                 className="rounded-sm bg-[#333333] p-5 sm:p-7"
-                key={item.label}
+                key={t(item.label)}
               >
                 <p className="text-xs font-bold uppercase tracking-wide text-[#e8b45f] sm:text-sm">
-                  {item.label}
+                  {t(item.label)}
                 </p>
                 <p className="mt-2 text-lg font-semibold text-zinc-100 sm:mt-3 sm:text-xl">
-                  {item.value}
+                  {t(item.value)}
                 </p>
               </div>
             ))}
@@ -46,7 +49,7 @@ export function ContactSection() {
               rel="noreferrer"
               target="_blank"
             >
-              Abrir mapa
+              <T>Abrir mapa</T>
             </a>
             <a
               className="inline-flex rounded-sm border border-[#e8b45f] px-5 py-3 font-bold text-white transition hover:bg-[#e8b45f] hover:text-zinc-950"
@@ -61,17 +64,17 @@ export function ContactSection() {
 
         <div className="grid gap-5">
           <div className="overflow-hidden rounded-sm bg-[#333333] shadow-xl shadow-black/30">
-            <div className="grid min-h-80 place-items-center bg-[linear-gradient(135deg,rgba(69,10,10,0.86),rgba(9,9,11,0.96)),url('https://images.unsplash.com/photo-1543007630-9710e4a00a20?auto=format&fit=crop&w=1200&q=85')] bg-cover bg-center p-8 text-center sm:min-h-[28rem] sm:p-10">
+            <div className="grid min-h-80 place-items-center bg-[linear-gradient(135deg,rgba(69,10,10,0.86),rgba(9,9,11,0.96)),url('/images/restaurante_vacio_fuera.png')] bg-cover bg-center p-8 text-center sm:min-h-[28rem] sm:p-10">
               <div>
                 <p className="font-display text-5xl font-bold sm:text-6xl">
                   Picasso
                 </p>
                 <p className="mt-2 text-sm font-semibold uppercase text-red-200">
-                  Restaurante y asadero familiar
+                  <T>Restaurante y asadero familiar</T>
                 </p>
-                <p className="mt-3 text-zinc-200">{MOCK_LOCATION_LABEL}</p>
+                <p className="mt-3 text-zinc-200">{t(MOCK_LOCATION_LABEL)}</p>
                 <p className="mt-6 rounded-md border border-white/20 px-4 py-3 text-sm font-semibold text-white">
-                  {MOCK_ADDRESS_LABEL}
+                  {t(MOCK_ADDRESS_LABEL)}
                 </p>
               </div>
             </div>
@@ -80,37 +83,39 @@ export function ContactSection() {
           <form className="rounded-sm bg-[#333333] p-5 shadow-xl shadow-black/30 sm:p-8">
             <div className="grid gap-5 sm:grid-cols-2">
               <label className="block text-sm font-semibold text-zinc-200">
-                Nombre
+                <T>Nombre</T>
                 <input
                   className="mt-2 w-full rounded-md border border-zinc-700 bg-zinc-900 px-4 py-3 text-white outline-none transition focus:border-red-900"
                   name="name"
-                  placeholder="Tu nombre"
+                  placeholder={t("Tu nombre")}
                   type="text"
                 />
               </label>
               <label className="block text-sm font-semibold text-zinc-200">
-                Telefono
+                <T>Telefono</T>
                 <input
                   className="mt-2 w-full rounded-md border border-zinc-700 bg-zinc-900 px-4 py-3 text-white outline-none transition focus:border-red-900"
                   name="phone"
-                  placeholder="Phone number"
+                  placeholder={t("Phone number")}
                   type="tel"
                 />
               </label>
             </div>
             <label className="mt-5 block text-sm font-semibold text-zinc-200">
-              Mensaje
+              <T>Mensaje</T>
               <textarea
                 className="mt-2 min-h-28 w-full rounded-md border border-zinc-700 bg-zinc-900 px-4 py-3 text-white outline-none transition focus:border-red-900"
                 name="message"
-                placeholder="Reserva familiar, pedido para recoger o evento"
+                placeholder={t(
+                  "Reserva familiar, pedido para recoger o evento",
+                )}
               />
             </label>
             <button
               className="mt-5 rounded-sm bg-[#e8b45f] px-5 py-3 font-bold text-zinc-950 transition hover:bg-white"
               type="button"
             >
-              Enviar mensaje
+              <T>Enviar mensaje</T>
             </button>
           </form>
         </div>

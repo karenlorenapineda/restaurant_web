@@ -1,3 +1,4 @@
+import { T, t } from "../i18n";
 import { FormEvent, useState } from "react";
 
 interface ChatMessage {
@@ -41,14 +42,14 @@ export function ChatWidget() {
           <div className="flex items-center justify-between border-b border-zinc-700 bg-[#333333] px-5 py-4">
             <div>
               <p className="text-xs font-bold uppercase text-[#e8b45f]">
-                Chat del asadero
+                <T>Chat del asadero</T>
               </p>
               <h2 className="font-display text-2xl font-bold text-white">
-                Hablemos
+                <T>Hablemos</T>
               </h2>
             </div>
             <button
-              aria-label="Cerrar chat"
+              aria-label={t("Cerrar chat")}
               className="grid h-9 w-9 place-items-center rounded-sm border border-zinc-700 text-lg font-bold text-zinc-200 transition hover:border-[#e8b45f]"
               onClick={() => setIsOpen(false)}
               type="button"
@@ -67,7 +68,7 @@ export function ChatWidget() {
                 }`}
                 key={`${chatMessage.author}-${index}`}
               >
-                {chatMessage.text}
+                {t(chatMessage.text)}
               </div>
             ))}
           </div>
@@ -79,21 +80,21 @@ export function ChatWidget() {
             <input
               className="min-w-0 flex-1 rounded-md border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm text-white outline-none transition focus:border-red-900"
               onChange={(event) => setMessage(event.target.value)}
-              placeholder="Escribe tu mensaje"
+              placeholder={t("Escribe tu mensaje")}
               value={message}
             />
             <button
               className="rounded-sm bg-[#e8b45f] px-4 py-3 text-sm font-bold text-zinc-950 transition hover:bg-white"
               type="submit"
             >
-              Enviar
+              <T>Enviar</T>
             </button>
           </form>
         </section>
       ) : null}
 
       <button
-        aria-label="Abrir chat con el restaurante"
+        aria-label={t("Abrir chat con el restaurante")}
         className="flex h-16 w-16 items-center justify-center rounded-full bg-[#e8b45f] text-2xl font-bold text-zinc-950 shadow-2xl shadow-black/50 transition hover:-translate-y-1 hover:bg-white"
         onClick={() => setIsOpen((currentValue) => !currentValue)}
         type="button"
