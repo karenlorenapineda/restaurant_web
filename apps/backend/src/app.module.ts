@@ -10,6 +10,9 @@ import { UnitsModule } from './units/units.module';
 import { RecipesModule } from './recipes/recipes.module';
 import { CategoriesModule } from './categories/categories.module';
 import { EmployeesModule } from './employees/employees.module';
+import { OrdersModule } from './orders/orders.module';
+import { RestaurantModule } from './restaurant/restaurant.module';
+import { ChatModule } from './chat/chat.module';
 
 function validateEnvironment(config: Record<string, unknown>) {
   const databaseUrl = config.DATABASE_URL;
@@ -37,6 +40,9 @@ function validateEnvironment(config: Record<string, unknown>) {
     RecipesModule,
     CategoriesModule,
     EmployeesModule,
+    OrdersModule,
+    RestaurantModule,
+    ChatModule,
   ],
 })
 export class AppModule {}
