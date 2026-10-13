@@ -18,6 +18,28 @@ afterEach(() => {
 });
 
 describe("App", () => {
+  it("switches to Portuguese across home, menu, orders and employee preview", () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Offline")));
+    render(<App />);
+    fireEvent.click(screen.getAllByRole("button", { name: "Português" })[0]!);
+    expect(
+      screen.getByRole("heading", { name: "Boa comida, grandes momentos" }),
+    ).toBeInTheDocument();
+    expect(document.documentElement.lang).toBe("pt");
+    expect(window.localStorage.getItem("picasso-locale")).toBe("pt");
+    fireEvent.click(screen.getByRole("link", { name: "MENU" }));
+    expect(
+      screen.getByRole("heading", { name: "Menu familiar" }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("link", { name: "PEDIR ONLINE" }));
+    expect(
+      screen.getByRole("searchbox", { name: "Pesquisar pratos" }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("link", { name: "FUNCIONÁRIOS" }));
+    expect(
+      screen.getByText("Pré-visualização do painel de funcionários"),
+    ).toBeInTheDocument();
+  });
   it("switches Spanish and English across the home and order pages", () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Offline")));
     render(<App />);

@@ -1,7 +1,8 @@
 import { useSyncExternalStore } from "react";
 import { employeeEnByEs, employeeEsByEn } from "./employeeTranslations";
+import { ptBySource } from "./portugueseTranslations";
 
-export type Locale = "es" | "en";
+export type Locale = "es" | "en" | "pt";
 
 const storageKey = "picasso-locale";
 
@@ -141,7 +142,8 @@ const esByEn: Record<string, string> = {
 
 function initialLocale(): Locale {
   try {
-    return window.localStorage.getItem(storageKey) === "en" ? "en" : "es";
+    const stored = window.localStorage.getItem(storageKey);
+    return stored === "en" || stored === "pt" ? stored : "es";
   } catch {
     return "es";
   }
@@ -179,6 +181,10 @@ export function useLocale(): Locale {
 
 export function t(text: string): string {
   const key = text.replace(/\s+/g, " ").trim();
+  if (currentLocale === "pt") {
+    const spanishKey = esByEn[key] ?? employeeEsByEn[key] ?? key;
+    return ptBySource[key] ?? ptBySource[spanishKey] ?? text;
+  }
   return currentLocale === "en"
     ? (enByEs[key] ?? employeeEnByEs[key] ?? text)
     : (esByEn[key] ?? employeeEsByEn[key] ?? text);

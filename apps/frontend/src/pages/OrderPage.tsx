@@ -34,6 +34,11 @@ const EMPTY_CONTACT: CustomerDetails = {
   notes: "",
 };
 const CURRENCY_FORMATTERS = {
+  pt: new Intl.NumberFormat("pt-PT", {
+    style: "currency",
+    currency: "COP",
+    maximumFractionDigits: 0,
+  }),
   es: new Intl.NumberFormat("es-CO", {
     style: "currency",
     currency: "COP",
@@ -301,7 +306,13 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
         </p>
 
         <nav
-          aria-label={locale === "es" ? "Pasos del pedido" : "Order steps"}
+          aria-label={
+            locale === "pt"
+              ? "Etapas do pedido"
+              : locale === "es"
+                ? "Pasos del pedido"
+                : "Order steps"
+          }
           className="mt-8 border-b border-white/15"
         >
           <ol className="grid grid-cols-3 gap-2">
@@ -344,7 +355,13 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
               <div
                 className="mt-5 flex flex-wrap gap-2"
                 role="group"
-                aria-label={locale === "es" ? "Categorías" : "Categories"}
+                aria-label={
+                  locale === "pt"
+                    ? "Categorias"
+                    : locale === "es"
+                      ? "Categorías"
+                      : "Categories"
+                }
               >
                 {categories.map((item) => (
                   <button
@@ -370,9 +387,7 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
                       <img
                         alt={t(dish.name)}
                         className="h-28 w-full rounded-sm object-cover sm:h-24"
-                        src={
-                          dish.image ?? "/images/Plato01.png"
-                        }
+                        src={dish.image ?? "/images/Plato01.png"}
                       />
                       <div className="min-w-0">
                         <p className="text-xs font-semibold uppercase text-[#e8b45f]">
