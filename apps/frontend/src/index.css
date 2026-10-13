@@ -3,11 +3,187 @@
 @tailwind utilities;
 
 :root {
+  --ui-accent: #e8b45f;
+  --ui-surface: #333333;
+  --ui-input: #18181b;
+  --ui-text: #fafafa;
+  --ui-muted: #a1a1aa;
+  --ui-border: #71717a;
+  --ui-danger: #fca5a5;
+  --ui-radius: 0.25rem;
   color: #20201e;
   background: #f8f3e8;
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+}
+
+@layer components {
+  .ui-panel {
+    border: 1px solid #ffffff1a;
+    border-radius: var(--ui-radius);
+    background: var(--ui-surface);
+    padding: clamp(1.25rem, 3vw, 1.5rem);
+    box-shadow: 0 20px 25px -5px #00000030;
+  }
+  .ui-metric {
+    border: 1px solid #ffffff1a;
+    border-radius: var(--ui-radius);
+    background: var(--ui-input);
+    padding: 1.25rem;
+  }
+  .ui-field {
+    display: block;
+    color: #e4e4e7;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  .ui-field > .ui-control {
+    margin-top: 0.5rem;
+  }
+  .ui-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    border: 1px solid #ffffff1a;
+    border-radius: var(--ui-radius);
+    background: var(--ui-input);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  .ui-checkbox-input {
+    width: 1.25rem;
+    height: 1.25rem;
+    accent-color: var(--ui-accent);
+  }
+  .ui-tab {
+    min-height: 2.75rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid #ffffff1a;
+    border-radius: var(--ui-radius);
+    background: #00000033;
+    color: #d4d4d8;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .ui-tab:hover {
+    border-color: var(--ui-accent);
+  }
+  .ui-tab--active {
+    background: var(--ui-accent);
+    color: #18181b;
+    border-color: var(--ui-accent);
+  }
+  .ui-status {
+    display: inline-flex;
+    border: 1px solid #ffffff1a;
+    border-radius: var(--ui-radius);
+    padding: 0.75rem 1rem;
+    background: #00000040;
+  }
+  .ui-delete {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    flex-shrink: 0;
+    border: 1px solid #ffffff1a;
+    border-radius: var(--ui-radius);
+    color: var(--ui-muted);
+  }
+  .ui-delete:hover {
+    background: #7f2019;
+    color: white;
+    border-color: var(--ui-accent);
+  }
+  .ui-tab:focus-visible,
+  .ui-delete:focus-visible,
+  .ui-checkbox-input:focus-visible {
+    outline: 2px solid var(--ui-accent);
+    outline-offset: 3px;
+  }
+  .ui-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.75rem 1.25rem;
+    border: 1px solid transparent;
+    border-radius: var(--ui-radius);
+    font-weight: 700;
+    transition:
+      background-color 150ms,
+      border-color 150ms;
+  }
+  .ui-button--primary {
+    background: var(--ui-accent);
+    color: #18181b;
+  }
+  .ui-button--primary:hover {
+    background: #fff;
+  }
+  .ui-button--secondary {
+    border-color: var(--ui-border);
+    color: var(--ui-text);
+    background: transparent;
+  }
+  .ui-button--secondary:hover {
+    background: var(--ui-surface);
+  }
+  .ui-button--danger {
+    background: #7f2019;
+    color: var(--ui-text);
+  }
+  .ui-button--danger:hover {
+    background: #991b1b;
+  }
+  .ui-control {
+    width: 100%;
+    min-height: 2.75rem;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius);
+    background: var(--ui-input);
+    padding: 0.75rem 1rem;
+    color: var(--ui-text);
+  }
+  .ui-control::placeholder {
+    color: var(--ui-muted);
+  }
+  .ui-control[aria-invalid="true"] {
+    border-color: var(--ui-danger);
+  }
+  .ui-control:disabled,
+  .ui-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+  .ui-control:focus-visible,
+  .ui-button:focus-visible {
+    outline: 2px solid var(--ui-accent);
+    outline-offset: 3px;
+  }
+  .ui-spinner {
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: ui-spin 700ms linear infinite;
+  }
+}
+@keyframes ui-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-spinner {
+    animation: none;
+  }
 }
 
 * {

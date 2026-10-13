@@ -1,3 +1,4 @@
+import { Button, Input } from "../components/ui/controls";
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 
@@ -269,8 +270,7 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
             </p>
           </div>
           <div className="mt-8 flex flex-wrap gap-3">
-            <button
-              className="rounded-sm bg-[#e8b45f] px-5 py-3 font-bold text-zinc-950"
+            <Button
               onClick={() => {
                 setConfirmation(null);
                 setContact(EMPTY_CONTACT);
@@ -280,9 +280,8 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
               type="button"
             >
               {copy.another}
-            </button>
+            </Button>
             <a
-              className="rounded-sm border border-white/30 px-5 py-3 font-bold"
               href="/empleados"
               onClick={(event) => navigate("/empleados", event)}
             >
@@ -318,7 +317,7 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
           <ol className="grid grid-cols-3 gap-2">
             {ORDER_STEPS.map((item, index) => (
               <li key={item}>
-                <button
+                <Button
                   aria-current={step === item ? "step" : undefined}
                   className={`w-full border-b-2 px-1 pb-4 text-left text-sm font-semibold ${step === item ? "border-[#e8b45f] text-[#e8b45f]" : "border-transparent text-zinc-400"}`}
                   disabled={index > ORDER_STEPS.indexOf(step)}
@@ -329,7 +328,7 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
                     {String(index + 1).padStart(2, "0")}
                   </span>
                   {copy.steps[index]}
-                </button>
+                </Button>
               </li>
             ))}
           </ol>
@@ -344,8 +343,7 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
               >
                 {copy.search}
               </label>
-              <input
-                className="mt-2 w-full rounded-sm border border-zinc-600 bg-[#333333] px-4 py-3 outline-none focus:border-[#e8b45f]"
+              <Input
                 id="dish-search"
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder={copy.searchPlaceholder}
@@ -364,7 +362,8 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
                 }
               >
                 {categories.map((item) => (
-                  <button
+                  <Button
+                    variant="secondary"
                     aria-pressed={category === item}
                     className={`rounded-sm border px-3 py-2 text-sm font-semibold ${category === item ? "border-[#e8b45f] bg-[#e8b45f] text-zinc-950" : "border-zinc-600 text-zinc-200"}`}
                     key={item}
@@ -372,7 +371,7 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
                     type="button"
                   >
                     {item === "Todos" ? copy.all : t(item)}
-                  </button>
+                  </Button>
                 ))}
               </div>
               <div className="mt-6 grid gap-3">
@@ -406,9 +405,9 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
                             ? copy.unavailablePrice
                             : currency(unitPrice)}
                         </span>
-                        <button
+                        <Button
                           aria-label={`${copy.add} ${t(dish.name)}`}
-                          className="rounded-sm bg-[#e8b45f] px-4 py-2 text-sm font-bold text-zinc-950 disabled:cursor-not-allowed disabled:opacity-50"
+
                           disabled={
                             unitPrice === null || (cart[dishKey] ?? 0) >= 99
                           }
@@ -416,7 +415,7 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
                           type="button"
                         >
                           {copy.add}
-                        </button>
+                        </Button>
                       </div>
                     </article>
                   );
@@ -440,7 +439,8 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
                   aria-label={copy.details}
                 >
                   {FULFILLMENT_OPTIONS.map((option) => (
-                    <button
+                    <Button
+                      variant="secondary"
                       aria-pressed={fulfillment === option}
                       className={`rounded-sm border px-3 py-3 text-sm font-semibold ${fulfillment === option ? "border-[#e8b45f] text-[#e8b45f]" : "border-white/20"}`}
                       key={option}
@@ -448,7 +448,7 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
                       type="button"
                     >
                       {copy[option]}
-                    </button>
+                    </Button>
                   ))}
                 </div>
                 <div className="mt-6 grid gap-5">
@@ -461,8 +461,7 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
                       key={key}
                     >
                       {copy[key]}
-                      <input
-                        className="rounded-sm border border-zinc-600 bg-[#333333] px-4 py-3 text-white"
+                      <Input
                         maxLength={maxLength}
                         minLength={minLength}
                         onChange={(event) =>
@@ -499,19 +498,15 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
                   </p>
                 ) : null}
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <button
-                    className="rounded-sm border border-white/30 px-5 py-3 font-semibold"
+                  <Button
+                    variant="secondary"
+
                     onClick={() => goToStep("dishes")}
                     type="button"
                   >
                     {copy.backToDishes}
-                  </button>
-                  <button
-                    className="rounded-sm bg-[#e8b45f] px-5 py-3 font-bold text-zinc-950"
-                    type="submit"
-                  >
-                    {copy.nextPayment}
-                  </button>
+                  </Button>
+                  <Button type="submit">{copy.nextPayment}</Button>
                 </div>
               </form>
             </div>
@@ -549,29 +544,29 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
                       </div>
                       {step === "dishes" ? (
                         <div className="mt-3 flex items-center gap-2">
-                          <button
+                          <Button
                             aria-label={`${copy.remove} ${t(dish.name)}`}
                             className="grid h-9 w-9 place-items-center rounded-sm border border-white/20"
                             onClick={() => changeQuantity(dishKey, -1)}
                             type="button"
                           >
                             −
-                          </button>
+                          </Button>
                           <span
                             aria-label={copy.quantity}
                             className="w-7 text-center font-bold"
                           >
                             {quantity}
                           </span>
-                          <button
+                          <Button
                             aria-label={`${copy.add} ${t(dish.name)}`}
                             className="grid h-9 w-9 place-items-center rounded-sm border border-white/20"
                             onClick={() => changeQuantity(dishKey, 1)}
                             type="button"
                           >
                             +
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             className="ml-auto text-xs text-zinc-400 underline"
                             onClick={() =>
                               setCart((current) => {
@@ -583,7 +578,7 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
                             type="button"
                           >
                             {copy.remove}
-                          </button>
+                          </Button>
                         </div>
                       ) : (
                         <p className="mt-2 text-sm text-zinc-400">
@@ -602,14 +597,14 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
 
             <div className="mt-6">
               {step === "dishes" ? (
-                <button
+                <Button
                   className="w-full rounded-sm bg-[#e8b45f] px-4 py-3 font-bold text-zinc-950 disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={cartLines.length === 0}
                   onClick={() => goToStep("details")}
                   type="button"
                 >
                   {copy.nextDetails}
-                </button>
+                </Button>
               ) : null}
             </div>
           </aside>

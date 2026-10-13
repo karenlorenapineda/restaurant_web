@@ -1,6 +1,6 @@
 import type { MouseEvent } from "react";
 
-export type Page = "employees" | "home" | "menu" | "order";
+export type Page = "employees" | "home" | "menu" | "order" | "design-system";
 
 export interface NavigationHandlers {
   navigate: (path: string, event: MouseEvent<HTMLAnchorElement>) => void;
@@ -8,6 +8,7 @@ export interface NavigationHandlers {
 }
 
 export function getPageFromPath(): Page {
+  if (window.location.pathname === "/design-system") return "design-system";
   if (
     window.location.pathname === "/pedido" ||
     window.location.pathname.startsWith("/pedido/") ||

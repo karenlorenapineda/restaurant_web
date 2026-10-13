@@ -18,6 +18,24 @@ afterEach(() => {
 });
 
 describe("App", () => {
+  it("opens the design gallery with accessible control states", () => {
+    window.history.replaceState({}, "", "/design-system");
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Offline")));
+    render(<App />);
+    expect(
+      screen.getByRole("heading", { name: "Sistema de diseño" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Guardando" })).toBeDisabled();
+    expect(
+      screen.getByRole("textbox", { name: "Campo obligatorio" }),
+    ).toHaveAttribute("aria-invalid", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Eliminar ejemplo" }));
+    expect(screen.getByText("Ejemplo eliminado")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Restablecer" }));
+    expect(
+      screen.getByRole("button", { name: "Eliminar ejemplo" }),
+    ).toBeInTheDocument();
+  });
   it("switches to Portuguese across home, menu, orders and employee preview", () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Offline")));
     render(<App />);

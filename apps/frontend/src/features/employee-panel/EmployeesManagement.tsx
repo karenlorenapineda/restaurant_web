@@ -1,3 +1,4 @@
+import { Button, Input, Select } from "../../components/ui/controls";
 import { T, t } from "../../i18n";
 import type { FormEvent } from "react";
 
@@ -66,13 +67,9 @@ export function EmployeesManagement({
             </T>
           </p>
         </div>
-        <button
-          className="rounded-sm bg-[#e8b45f] px-4 py-3 text-sm font-bold uppercase tracking-[0.1em] text-zinc-950 transition hover:bg-white"
-          onClick={onAdd}
-          type="button"
-        >
+        <Button onClick={onAdd} type="button">
           <T>Anadir empleado</T>
-        </button>
+        </Button>
       </div>
 
       {!isAdmin ? (
@@ -91,8 +88,8 @@ export function EmployeesManagement({
             key={employee.id}
           >
             <Field label={t("Nombre")}>
-              <input
-                className={inputClassName}
+              <Input
+                className="mt-2"
                 onChange={(event) =>
                   onUpdate(employee.id, "name", event.target.value)
                 }
@@ -100,8 +97,8 @@ export function EmployeesManagement({
               />
             </Field>
             <Field label={t("Email")}>
-              <input
-                className={inputClassName}
+              <Input
+                className="mt-2"
                 onChange={(event) =>
                   onUpdate(employee.id, "email", event.target.value)
                 }
@@ -110,8 +107,8 @@ export function EmployeesManagement({
               />
             </Field>
             <Field label={t("Cargo")}>
-              <input
-                className={inputClassName}
+              <Input
+                className="mt-2"
                 onChange={(event) =>
                   onUpdate(employee.id, "position", event.target.value)
                 }
@@ -119,8 +116,8 @@ export function EmployeesManagement({
               />
             </Field>
             <Field label={t("Rol")}>
-              <select
-                className={`${inputClassName} disabled:cursor-not-allowed disabled:opacity-55`}
+              <Select
+                className="mt-2"
                 disabled={!isAdmin}
                 onChange={(event) =>
                   onUpdate(employee.id, "role", event.target.value)
@@ -136,7 +133,7 @@ export function EmployeesManagement({
                 <option value="cocina">
                   <T>cocina</T>
                 </option>
-              </select>
+              </Select>
             </Field>
             <label className="flex items-end gap-3 pb-3 text-sm font-semibold text-zinc-200">
               <input

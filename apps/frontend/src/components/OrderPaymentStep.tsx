@@ -1,3 +1,4 @@
+import { Button, Input, Select } from "./ui/controls";
 import type { OrderCopy } from "../orderCopy";
 
 const PAYMENT_METHODS = ["card", "pse"] as const;
@@ -44,7 +45,8 @@ export function OrderPaymentStep({
         aria-label={copy.paymentMethod}
       >
         {PAYMENT_METHODS.map((method) => (
-          <button
+          <Button
+            variant="secondary"
             aria-pressed={paymentMethod === method}
             className={`rounded-sm border px-4 py-4 text-left font-semibold ${paymentMethod === method ? "border-[#e8b45f] bg-[#333333]" : "border-white/20"}`}
             key={method}
@@ -52,7 +54,7 @@ export function OrderPaymentStep({
             type="button"
           >
             {method === "card" ? copy.card : copy.bank}
-          </button>
+          </Button>
         ))}
       </div>
       {/* The payment provider must supply hosted fields; do not collect card data here. */}
@@ -64,23 +66,16 @@ export function OrderPaymentStep({
               key={key}
             >
               {copy[key]}
-              <input
-                className="rounded-sm border border-zinc-600 bg-[#333333] px-4 py-3 opacity-60"
-                placeholder={placeholder}
-                type="text"
-              />
+              <Input placeholder={placeholder} type="text" />
             </label>
           ))}
         </fieldset>
       ) : (
         <label className="mt-6 grid max-w-2xl gap-2 text-sm font-semibold">
           {copy.selectBank}
-          <select
-            className="rounded-sm border border-zinc-600 bg-[#333333] px-4 py-3 opacity-60"
-            disabled
-          >
+          <Select disabled>
             <option>{copy.selectBank}</option>
-          </select>
+          </Select>
         </label>
       )}
       <p className="mt-4 text-sm text-zinc-400">{copy.paymentPending}</p>
@@ -112,20 +107,17 @@ export function OrderPaymentStep({
         </p>
       ) : null}
       <div className="mt-8 flex flex-wrap gap-3">
-        <button
-          className="rounded-sm border border-white/30 px-5 py-3 font-semibold"
+        <Button
+          variant="secondary"
+
           onClick={onBack}
           type="button"
         >
           {copy.backToDetails}
-        </button>
-        <button
-          className="rounded-sm bg-[#e8b45f] px-5 py-3 font-bold text-zinc-950"
-          onClick={onRegister}
-          type="button"
-        >
+        </Button>
+        <Button onClick={onRegister} type="button">
           {copy.place}
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -2,7 +2,7 @@ import type React from "react";
 
 export function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-sm border border-white/10 bg-zinc-950/70 p-5 shadow-2xl shadow-black/25">
+    <div className="ui-metric">
       <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#e8b45f]">
         {label}
       </p>
@@ -18,13 +18,7 @@ export function Panel({
   children: React.ReactNode;
   className?: string;
 }) {
-  return (
-    <div
-      className={`rounded-md border border-white/10 bg-[#333333] p-5 shadow-2xl shadow-black/30 sm:p-6 ${className}`}
-    >
-      {children}
-    </div>
-  );
+  return <div className={`ui-panel ${className}`}>{children}</div>;
 }
 
 export function TabButton({
@@ -38,11 +32,8 @@ export function TabButton({
 }) {
   return (
     <button
-      className={`rounded-sm border px-4 py-3 text-left text-sm font-bold uppercase tracking-[0.12em] shadow-lg shadow-black/10 transition ${
-        active
-          ? "border-[#e8b45f] bg-[#e8b45f] text-zinc-950"
-          : "border-white/10 bg-black/20 text-zinc-300 hover:border-[#e8b45f]/45 hover:bg-[#333333] hover:text-white"
-      }`}
+      className={`ui-tab ${active ? "ui-tab--active" : ""}`}
+      aria-pressed={active}
       onClick={onClick}
       type="button"
     >
@@ -59,7 +50,7 @@ export function Field({
   label: string;
 }) {
   return (
-    <label className="block text-sm font-semibold text-zinc-200">
+    <label className="ui-field">
       {label}
       {children}
     </label>
@@ -76,10 +67,10 @@ export function Checkbox({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <label className="flex items-center gap-3 rounded-sm border border-white/10 bg-zinc-950/60 p-4 text-sm font-semibold text-zinc-200">
+    <label className="ui-checkbox">
       <input
         checked={checked}
-        className="h-5 w-5 accent-[#e8b45f]"
+        className="ui-checkbox-input"
         onChange={(event) => onChange(event.target.checked)}
         type="checkbox"
       />
@@ -89,11 +80,7 @@ export function Checkbox({
 }
 
 export function StatusPill({ label }: { label: string }) {
-  return (
-    <span className="rounded-sm border border-white/10 bg-black/25 px-4 py-3">
-      {label}
-    </span>
-  );
+  return <span className="ui-status">{label}</span>;
 }
 
 export const inputClassName =
@@ -115,11 +102,23 @@ export function DeleteButton({
   return (
     <button
       aria-label={label}
-      className="grid h-8 w-8 shrink-0 place-items-center rounded-sm border border-white/10 text-lg font-bold leading-none text-zinc-400 transition hover:border-[#e8b45f] hover:bg-[#7f2019] hover:text-white"
+      className="ui-delete"
       onClick={onClick}
       type="button"
     >
-      x
+      <svg
+        aria-hidden="true"
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7" />
+      </svg>
     </button>
   );
 }
