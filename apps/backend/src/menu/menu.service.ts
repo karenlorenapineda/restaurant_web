@@ -63,20 +63,29 @@ export class MenuService {
 		}));
 	}
 
-	async createMenuItem(data: CreateMenuItemDto){
+	async createMenuItem(data: CreateMenuItemDto) {
 		const { ingredients, ...menuItemData } = data;
-		const newDish = await this.prisma.menuItem.create({
+
+		return this.prisma.$transaction(async (tx) => {
+			const newDish = await tx.menuItem.create({
 			data: menuItemData,
-		});
-		if (ingredients?.length) {
-			await this.recipeService.createRecipes({
-				itemId: newDish.id,
-				ingredients: ingredients,
 			});
-		}
-		return this.prisma.menuItem.findUnique({
+
+			if (ingredients?.length) {
+			await tx.recipe.createMany({
+				data: ingredients.map((ingredient) => ({
+				itemId: newDish.id,
+				ingredientId: ingredient.ingredientId,
+				quantity: ingredient.quantity,
+				unitId: ingredient.unitId,
+				})),
+			});
+			}
+
+			return tx.menuItem.findUnique({
 			where: { id: newDish.id },
-			include: { recipes: true }
+			include: { recipes: true },
+			});
 		});
 	}
 
@@ -107,19 +116,37 @@ export class MenuService {
 
 	async deleteMenuItem(id: number) {
 		try {
-			const deleteDish = await this.prisma.menuItem.findUnique({
-				where: {id: id},
-				include: { recipes: true }
+			return await this.prisma.$transaction(async (tx) => {
+				const dish = await tx.menuItem.findUnique({
+					where: { id },
+					include: {
+					recipes: true,
+					orderDetails: {
+						select: { id: true },
+					},
+					},
+				});
+
+				if (!dish) {
+					throw new NotFoundException(`Menu id ${id} not found`);
+				}
+
+				if (dish.orderDetails.length > 0) {
+					return await tx.menuItem.update({
+					where: { id },
+					data: { isAvailable: false },
+					include: { recipes: true },
+					});
+				}
+
+				await tx.recipe.deleteMany({
+					where: { itemId: id },
+				});
+
+				return await tx.menuItem.delete({
+					where: { id },
+				});
 			});
-			
-			await this.prisma.recipe.deleteMany({
-				where: {itemId: id}
-			});
-	
-			await this.prisma.menuItem.delete({
-				where: {id: id}
-			});
-			return deleteDish;
 		} catch (error) {
 			if (isPrismaNotFoundError(error)) {
 				throw new NotFoundException(`Menu id ${id} not found`);
