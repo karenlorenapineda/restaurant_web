@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, ConflictException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PrismaService } from '../database/prisma.service';
 import { OrderStatus, Prisma } from '@prisma/client';
@@ -213,6 +213,22 @@ export class OrdersService {
     }
 
     return this.prisma.$transaction(async (tx) => {
+		const claimedOrder = await tx.order.updateMany({
+			where: {
+				id,
+				status: order.status,
+			},
+			data: {
+				status: newStatus,
+			},
+		});
+
+		if (claimedOrder.count !== 1) {
+			throw new ConflictException(
+				'The order status has already changed',
+			);
+		}
+
       if (newStatus === OrderStatus.preparing) {
         const stockDeductions = new Map<number, Prisma.Decimal>();
 
@@ -254,20 +270,15 @@ export class OrdersService {
         }
       }
 
-      return tx.order.update({
-        where: { id },
-        data: {
-          status: newStatus,
-          statusHistory: {
-            create: {
-              status: newStatus,
-            },
-          },
-        },
-        include: {
-          statusHistory: true,
-        },
-      });
+		return tx.order.update({
+			where: { id },
+			data: {
+				statusHistory: {
+				create: { status: newStatus },
+				},
+			},
+			include: { statusHistory: true },
+		});
     });
   }
 }
