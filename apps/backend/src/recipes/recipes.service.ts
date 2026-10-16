@@ -73,77 +73,113 @@ export class RecipesService {
 	}
 
 	async createRecipes(data: CreateRecipeDto) {
-		const {itemId, ingredients } = data;
-		
-		const recipes = await this.prisma.recipe.createMany({
-			data: ingredients.map((ingredient) => ({
-				itemId,
-				ingredientId: ingredient.ingredientId,
-				quantity: ingredient.quantity,
-				unitId: ingredient.unitId,
-			})),
-		});
+		return this.prisma.$transaction(async (tx) => {
+			for (const entry of data.ingredients) {
+			const ingredient = await tx.ingredient.findUnique({
+				where: { id: entry.ingredientId },
+				include: { unit: true },
+			});
 
-		return recipes;
+			if (!ingredient) {
+				throw new NotFoundException(
+				`Ingredient with id ${entry.ingredientId} not found`,
+				);
+			}
+
+			const unit = await tx.unitOfMeasure.findUnique({
+				where: { id: entry.unitId },
+			});
+
+			if (!unit) {
+				throw new NotFoundException(
+				`Unit with id ${entry.unitId} not found`,
+				);
+			}
+
+			if (ingredient.unit.type !== unit.type) {
+				throw new BadRequestException(
+				`Unit type "${unit.type}" is not compatible with ingredient "${ingredient.name}". Expected "${ingredient.unit.type}".`,
+				);
+			}
+			}
+
+			return tx.recipe.createMany({
+			data: data.ingredients.map((entry) => ({
+				itemId: data.itemId,
+				ingredientId: entry.ingredientId,
+				quantity: entry.quantity,
+				unitId: entry.unitId,
+			})),
+			});
+		});
 	}
 
 	async updateRecipes(data: UpdateRecipeDto) {
-		const updatedRecipes = [];
-		for (const recipeUpdate of data.ingredients) {
-			const currentRecipe = await this.prisma.recipe.findUnique({
-				where: {id: recipeUpdate.id},
-				include: {
-					ingredient: {
-						include: {
-							unit: true,
-						}
-					}
-				}
+		return this.prisma.$transaction(async (tx) => {
+			const updatedRecipes = [];
+
+			for (const entry of data.ingredients) {
+			const currentRecipe = await tx.recipe.findUnique({
+				where: { id: entry.id },
 			});
+
 			if (!currentRecipe) {
-				throw new NotFoundException(`Recipe with id ${recipeUpdate.id} not found`);
+				throw new NotFoundException(
+				`Recipe with id ${entry.id} not found`,
+				);
 			}
-			const ingredientId = recipeUpdate.ingredientId ?? currentRecipe.ingredientId;
-			const unitId = recipeUpdate.unitId ?? currentRecipe.unitId;
 
-			const ingredient = await this.prisma.ingredient.findUnique({
-				where: {id: ingredientId},
-				include: {unit: true},
+			const ingredientId =
+				entry.ingredientId ?? currentRecipe.ingredientId;
+			const unitId = entry.unitId ?? currentRecipe.unitId;
+
+			const ingredient = await tx.ingredient.findUnique({
+				where: { id: ingredientId },
+				include: { unit: true },
 			});
 
-			if (!ingredient){
-				throw new NotFoundException(`Ingredient with id ${ingredientId} not found`);
+			if (!ingredient) {
+				throw new NotFoundException(
+				`Ingredient with id ${ingredientId} not found`,
+				);
 			}
-			const unit = await this.prisma.unitOfMeasure.findUnique({
-				where: {id: unitId},
+
+			const unit = await tx.unitOfMeasure.findUnique({
+				where: { id: unitId },
 			});
 
-			if (!unit){
-				throw new NotFoundException( `Unit with id ${unitId} not found`);
+			if (!unit) {
+				throw new NotFoundException(
+				`Unit with id ${unitId} not found`,
+				);
 			}
 
-			if (ingredient.unit.type !== unit.type){
-				throw new BadRequestException(`Unit type "${unit.type}" is not compatible with ingredient "${ingredient.name}". Expected "${ingredient.unit.type}".`);
+			if (ingredient.unit.type !== unit.type) {
+				throw new BadRequestException(
+				`Unit type "${unit.type}" is not compatible with ingredient "${ingredient.name}". Expected "${ingredient.unit.type}".`,
+				);
 			}
 
-			const updatedRecipe = await this.prisma.recipe.update({
-				where: {id: recipeUpdate.id},
+			const updatedRecipe = await tx.recipe.update({
+				where: { id: entry.id },
 				data: {
-					...(recipeUpdate.ingredientId !== undefined && {
-						ingredientId: recipeUpdate.ingredientId,
-					}),
-					...(recipeUpdate.quantity !== undefined && {
-						quantity: recipeUpdate.quantity,
-					}),
-					...(recipeUpdate.unitId !== undefined && {
-						unitId: recipeUpdate.unitId,
-					}),
-				}
+				...(entry.ingredientId !== undefined && {
+					ingredientId: entry.ingredientId,
+				}),
+				...(entry.quantity !== undefined && {
+					quantity: entry.quantity,
+				}),
+				...(entry.unitId !== undefined && {
+					unitId: entry.unitId,
+				}),
+				},
 			});
 
 			updatedRecipes.push(updatedRecipe);
-		}
-		return updatedRecipes;
+			}
+
+			return updatedRecipes;
+		});
 	}
 
 	async deleteRecipes(ids: number[]) {
