@@ -70,16 +70,41 @@ describe('RecipesService', () => {
 			]);
 
 			await expect(service.getRecipes()).resolves.toEqual({
-				Pizza: {
+				'10': {
+					itemId: 10,
+					name: 'Pizza',
 					ingredients: [
-						{ quantity: '250', supplyName: 'Flour', unit: 'g' },
-						{ quantity: '80.5', supplyName: 'Cheese', unit: 'g' },
+						{
+							id: 1,
+							ingredientId: 1,
+							unitId: 1,
+							quantity: '250',
+							supplyName: 'Flour',
+							unit: 'g',
+						},
+						{
+							id: 2,
+							ingredientId: 2,
+							unitId: 1,
+							quantity: '80.5',
+							supplyName: 'Cheese',
+							unit: 'g',
+						},
 					],
 					recipe: 'Bake',
 				},
-				Salad: {
+				'20': {
+					itemId: 20,
+					name: 'Salad',
 					ingredients: [
-						{ quantity: '100', supplyName: 'Lettuce', unit: 'g' },
+						{
+							id: 3,
+							ingredientId: 3,
+							unitId: 1,
+							quantity: '100',
+							supplyName: 'Lettuce',
+							unit: 'g',
+						},
 					],
 					recipe: null,
 				},
@@ -112,10 +137,26 @@ describe('RecipesService', () => {
 			]);
 
 			await expect(service.getRecipesDish(10)).resolves.toEqual({
-				Pizza: {
+				'10': {
+					itemId: 10,
+					name: 'Pizza',
 					ingredients: [
-						{ quantity: '250', supplyName: 'Flour', unit: 'g' },
-						{ quantity: '80.5', supplyName: 'Cheese', unit: 'g' },
+						{
+							id: 1,
+							ingredientId: 1,
+							unitId: 1,
+							quantity: '250',
+							supplyName: 'Flour',
+							unit: 'g',
+						},
+						{
+							id: 2,
+							ingredientId: 2,
+							unitId: 1,
+							quantity: '80.5',
+							supplyName: 'Cheese',
+							unit: 'g',
+						},
 					],
 					recipe: 'Bake',
 				},
@@ -539,6 +580,45 @@ describe('RecipesService', () => {
 			prismaMock.recipe.deleteMany.mockRejectedValue(error);
 
 			await expect(service.deleteRecipes([1])).rejects.toBe(error);
+		});
+	});
+	it('keeps dishes with the same name in separate groups', async () => {
+		prismaMock.recipe.findMany.mockResolvedValue([
+			makeRecipeRow(1, 10, 'Pizza', 'Flour', '250', 'Bake first'),
+			makeRecipeRow(2, 20, 'Pizza', 'Cheese', '100', 'Bake second'),
+		]);
+
+		await expect(service.getRecipes()).resolves.toEqual({
+			'10': {
+				itemId: 10,
+				name: 'Pizza',
+				ingredients: [
+					{
+						id: 1,
+						ingredientId: 1,
+						unitId: 1,
+						quantity: '250',
+						supplyName: 'Flour',
+						unit: 'g',
+					},
+				],
+				recipe: 'Bake first',
+			},
+			'20': {
+				itemId: 20,
+				name: 'Pizza',
+				ingredients: [
+					{
+						id: 2,
+						ingredientId: 2,
+						unitId: 1,
+						quantity: '100',
+						supplyName: 'Cheese',
+						unit: 'g',
+					},
+				],
+				recipe: 'Bake second',
+			},
 		});
 	});
 });

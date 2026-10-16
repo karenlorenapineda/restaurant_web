@@ -3,16 +3,21 @@ import { PrismaService } from '../database/prisma.service';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
 import { UpdateRecipeDto } from './dto/update-recipe.dto';
 
-type RecipeResul = Record<
-	string,
-	{
-	ingredients: {
-		quantity: string;
-		supplyName: string;
-		unit: string;
-	}[];
-	recipe: string | null;
-	}
+type RecipeResult = Record<
+  string,
+  {
+    itemId: number;
+    name: string;
+    ingredients: {
+      id: number;
+      ingredientId: number;
+      unitId: number;
+      quantity: string;
+      supplyName: string;
+      unit: string;
+    }[];
+    recipe: string | null;
+  }
 >;
 
 @Injectable()
@@ -27,20 +32,28 @@ export class RecipesService {
 				unit: true,
 			}
 		});
-		const result: RecipeResul = {};
+		const result: RecipeResult = {};
+
 		for (const recipe of recipes) {
-			const itemName = recipe.item.name;
-			if (!result[itemName]) {
-				result[itemName] = {
-					ingredients: [],
-					recipe: recipe.item.internalRecipe,
-				};
-			}
-			result[itemName].ingredients.push({
-				quantity: recipe.quantity.toString(),
-				supplyName: recipe.ingredient.name,
-				unit: recipe.unit.abbreviation,
-			});
+		const key = String(recipe.itemId);
+
+		if (!result[key]) {
+			result[key] = {
+			itemId: recipe.itemId,
+			name: recipe.item.name,
+			ingredients: [],
+			recipe: recipe.item.internalRecipe,
+			};
+		}
+
+		result[key]!.ingredients.push({
+			id: recipe.id,
+			ingredientId: recipe.ingredientId,
+			unitId: recipe.unitId,
+			quantity: recipe.quantity.toString(),
+			supplyName: recipe.ingredient.name,
+			unit: recipe.unit.abbreviation,
+		});
 		}
 		return result;
 	}
@@ -54,20 +67,28 @@ export class RecipesService {
 				unit: true,
 			},
 		});
-		const result: RecipeResul = {};
+		const result: RecipeResult = {};
+
 		for (const recipe of recipes) {
-			const itemName = recipe.item.name;
-			if (!result[itemName]) {
-				result[itemName] = {
-					ingredients: [],
-					recipe: recipe.item.internalRecipe,
-				};
-			}
-			result[itemName].ingredients.push({
-				quantity: recipe.quantity.toString(),
-				supplyName: recipe.ingredient.name,
-				unit: recipe.unit.abbreviation,
-			});
+		const key = String(recipe.itemId);
+
+		if (!result[key]) {
+			result[key] = {
+			itemId: recipe.itemId,
+			name: recipe.item.name,
+			ingredients: [],
+			recipe: recipe.item.internalRecipe,
+			};
+		}
+
+		result[key]!.ingredients.push({
+			id: recipe.id,
+			ingredientId: recipe.ingredientId,
+			unitId: recipe.unitId,
+			quantity: recipe.quantity.toString(),
+			supplyName: recipe.ingredient.name,
+			unit: recipe.unit.abbreviation,
+		});
 		}
 		return result;
 	}
