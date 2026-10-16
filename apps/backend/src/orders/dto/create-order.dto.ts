@@ -1,4 +1,4 @@
-import { IsEnum, IsArray, IsInt, IsNotEmpty, IsOptional, IsPositive, IsString, Min, ValidateNested } from "class-validator";
+import { IsEnum, IsArray, IsInt, IsNotEmpty, IsOptional, IsPositive, IsString, Min, ValidateNested, ArrayMaxSize, ArrayMinSize } from "class-validator";
 import { OrderType } from "@prisma/client";
 import { Type } from "class-transformer";
 
@@ -53,6 +53,7 @@ export class CreateOrderDto {
 	customerPhone?: string;
 
 	@IsArray({ message: "Items must be an array." })
+	@ArrayMinSize(1, { message: 'Order must contain at least one item.' })
 	@ValidateNested({ each: true, message: "Each order item must be valid." })
 	@Type(() => CreateOrderDetailDto)
 	items: CreateOrderDetailDto[];

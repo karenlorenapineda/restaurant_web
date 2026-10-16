@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConflictException } from '@nestjs/common';
-import { OrderStatus, Prisma } from '@prisma/client';
+import { ConflictException, BadRequestException } from '@nestjs/common';
+import { OrderStatus, Prisma, OrderType } from '@prisma/client';
 import { OrdersService } from './orders.service';
 import { PrismaService } from '../database/prisma.service';
 
@@ -249,5 +249,22 @@ describe('OrdersService', () => {
 		).rejects.toThrow('Database error');
 
 		expect(prismaMock.order.update).not.toHaveBeenCalled();
+	});
+
+	describe('create', () => {
+		it('rejects an empty order before starting a transaction', async () => {
+			await expect(
+				service.create(1, {
+					type: OrderType.takeaway,
+					items: [],
+				}),
+			).rejects.toThrow(
+				new BadRequestException(
+					'Order must contain at least one item.',
+				),
+			);
+
+			expect(prismaMock.$transaction).not.toHaveBeenCalled();
+		});
 	});
 });

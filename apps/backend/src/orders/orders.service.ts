@@ -69,7 +69,12 @@ export class OrdersService {
   }
 
   async create(restaurantId: number, dto: CreateOrderDto, employeeId?: number) {
-    validateOrderType(dto);
+    if (!dto.items?.length) {
+		throw new BadRequestException(
+			'Order must contain at least one item.',
+		);
+	}
+	validateOrderType(dto);
 
     if (dto.tableId) {
       const table = await this.prisma.table.findUnique({
