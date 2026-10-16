@@ -41,6 +41,7 @@ export class CreateMenuItemDto {
 	@IsBoolean({ message: "showImageInGallery must be a boolean" })
 	showImageInGallery?: boolean;
 
+	@IsOptional()
 	@IsArray({ message: "ingredients must be an array." })
 	@ArrayMinSize(1, { message: "ingredients must contain at least one ingredient." })
 	@ValidateNested({ each: true})

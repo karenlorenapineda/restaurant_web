@@ -1,8 +1,7 @@
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { MenuService } from './menu.service';
 import { PrismaService } from '../database/prisma.service';
-import { RecipesService } from '../recipes/recipes.service';
 
 describe('MenuService', () => {
 	let service: MenuService;
@@ -15,8 +14,16 @@ describe('MenuService', () => {
 			delete: jest.fn(),
 		},
 		recipe: {
+			findUnique: jest.fn(),
 			createMany: jest.fn(),
+			update: jest.fn(),
 			deleteMany: jest.fn(),
+		},
+		ingredient: {
+			findUnique: jest.fn(),
+		},
+		unitOfMeasure: {
+			findUnique: jest.fn(),
 		},
 	};
 
@@ -32,13 +39,19 @@ describe('MenuService', () => {
 		},
 	};
 
-	const recipesService = {
-		createRecipes: jest.fn(),
-		updateRecipes: jest.fn(),
-	};
-
 	beforeEach(async () => {
-		jest.clearAllMocks();
+		jest.resetAllMocks();
+
+		tx.ingredient.findUnique.mockResolvedValue({
+			id: 5,
+			name: 'Flour',
+			unit: { type: 'weight' },
+		});
+
+		tx.unitOfMeasure.findUnique.mockResolvedValue({
+			id: 1,
+			type: 'weight',
+		});
 
 		prisma.$transaction.mockImplementation(
 			(callback) => callback(tx),
@@ -48,7 +61,6 @@ describe('MenuService', () => {
 			providers: [
 				MenuService,
 				{ provide: PrismaService, useValue: prisma },
-				{ provide: RecipesService, useValue: recipesService },
 			],
 		}).compile();
 
@@ -321,8 +333,6 @@ describe('MenuService', () => {
 			recipes: [{ id: 20, itemId: 10 }],
 		};
 
-		recipesService.createRecipes.mockResolvedValue({ count: 1 });
-
 		tx.menuItem.create.mockResolvedValue(newDish);
 		tx.menuItem.findUnique.mockResolvedValue(expected);
 		tx.recipe.createMany.mockResolvedValue({ count: 1 });
@@ -378,4 +388,176 @@ describe('MenuService', () => {
 		expect(tx.menuItem.findUnique).not.toHaveBeenCalled();
 	});
 
+	it('rejects incompatible units before creating a dish', async () => {
+		tx.unitOfMeasure.findUnique.mockResolvedValue({
+			id: 3,
+			type: 'volume',
+		});
+
+		await expect(
+			service.createMenuItem({
+				name: 'Pizza',
+				price: 25000,
+				categoryId: 1,
+				ingredients: [
+					{ ingredientId: 5, quantity: 100, unitId: 3 },
+				],
+			}),
+		).rejects.toBeInstanceOf(BadRequestException);
+
+		expect(tx.menuItem.create).not.toHaveBeenCalled();
+		expect(tx.recipe.createMany).not.toHaveBeenCalled();
+	});
+
+	it('rejects a missing ingredient before creating a dish', async () => {
+		tx.ingredient.findUnique.mockResolvedValue(null);
+
+		await expect(
+			service.createMenuItem({
+				name: 'Pizza',
+				price: 25000,
+				categoryId: 1,
+				ingredients: [
+					{ ingredientId: 99, quantity: 100, unitId: 1 },
+				],
+			}),
+		).rejects.toBeInstanceOf(NotFoundException);
+
+		expect(tx.menuItem.create).not.toHaveBeenCalled();
+	});
+
+	it('rejects a missing unit before creating a dish', async () => {
+		tx.unitOfMeasure.findUnique.mockResolvedValue(null);
+
+		await expect(
+			service.createMenuItem({
+				name: 'Pizza',
+				price: 25000,
+				categoryId: 1,
+				ingredients: [
+					{ ingredientId: 5, quantity: 100, unitId: 99 },
+				],
+			}),
+		).rejects.toBeInstanceOf(NotFoundException);
+
+		expect(tx.menuItem.create).not.toHaveBeenCalled();
+	});
+
+	it('updates a dish and its recipes using the transaction client', async () => {
+		const expected = {
+			id: 10,
+			name: 'Updated pizza',
+			recipes: [{ id: 20, quantity: 300 }],
+		};
+
+		tx.menuItem.findUnique
+			.mockResolvedValueOnce({ id: 10 })
+			.mockResolvedValueOnce(expected);
+
+		tx.recipe.findUnique.mockResolvedValue({
+			id: 20,
+			itemId: 10,
+			ingredientId: 5,
+			unitId: 1,
+		});
+
+		await expect(
+			service.updateMenuItem(10, {
+				name: 'Updated pizza',
+				ingredients: [{ id: 20, quantity: 300 }],
+			}),
+		).resolves.toEqual(expected);
+
+		expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+
+		expect(tx.menuItem.update).toHaveBeenCalledWith({
+			where: { id: 10 },
+			data: { name: 'Updated pizza' },
+		});
+
+		expect(tx.recipe.update).toHaveBeenCalledWith({
+			where: { id: 20 },
+			data: { quantity: 300 },
+		});
+	});
+
+	it('rejects recipes belonging to another dish before writing', async () => {
+		tx.menuItem.findUnique.mockResolvedValue({ id: 10 });
+
+		tx.recipe.findUnique.mockResolvedValue({
+			id: 20,
+			itemId: 99,
+			ingredientId: 5,
+			unitId: 1,
+		});
+
+		await expect(
+			service.updateMenuItem(10, {
+				name: 'Updated pizza',
+				ingredients: [{ id: 20, quantity: 300 }],
+			}),
+		).rejects.toBeInstanceOf(NotFoundException);
+
+		expect(tx.menuItem.update).not.toHaveBeenCalled();
+		expect(tx.recipe.update).not.toHaveBeenCalled();
+	});
+
+	it('rejects incompatible recipe updates before changing the dish', async () => {
+		tx.menuItem.findUnique.mockResolvedValue({ id: 10 });
+
+		tx.recipe.findUnique.mockResolvedValue({
+			id: 20,
+			itemId: 10,
+			ingredientId: 5,
+			unitId: 1,
+		});
+
+		tx.unitOfMeasure.findUnique.mockResolvedValue({
+			id: 3,
+			type: 'volume',
+		});
+
+		await expect(
+			service.updateMenuItem(10, {
+				name: 'Updated pizza',
+				ingredients: [{ id: 20, unitId: 3 }],
+			}),
+		).rejects.toBeInstanceOf(BadRequestException);
+
+		expect(tx.menuItem.update).not.toHaveBeenCalled();
+		expect(tx.recipe.update).not.toHaveBeenCalled();
+	});
+
+	it('rejects an update when the dish does not exist', async () => {
+		tx.menuItem.findUnique.mockResolvedValue(null);
+
+		await expect(
+			service.updateMenuItem(99, { name: 'Updated pizza' }),
+		).rejects.toBeInstanceOf(NotFoundException);
+
+		expect(tx.menuItem.update).not.toHaveBeenCalled();
+	});
+
+	it('propagates recipe update failures from the transaction', async () => {
+		const error = new Error('Recipe update failed');
+
+		tx.menuItem.findUnique.mockResolvedValue({ id: 10 });
+
+		tx.recipe.findUnique.mockResolvedValue({
+			id: 20,
+			itemId: 10,
+			ingredientId: 5,
+			unitId: 1,
+		});
+
+		tx.recipe.update.mockRejectedValue(error);
+
+		await expect(
+			service.updateMenuItem(10, {
+				ingredients: [{ id: 20, quantity: 300 }],
+			}),
+		).rejects.toBe(error);
+
+		expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+	});
 });

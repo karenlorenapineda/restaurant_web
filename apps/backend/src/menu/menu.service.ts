@@ -1,15 +1,44 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { CreateMenuItemDto } from './dto/create-menu-item.dto';
 import { UpdateMenuItemDto } from './dto/update-menu-item.dto';
-import { RecipesService } from '../recipes/recipes.service';
 import { isPrismaNotFoundError } from '../common/utils/prisma-error.util';
+import { Prisma } from '@prisma/client';
 @Injectable()
 export class MenuService {
-	constructor(private readonly prisma: PrismaService,
-		private readonly recipeService: RecipesService,
-	) {}
+	constructor(private readonly prisma: PrismaService) {}
 
+	private async validateIngredientUnit(
+		tx: Prisma.TransactionClient,
+		ingredientId: number,
+		unitId: number,
+		): Promise<void> {
+		const ingredient = await tx.ingredient.findUnique({
+			where: { id: ingredientId },
+			include: { unit: true },
+		});
+
+		if (!ingredient) {
+			throw new NotFoundException(
+			`Ingredient with id ${ingredientId} not found`,
+			);
+		}
+
+		const unit = await tx.unitOfMeasure.findUnique({
+			where: { id: unitId },
+		});
+
+		if (!unit) {
+			throw new NotFoundException(`Unit with id ${unitId} not found`);
+		}
+
+		if (ingredient.unit.type !== unit.type) {
+			throw new BadRequestException(
+			`Unit type "${unit.type}" is not compatible with ingredient "${ingredient.name}". Expected "${ingredient.unit.type}".`,
+			);
+		}
+	}
+	
 	async getMenuSections(){
 		const menu = await this.prisma.menuCategory.findMany({
 			include: {
@@ -67,17 +96,25 @@ export class MenuService {
 		const { ingredients, ...menuItemData } = data;
 
 		return this.prisma.$transaction(async (tx) => {
+			for (const entry of ingredients ?? []) {
+			await this.validateIngredientUnit(
+				tx,
+				entry.ingredientId,
+				entry.unitId,
+			);
+			}
+
 			const newDish = await tx.menuItem.create({
 			data: menuItemData,
 			});
 
 			if (ingredients?.length) {
 			await tx.recipe.createMany({
-				data: ingredients.map((ingredient) => ({
+				data: ingredients.map((entry) => ({
 				itemId: newDish.id,
-				ingredientId: ingredient.ingredientId,
-				quantity: ingredient.quantity,
-				unitId: ingredient.unitId,
+				ingredientId: entry.ingredientId,
+				quantity: entry.quantity,
+				unitId: entry.unitId,
 				})),
 			});
 			}
@@ -90,25 +127,67 @@ export class MenuService {
 	}
 
 	async updateMenuItem(id: number, data: UpdateMenuItemDto) {
+		const { ingredients, ...menuItemData } = data;
+
 		try {
-			const { ingredients, ...menuItemData } = data;
-			await this.prisma.menuItem.update({
-				where: { id: id },
+			return await this.prisma.$transaction(async (tx) => {
+			const dish = await tx.menuItem.findUnique({
+				where: { id },
+			});
+
+			if (!dish) {
+				throw new NotFoundException(`Menu id ${id} not found`);
+			}
+
+			// Validate every recipe before changing the dish.
+			for (const entry of ingredients ?? []) {
+				const recipe = await tx.recipe.findUnique({
+				where: { id: entry.id },
+				});
+
+				if (!recipe || recipe.itemId !== id) {
+				throw new NotFoundException(
+					`Recipe with id ${entry.id} not found for menu item ${id}`,
+				);
+				}
+
+				await this.validateIngredientUnit(
+				tx,
+				entry.ingredientId ?? recipe.ingredientId,
+				entry.unitId ?? recipe.unitId,
+				);
+			}
+
+			await tx.menuItem.update({
+				where: { id },
 				data: menuItemData,
 			});
-	
-			if (ingredients?.length) {
-				await this.recipeService.updateRecipes({
-					ingredients: ingredients,
+
+			for (const entry of ingredients ?? []) {
+				await tx.recipe.update({
+				where: { id: entry.id },
+				data: {
+					...(entry.ingredientId !== undefined && {
+					ingredientId: entry.ingredientId,
+					}),
+					...(entry.quantity !== undefined && {
+					quantity: entry.quantity,
+					}),
+					...(entry.unitId !== undefined && {
+					unitId: entry.unitId,
+					}),
+				},
 				});
 			}
-			return await this.prisma.menuItem.findUnique({
-				where: { id: id },
-				include: { recipes: true }
+
+			return tx.menuItem.findUnique({
+				where: { id },
+				include: { recipes: true },
+			});
 			});
 		} catch (error) {
 			if (isPrismaNotFoundError(error)) {
-				throw new NotFoundException(`Menu id ${id} not found`);
+			throw new NotFoundException(`Menu id ${id} not found`);
 			}
 			throw error;
 		}
