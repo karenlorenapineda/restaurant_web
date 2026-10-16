@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { CreateIngredientDto } from '../supplies/dto/create-ingredient.dto';
 import { UpdateIngredientDto } from '../supplies/dto/update-ingredient.dto';
 import { isPrismaNotFoundError } from '../common/utils/prisma-error.util';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class SuppliesService {
@@ -47,12 +48,22 @@ export class SuppliesService {
 	async deleteIngredient(id: number) {
 		try {
 			return await this.prisma.ingredient.delete({
-				where: {id: id}
+			where: { id },
 			});
 		} catch (error) {
 			if (isPrismaNotFoundError(error)) {
-				throw new NotFoundException(`Ingredient id ${id} not found`);
+			throw new NotFoundException(`Ingredient id ${id} not found`);
 			}
+
+			if (
+			error instanceof Prisma.PrismaClientKnownRequestError &&
+			error.code === 'P2003'
+			) {
+			throw new ConflictException(
+				'Cannot delete an ingredient used by recipes.',
+			);
+			}
+
 			throw error;
 		}
 	}

@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, ConflictException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 import { SuppliesService } from './supplies.service';
@@ -249,12 +249,17 @@ describe('SuppliesService', () => {
       ).rejects.toBeInstanceOf(NotFoundException);
     });
 
-    it('propagates foreign key errors when deletion is blocked', async () => {
-      const error = makePrismaError('P2003');
-      prismaMock.ingredient.delete.mockRejectedValue(error);
+    it('rejects deletion when the ingredient is used by recipes', async () => {
+	  prismaMock.ingredient.delete.mockRejectedValue(
+		 makePrismaError('P2003'),
+	  );
 
-      await expect(service.deleteIngredient(7)).rejects.toBe(error);
-    });
+	  await expect(service.deleteIngredient(7)).rejects.toThrow(
+		 new ConflictException(
+			'Cannot delete an ingredient used by recipes.',
+		 ),
+	  );
+	});
 
     it('propagates unexpected errors', async () => {
       const error = new Error('Database connection failed');
