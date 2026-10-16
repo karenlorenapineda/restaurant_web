@@ -2,7 +2,7 @@ import { Injectable, BadRequestException, NotFoundException, ConflictException }
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PrismaService } from '../database/prisma.service';
 import { OrderStatus, Prisma } from '@prisma/client';
-import { convertQuantity } from './orders.utils';
+import { convertQuantity } from '../common/utils/unit-conversion.util';
 import { validateOrderType } from './orders.validator';
 import { formatOrderResponse } from './orders.formatter';
 
