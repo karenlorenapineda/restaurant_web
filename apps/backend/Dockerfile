@@ -25,6 +25,8 @@ COPY --from=build --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/apps/backend/dist ./apps/backend/dist
 COPY --from=build --chown=node:node /app/apps/backend/prisma ./apps/backend/prisma
 
+RUN mkdir -p /app/uploads && chown node:node /app/uploads
+
 USER node
 
 EXPOSE 3000

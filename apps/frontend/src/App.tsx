@@ -11,6 +11,8 @@ import { EmployeePanelPage } from "./pages/EmployeePanelPage";
 import { HomePage } from "./pages/HomePage";
 import { MenuPage } from "./pages/MenuPage";
 import { OrderPage } from "./pages/OrderPage";
+import { FileManager } from "./features/files/FileManager";
+import { FilesPage } from "./pages/FilesPage";
 
 export function App() {
   useLocale();
@@ -92,7 +94,9 @@ export function App() {
     <main className="min-h-screen bg-[#242424] text-zinc-100 selection:bg-[#e8b45f] selection:text-zinc-950">
       <Header navigate={navigate} goToContact={goToContact} />
       {page === "employees" ? (
-        <EmployeePanelPage navigate={navigate} />
+              <EmployeePanelPage navigate={navigate} />
+      ) : page === "files" ? (
+          <FilesPage />
       ) : page === "menu" ? (
         <MenuPage navigate={navigate} />
       ) : page === "order" ? (

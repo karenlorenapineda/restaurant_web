@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 
 import { DatabaseModule } from "./database/database.module";
+import { FilesModule } from "./files/files.module";
 import { HealthModule } from "./health/health.module";
 
 function validateEnvironment(config: Record<string, unknown>) {
@@ -23,6 +24,7 @@ function validateEnvironment(config: Record<string, unknown>) {
     }),
     DatabaseModule,
     HealthModule,
+    FilesModule
   ],
 })
 export class AppModule {}
