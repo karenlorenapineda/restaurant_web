@@ -1,0 +1,10 @@
+services:
+  database:
+    ports:
+      - "127.0.0.1:5432:5432"
+    networks:
+      - database_dev
+
+networks:
+  database_dev:
+    driver: bridge

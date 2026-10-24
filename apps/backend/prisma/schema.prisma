@@ -86,7 +86,7 @@ model Employee {
   phone           String?   @db.VarChar(255)
   restaurantId    Int       @map("restaurant_id")
   positionId      Int       @map("position_id")
-  birthDate       DateTime  @map("birth_date") @db.Date
+  birthDate       DateTime? @map("birth_date") @db.Date
   hireDate        DateTime  @default(now()) @map("hire_date") @db.Timestamp(6)
   terminationDate DateTime? @map("termination_date") @db.Timestamp(6)
   isActive        Boolean   @default(true) @map("is_active")
@@ -111,13 +111,16 @@ model MenuCategory {
 }
 
 model MenuItem {
-  id          Int     @id @default(autoincrement()) @map("item_id")
-  name        String  @db.VarChar(255)
-  imageUrl    String? @map("image_url") @db.VarChar(255)
-  description String? @db.Text
-  price       Decimal @db.Decimal(10, 2)
-  categoryId  Int     @map("category_id")
-  isAvailable Boolean @default(true) @map("is_available")
+  id                 Int     @id @default(autoincrement()) @map("item_id")
+  name               String  @db.VarChar(255)
+  imageUrl           String? @map("image_url") @db.VarChar(255)
+  description        String? @db.Text
+  price              Decimal @db.Decimal(10, 2)
+  categoryId         Int     @map("category_id")
+  isAvailable        Boolean @default(true) @map("is_available")
+  internalRecipe     String? @map("internal_recipe") @db.Text
+  isFavorite         Boolean @default(false) @map("is_favorite")
+  showImageInGallery Boolean @default(false) @map("show_image_in_gallery")
 
   category     MenuCategory  @relation(fields: [categoryId], references: [id])
   recipes      Recipe[]
@@ -127,13 +130,37 @@ model MenuItem {
   @@map("menu_items")
 }
 
+enum UnitType {
+  weight
+  volume
+  count
+}
+
 model UnitOfMeasure {
-  id           Int          @id @default(autoincrement()) @map("unit_id")
-  abbreviation String       @db.VarChar(10)
-  name         String       @db.VarChar(50)
-  ingredients  Ingredient[]
+  id           Int      @id @default(autoincrement()) @map("unit_id")
+  abbreviation String   @db.VarChar(10)
+  name         String   @db.VarChar(50)
+  type         UnitType
+  baseFactor   Decimal  @default(1.0000) @map("base_factor") @db.Decimal(12, 4)
+
+  ingredients    Ingredient[]
+  recipes        Recipe[]
+  inventoryItems InventoryItem[]
 
   @@map("units_of_measure")
+}
+
+model InventoryItem {
+  id           Int     @id @default(autoincrement()) @map("item_id")
+  name         String  @db.VarChar(255)
+  unitId       Int     @map("unit_id")
+  unitCost     Decimal @map("unit_cost") @db.Decimal(10, 2)
+  currentStock Decimal @default(0.000) @map("current_stock") @db.Decimal(10, 3)
+  minimumStock Decimal @default(0.000) @map("minimum_stock") @db.Decimal(10, 3)
+
+  unit UnitOfMeasure @relation(fields: [unitId], references: [id])
+
+  @@map("inventory_items")
 }
 
 model Ingredient {
@@ -142,6 +169,7 @@ model Ingredient {
   unitId       Int     @map("unit_id")
   unitCost     Decimal @map("unit_cost") @db.Decimal(10, 2)
   currentStock Decimal @default(0.000) @map("current_stock") @db.Decimal(10, 3)
+  minimumStock Decimal @default(0.000) @map("minimum_stock") @db.Decimal(10, 3)
 
   unit    UnitOfMeasure @relation(fields: [unitId], references: [id])
   recipes Recipe[]
@@ -154,23 +182,33 @@ model Recipe {
   itemId       Int     @map("item_id")
   ingredientId Int     @map("ingredient_id")
   quantity     Decimal @db.Decimal(10, 3)
+  unitId       Int     @map("unit_id")
 
-  item       MenuItem   @relation(fields: [itemId], references: [id])
-  ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+  item          MenuItem                  @relation(fields: [itemId], references: [id])
+  ingredient    Ingredient                @relation(fields: [ingredientId], references: [id])
+  unit          UnitOfMeasure             @relation(fields: [unitId], references: [id])
+  modifications OrderDetailModification[]
 
   @@index([itemId])
+  @@index([ingredientId])
+  @@index([unitId])
   @@map("recipes")
 }
 
 // ---------------- ORDERS & BILLING ----------------
 
-model OrderStatus {
-  id            Int                  @id @default(autoincrement()) @map("status_id")
-  name          String               @db.VarChar(50)
-  orders        Order[]
-  statusHistory OrderStatusHistory[]
+enum OrderStatus {
+  queued
+  preparing
+  ready
+  completed
+  cancelled
+}
 
-  @@map("order_statuses")
+enum OrderType {
+  dine_in
+  takeaway
+  delivery
 }
 
 model Table {
@@ -183,21 +221,21 @@ model Table {
 }
 
 model Order {
-  id              Int      @id @default(autoincrement()) @map("order_id")
-  tableId         Int?     @map("table_id")
-  customerName    String?  @map("customer_name") @db.VarChar(255)
-  customerAddress String?  @map("customer_address") @db.Text
-  customerPhone   String?  @map("customer_phone") @db.VarChar(255)
-  restaurantId    Int      @map("restaurant_id")
-  employeeId      Int?     @map("employee_id")
-  statusId        Int      @map("status_id")
-  orderDate       DateTime @default(now()) @map("order_date") @db.Timestamp(6)
-  total           Decimal  @default(0.00) @db.Decimal(10, 2)
+  id              Int         @id @default(autoincrement()) @map("order_id")
+  tableId         Int?        @map("table_id")
+  customerName    String?     @map("customer_name") @db.VarChar(255)
+  customerAddress String?     @map("customer_address") @db.Text
+  customerPhone   String?     @map("customer_phone") @db.VarChar(255)
+  restaurantId    Int         @map("restaurant_id")
+  employeeId      Int?        @map("employee_id")
+  status          OrderStatus @default(queued)
+  type            OrderType
+  orderDate       DateTime    @default(now()) @map("order_date") @db.Timestamp(6)
+  total           Decimal     @default(0.00) @db.Decimal(10, 2)
 
   table         Table?               @relation(fields: [tableId], references: [id])
   restaurant    Restaurant           @relation(fields: [restaurantId], references: [id])
   employee      Employee?            @relation(fields: [employeeId], references: [id])
-  status        OrderStatus          @relation(fields: [statusId], references: [id])
   orderDetails  OrderDetail[]
   statusHistory OrderStatusHistory[]
   payments      Payment[]
@@ -214,22 +252,33 @@ model OrderDetail {
   unitPrice Decimal @map("unit_price") @db.Decimal(10, 2)
   notes     String? @db.Text
 
-  order Order    @relation(fields: [orderId], references: [id])
-  item  MenuItem @relation(fields: [itemId], references: [id])
+  order         Order                     @relation(fields: [orderId], references: [id])
+  item          MenuItem                  @relation(fields: [itemId], references: [id])
+  modifications OrderDetailModification[]
 
   @@index([orderId])
   @@index([itemId])
   @@map("order_details")
 }
 
-model OrderStatusHistory {
-  id         Int      @id @default(autoincrement()) @map("history_id")
-  orderId    Int      @map("order_id")
-  statusId   Int      @map("status_id")
-  statusDate DateTime @default(now()) @map("status_date") @db.Timestamp(6)
+model OrderDetailModification {
+  id            Int @id @default(autoincrement()) @map("order_detail_modification_id")
+  orderDetailId Int @map("order_detail_id")
+  recipeId      Int @map("recipe_id")
 
-  order  Order       @relation(fields: [orderId], references: [id])
-  status OrderStatus @relation(fields: [statusId], references: [id])
+  orderDetail OrderDetail @relation(fields: [orderDetailId], references: [id])
+  recipe      Recipe      @relation(fields: [recipeId], references: [id])
+
+  @@map("order_detail_modifications")
+}
+
+model OrderStatusHistory {
+  id         Int         @id @default(autoincrement()) @map("history_id")
+  orderId    Int         @map("order_id")
+  status     OrderStatus
+  statusDate DateTime    @default(now()) @map("status_date") @db.Timestamp(6)
+
+  order Order @relation(fields: [orderId], references: [id])
 
   @@index([orderId])
   @@map("order_status_history")
