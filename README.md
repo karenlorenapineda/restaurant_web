@@ -1,39 +1,48 @@
 # restaurant_web
-## Local development
 
-Start the application with PostgreSQL accessible from the host:
+
+## Run locally
+
+Requires Docker and Node.js 22.
+
+Start PostgreSQL:
 
 ```bash
-docker compose -f compose.yaml -f compose.dev.yaml up -d
+docker compose up -d database
 ```
 
-The development configuration publishes PostgreSQL only on
-`127.0.0.1:5432`.
-
-Configure the database connections using the same database credentials:
-
-- Root `.env`: `DATABASE_URL` uses `database:5432` for the backend container.
-- `apps/backend/.env`: `DATABASE_URL` uses `localhost:5432` for local Prisma commands.
-
-Do not commit `.env` files containing credentials.
-
-Check database connectivity and migration status:
+Set `DATABASE_URL` in `.env` to use `localhost:5432`, then start the frontend and backend:
 
 ```bash
-cd apps/backend
-npx prisma migrate status
+npm install
+npm run dev
 ```
 
-Run the following commands from the repository root.
+Frontend: http://localhost:5173  
+Backend: http://localhost:3000/api/health
 
-Stop the development environment while preserving database data:
+Stop the app with `Ctrl+C`, then stop PostgreSQL:
 
 ```bash
-docker compose -f compose.yaml -f compose.dev.yaml down
+docker compose down
 ```
 
-Start without publishing PostgreSQL to the host:
+## Run everything with Docker
+
+Set `DATABASE_URL` in `.env` to use `database:5432`, then run:
 
 ```bash
-docker compose -f compose.yaml up -d
+docker compose up -d --build
+```
+
+Stop everything with:
+
+```bash
+docker compose down
+```
+
+## Run tests
+
+```bash
+npm run test
 ```

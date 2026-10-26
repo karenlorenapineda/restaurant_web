@@ -1,0 +1,320 @@
+// Portuguese translations shared by the public pages and employee preview.
+export const ptBySource: Record<string, string> = {
+  Home: "Início",
+  HOME: "INÍCIO",
+  Menu: "Menu",
+  MENU: "MENU",
+  "Navegacion principal": "Navegação principal",
+  "Abrir menu de navegacion": "Abrir menu de navegação",
+  "Restaurante y asadero": "Restaurante e churrasqueira",
+  "Restaurante y asadero familiar": "Restaurante e churrasqueira familiar",
+  CONTACTO: "CONTACTO",
+  EMPLEADOS: "FUNCIONÁRIOS",
+  Contacto: "Contacto",
+  Empleados: "Funcionários",
+  Reservas: "Reservas",
+  Reservations: "Reservas",
+  "Reservar mesa": "Reservar mesa",
+  "Espacio logo": "Espaço para o logótipo",
+  "Buena comida, grandes momentos": "Boa comida, grandes momentos",
+  "Platos colombianos, carnes al asador y recetas de casa para sentarse en familia y compartir sin prisa.":
+    "Pratos colombianos, carnes grelhadas e receitas caseiras para reunir a família e partilhar sem pressa.",
+  "Especiales de hoy": "Especialidades de hoje",
+  "Favoritos editables desde el panel de empleados.":
+    "Favoritos editáveis no painel de funcionários.",
+  Familiar: "Familiar",
+  "Descubre el verdadero sabor de casa.":
+    "Descubra o verdadeiro sabor de casa.",
+  "Brasa encendida, acompanamientos colombianos y mesas listas para celebraciones, almuerzos familiares y pedidos para recoger.":
+    "Brasas acesas, acompanhamentos colombianos e mesas prontas para celebrações, almoços em família e pedidos para levar.",
+  Galeria: "Galeria",
+  "Imagenes elegidas desde el panel de empleados.":
+    "Imagens escolhidas no painel de funcionários.",
+  "Mesa familiar de restaurante con ambiente calido":
+    "Mesa familiar num restaurante com ambiente acolhedor",
+  "Mesa servida para reservar en familia":
+    "Mesa posta para uma reserva em família",
+  "Fachada del asadero familiar": "Fachada da churrasqueira familiar",
+  "Volver al inicio": "Voltar ao início",
+  "Carta del asadero": "Menu da churrasqueira",
+  "Menu familiar": "Menu familiar",
+  "Elige un plato para verlo en grande. Carnes al asador, entradas caseras y bebidas para acompanar la mesa.":
+    "Escolha um prato para o ver em detalhe. Carnes grelhadas, entradas caseiras e bebidas para acompanhar a refeição.",
+  Todos: "Todos",
+  "Cerrar detalle del plato": "Fechar detalhes do prato",
+  "Reservas y localizacion": "Reservas e localização",
+  "Ven con tu familia": "Venha com a sua família",
+  "Tenemos mesas para grupos, pedidos para recoger y atencion para celebraciones familiares alrededor de la brasa.":
+    "Temos mesas para grupos, pedidos para levar e serviço para celebrações familiares à volta das brasas.",
+  "Abrir mapa": "Abrir mapa",
+  Nombre: "Nome",
+  Telefono: "Telefone",
+  Mensaje: "Mensagem",
+  "Enviar mensaje": "Enviar mensagem",
+  "Tu nombre": "O seu nome",
+  "Reserva familiar, pedido para recoger o evento":
+    "Reserva familiar, pedido para levar ou evento",
+  "Chat del asadero": "Chat da churrasqueira",
+  Hablemos: "Vamos conversar",
+  "Cerrar chat": "Fechar chat",
+  "Abrir chat con el restaurante": "Abrir chat com o restaurante",
+  "Escribe tu mensaje": "Escreva a sua mensagem",
+  Enviar: "Enviar",
+  "Hola, somos Picasso Asadero. Quieres reservar, pedir para recoger o consultar la carta?":
+    "Olá, somos a Picasso Asadero. Quer reservar, fazer um pedido para levar ou consultar o menu?",
+  "Gracias por escribirnos. El equipo del asadero te respondera pronto.":
+    "Obrigado pela mensagem. A equipa da churrasqueira responderá em breve.",
+  "Comprobando servicios": "A verificar os serviços",
+  "Servicios no disponibles": "Serviços indisponíveis",
+  "Application and database are online":
+    "A aplicação e a base de dados estão disponíveis",
+  Address: "Morada",
+  "Address to be confirmed": "Morada por confirmar",
+  Hours: "Horário",
+  "Opening hours to be confirmed": "Horário por confirmar",
+  "Phone to be confirmed": "Telefone por confirmar",
+  "Location to be confirmed": "Localização por confirmar",
+  "Address pending": "Morada pendente",
+  "Phone number": "Número de telefone",
+  Entradas: "Entradas",
+  "Platos colombianos": "Pratos colombianos",
+  "Bebidas y postres": "Bebidas e sobremesas",
+  "Empanadas vallunas": "Empanadas do Valle",
+  "Patacones con hogao": "Banana-pão frita com hogao",
+  Aborrajado: "Banana-pão frita recheada com queijo",
+  "Bandeja paisa familiar": "Bandeja paisa familiar",
+  "Pollo asado colombiano": "Frango assado colombiano",
+  "Sancocho trifasico": "Sancocho de três carnes",
+  "Chuleta valluna": "Costeleta à moda do Valle",
+  "Limonada de panela": "Limonada de rapadura",
+  "Jugo de lulo": "Sumo de lulo",
+  "Tres leches": "Bolo de três leites",
+  "Entrada criolla": "Entrada crioula",
+  "Antojo del asadero": "Petisco da churrasqueira",
+  "Entrada dulce y salada": "Entrada doce e salgada",
+  "Plato especial de la casa": "Prato especial da casa",
+  "Parrillada familiar": "Grelhada familiar",
+  "Plato tradicional colombiano": "Prato tradicional colombiano",
+  "Especial a la brasa": "Especial na brasa",
+  "Receta principal del asadero preparada para compartir.":
+    "Receita principal da churrasqueira, preparada para partilhar.",
+  "Carnes de la casa con acompanamientos colombianos.":
+    "Carnes da casa com acompanhamentos colombianos.",
+  "Sabor casero con ingredientes frescos y porcion generosa.":
+    "Sabor caseiro com ingredientes frescos e uma porção generosa.",
+  "Bocado de la casa para abrir la mesa con sabor local.":
+    "Petisco da casa para começar a refeição com sabor local.",
+  "Preparacion crocante servida con salsa de la casa.":
+    "Preparação crocante servida com molho da casa.",
+  "Contraste colombiano servido caliente para compartir.":
+    "Contraste colombiano servido quente para partilhar.",
+  "Preparacion caliente con el toque ahumado de la cocina.":
+    "Preparação quente com o toque fumado da cozinha.",
+  "Frijoles, arroz, chicharron, carne molida, chorizo, huevo, tajada, arepa y aguacate.":
+    "Feijão, arroz, torresmos, carne picada, chouriço, ovo, banana-pão, arepa e abacate.",
+  "Pollo al carbon con papa salada, yuca, arepa, ensalada y ajies de la casa.":
+    "Frango no carvão com batata salgada, mandioca, arepa, salada e molhos picantes da casa.",
+  "Sopa abundante con res, pollo, cerdo, yuca, platano, papa, mazorca y cilantro.":
+    "Sopa generosa com vaca, frango, porco, mandioca, banana-pão, batata, milho e coentros.",
+  "Masa de maiz, carne desmechada, papa criolla y aji de la casa.":
+    "Massa de milho, carne desfiada, batata crioula e molho picante da casa.",
+  "Platano verde crocante con tomate, cebolla larga y cilantro.":
+    "Banana-pão verde crocante com tomate, cebolinho e coentros.",
+  "Platano maduro relleno de queso, dorado y servido caliente.":
+    "Banana-pão madura recheada com queijo, dourada e servida quente.",
+  "Res, pollo, cerdo, yuca, platano, papa, mazorca y cilantro.":
+    "Vaca, frango, porco, mandioca, banana-pão, batata, milho e coentros.",
+  "Cerdo apanado, arroz, papas a la francesa, ensalada y limon.":
+    "Porco panado, arroz, batatas fritas, salada e limão.",
+  "Panela, limon fresco y hielo.": "Rapadura, limão fresco e gelo.",
+  "Preparado en agua o leche.": "Preparado com água ou leite.",
+  "Bizcocho suave, crema de leche y toque de canela.":
+    "Bolo macio, natas e um toque de canela.",
+  "PEDIR ONLINE": "PEDIR ONLINE",
+  "Pedir online": "Pedir online",
+  "Pedido online": "Pedido online",
+  Recogida: "Recolha",
+  Domicilio: "Entrega",
+  Direccion: "Morada",
+  "El pedido online es una vista previa local; no descuenta inventario ni procesa pagos.":
+    "O pedido online é uma pré-visualização local; não desconta stock nem processa pagamentos.",
+  "Sesion activa": "Sessão ativa",
+  "Rol:": "Função:",
+  "Ver carta": "Ver menu",
+  Salir: "Sair",
+  "Panel de empleados": "Painel de funcionários",
+  "Gestion interna del asadero": "Gestão interna da churrasqueira",
+  "Carta, favoritos, galeria, equipo, inventario y chat interno preparados para conectarse despues a la base de datos.":
+    "Menu, favoritos, galeria, equipa, inventário e chat interno preparados para ligação futura à base de dados.",
+  "Consulta la carta, revisa insumos, mira pedidos activos y conversa con el equipo desde el chat interno.":
+    "Consulte o menu, os ingredientes e os pedidos ativos, e converse com a equipa no chat interno.",
+  "Consulta insumos, mira pedidos activos y conversa con el equipo desde el chat interno.":
+    "Consulte os ingredientes e os pedidos ativos, e converse com a equipa no chat interno.",
+  Insumos: "Ingredientes",
+  Inventario: "Inventário",
+  Pedidos: "Pedidos",
+  "Gestion de insumos": "Gestão de ingredientes",
+  "Anadir insumo": "Adicionar ingrediente",
+  "Anadir inventario": "Adicionar artigo ao inventário",
+  "Insumos listos para usar en recetas y pedidos. Estos si se descuentan cuando se confirma un pedido.":
+    "Ingredientes prontos para receitas e pedidos. São descontados quando um pedido é confirmado.",
+  "Vista de consulta para empleados: puedes revisar existencias, costos y minimos, pero la edicion queda para administracion.":
+    "Vista de consulta para funcionários: pode verificar stock, custos e mínimos; a edição fica reservada à administração.",
+  "Inventario en bruto o pendiente de preparar. Por ahora es una lista independiente y no se conecta con recetas, pedidos ni descuentos de stock.":
+    "Inventário em bruto ou por preparar. Por enquanto, é uma lista independente das receitas, dos pedidos e dos descontos de stock.",
+  "Vista de consulta: este inventario todavia no afecta pedidos ni insumos preparados.":
+    "Vista de consulta: este inventário ainda não afeta pedidos nem ingredientes preparados.",
+  Articulo: "Artigo",
+  Insumo: "Ingrediente",
+  "Chat interno": "Chat interno",
+  "Conversaciones directas entre empleados del restaurante.":
+    "Conversas diretas entre funcionários do restaurante.",
+  Conversacion: "Conversa",
+  "No hay mensajes con esta persona.": "Não há mensagens com esta pessoa.",
+  "Sin empleados disponibles": "Sem funcionários disponíveis",
+  "Gestion de empleados": "Gestão de funcionários",
+  "Los roles siguen la idea de RolesUsuario y Empleados de la base de datos. Solo admin puede cambiarlos.":
+    "As funções seguem os modelos de utilizadores e funcionários da base de dados. Só a administração pode alterá-las.",
+  "Anadir empleado": "Adicionar funcionário",
+  "Has entrado con rol empleado. Puedes consultar el equipo, pero el cambio de roles queda reservado a administracion.":
+    "Está a ver o painel como funcionário. Pode consultar a equipa, mas só a administração pode alterar funções.",
+  Activo: "Ativo",
+  Cargo: "Cargo",
+  Rol: "Função",
+  Platos: "Pratos",
+  "Anadir plato": "Adicionar prato",
+  "Vista para cocina: puedes revisar platos, categorias, disponibilidad y descripcion, pero la edicion queda para administracion.":
+    "Vista da cozinha: pode consultar pratos, categorias, disponibilidade e descrições; a edição fica reservada à administração.",
+  "Guardar cambios": "Guardar alterações",
+  "No hay platos para editar.": "Não há pratos para editar.",
+  "Insumos de la receta": "Ingredientes da receita",
+  "No hay insumos asignados a esta receta.":
+    "Não há ingredientes atribuídos a esta receita.",
+  Disponibles: "Disponíveis",
+  Favoritos: "Favoritos",
+  Categoria: "Categoria",
+  Precio: "Preço",
+  Imagen: "Imagem",
+  Descripcion: "Descrição",
+  "Receta interna": "Receita interna",
+  "Disponible en la carta": "Disponível no menu",
+  "Mostrar como favorito en la pagina principal": "Destacar na página inicial",
+  "Mostrar imagen del plato en la galeria":
+    "Mostrar imagem do prato na galeria",
+  "Nuevo plato": "Novo prato",
+  "Editar plato": "Editar prato",
+  "Detalle del plato": "Detalhes do prato",
+  Disponible: "Disponível",
+  "No disponible": "Indisponível",
+  Favorito: "Favorito",
+  "No favorito": "Não favorito",
+  "En galeria": "Na galeria",
+  "Fuera de galeria": "Fora da galeria",
+  "Nuevo insumo": "Novo ingrediente",
+  "Tablero visual basado en pedidos: cola, preparacion y terminado.":
+    "Quadro visual de pedidos: em fila, em preparação e concluídos.",
+  "Cocina puede ver pedidos y cambiarlos de estado, pero crear pedidos queda para sala y administracion.":
+    "A cozinha pode consultar pedidos e alterar o estado; a criação fica reservada à sala e à administração.",
+  "Pedido sin confirmar: puedes revisarlo y cambiar platos/opciones. Los insumos se descontaran solo al confirmar.":
+    "Pedido por confirmar: pode rever os pratos e as opções. Os ingredientes só serão descontados após a confirmação.",
+  "Pedido pendiente": "Pedido pendente",
+  "Anadir pedido": "Adicionar pedido",
+  "Selecciona platos para este pedido.":
+    "Selecione os pratos para este pedido.",
+  "Confirmar pedido": "Confirmar pedido",
+  Cancelar: "Cancelar",
+  "Platos del pedido": "Pratos do pedido",
+  "Con cambios": "Com alterações",
+  "Receta cocina": "Receita da cozinha",
+  "Insumos y opciones": "Ingredientes e opções",
+  Sin: "Sem",
+  "No hay pedidos creados.": "Ainda não há pedidos.",
+  Mesa: "Mesa",
+  Cliente: "Cliente",
+  Total: "Total",
+  Notas: "Notas",
+  Unidad: "Unidade",
+  Stock: "Stock",
+  Costo: "Custo",
+  Minimo: "Mínimo",
+  empleado: "funcionário",
+  cocina: "cozinha",
+  "En cola": "Em fila",
+  Preparando: "Em preparação",
+  Terminado: "Concluído",
+  recibido: "recebido",
+  "en cocina": "na cozinha",
+  listo: "pronto",
+  entregado: "entregue",
+  "Administracion Picasso": "Administração Picasso",
+  Gerencia: "Gerência",
+  Asador: "Grelhador",
+  "Servicio de mesa": "Serviço de mesa",
+  Servicio: "Serviço",
+  "Equipo de cocina": "Equipa da cozinha",
+  Frijoles: "Feijão",
+  Arroz: "Arroz",
+  Chicharron: "Torresmos",
+  "Carne molida": "Carne picada",
+  Huevo: "Ovo",
+  "Tajada madura": "Banana-pão madura frita",
+  "Papa criolla": "Batata crioula",
+  Yuca: "Mandioca",
+  Ensalada: "Salada",
+  "Carne de res": "Carne de vaca",
+  Cerdo: "Porco",
+  Platano: "Banana-pão",
+  Mazorca: "Milho",
+  Cilantro: "Coentros",
+  "Masa de maiz": "Massa de milho",
+  "Carne desmechada": "Carne desfiada",
+  "Calentar frijoles y arroz, dorar chicharron y chorizo, terminar con huevo frito, tajada, arepa y aguacate al pase.":
+    "Aquecer o feijão e o arroz, dourar os torresmos e o chouriço, e finalizar com ovo frito, banana-pão, arepa e abacate.",
+  "Marinar el pollo, asar al carbon hasta dorar, reposar y servir con papa, yuca, arepa, ensalada y aji de la casa.":
+    "Marinar o frango, assar no carvão até dourar, deixar repousar e servir com batata, mandioca, arepa, salada e molho picante da casa.",
+  "Cocer carnes por etapas, agregar tuberculos y mazorca, rectificar sal y terminar con cilantro fresco.":
+    "Cozer as carnes por etapas, juntar os tubérculos e o milho, ajustar o sal e finalizar com coentros frescos.",
+  "Rellenar la masa con carne y papa, cerrar, freir hasta dorar y servir con aji aparte.":
+    "Rechear a massa com carne e batata, fechar, fritar até dourar e servir com molho picante à parte.",
+  "Bulto de papa sin lavar": "Saco de batatas por lavar",
+  "Canastilla de pollo crudo": "Caixa de frango cru",
+  "Saco de arroz": "Saco de arroz",
+  "Caja de verduras por limpiar": "Caixa de legumes por limpar",
+  "Recuerden revisar existencias antes del servicio de la noche.":
+    "Lembrem-se de verificar o stock antes do serviço da noite.",
+  "Quedan pollos listos para el primer turno.":
+    "Há frangos prontos para o primeiro turno.",
+  "Mesa familiar": "Mesa familiar",
+  "Bandeja paisa familiar, 2 limonadas": "Bandeja paisa familiar, 2 limonadas",
+  "Sin picante": "Sem picante",
+  "Domicilio Rodriguez": "Entrega Rodriguez",
+  "Pollo asado colombiano, yuca, arepas":
+    "Frango assado colombiano, mandioca, arepas",
+  "Enviar cubiertos": "Incluir talheres",
+  "Reserva 7:30": "Reserva 7:30",
+  "Sancocho trifasico, empanadas vallunas":
+    "Sancocho de três carnes, empanadas do Valle",
+  "Preparar entrada primero": "Preparar primeiro a entrada",
+  "Nuevo plato colombiano": "Novo prato colombiano",
+  "Describe aqui los pasos internos de preparacion.":
+    "Descreva aqui os passos de preparação.",
+  "Nuevo empleado": "Novo funcionário",
+  "Cliente nuevo": "Novo cliente",
+  "Plato por definir": "Prato por escolher",
+  "Platos fuertes": "Pratos principais",
+  "Plato eliminado de la carta.": "Prato removido do menu.",
+  "Employee dashboard preview": "Pré-visualização do painel de funcionários",
+  "Frontend-only restaurant operations preview":
+    "Pré-visualização das operações do restaurante",
+  "Choose a role to preview the dashboard screens. This does not authenticate users, grant real permissions, or replace backend access control.":
+    "Escolha uma função para explorar o painel. Esta vista não autentica utilizadores, não concede permissões reais nem substitui o controlo de acesso do servidor.",
+  "Preview role": "Função de teste",
+  "Role:": "Função:",
+  "Mock mode only: data changes stay in this browser and must be replaced with real backend authentication before production.":
+    "Modo de teste: as alterações ficam neste navegador. Antes da publicação, é necessária autenticação real no servidor.",
+  "Admin preview": "Vista de administrador",
+  "Service preview": "Vista da sala",
+  "Kitchen preview": "Vista da cozinha",
+  "Preview menu updated for this session.":
+    "Menu de teste atualizado para esta sessão.",
+};
