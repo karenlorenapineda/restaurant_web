@@ -30,6 +30,33 @@ export interface DateRange {
   endExclusive: Date;
 }
 
+/**
+ * `new Date("2026-02-30")` silently becomes 2 March, so the calendar day is
+ * checked by hand before the string is parsed. Anything that is not a real
+ * calendar date (30 Feb, 31 Apr, 29 Feb in a non-leap year, month 13...) is a 400.
+ */
+function parseQueryDate(value: string, field: "from" | "to"): Date {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  const parsed = new Date(value);
+
+  if (!match || Number.isNaN(parsed.getTime())) {
+    throw new BadRequestException(`\`${field}\` must be a valid date`);
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+
+  if (month < 1 || month > 12 || day < 1 || day > daysInMonth) {
+    throw new BadRequestException(
+      `\`${field}\` is not a real calendar date: ${match[0]}`,
+    );
+  }
+
+  return parsed;
+}
+
 /** Last instant that belongs to the range (for display only). */
 export function inclusiveEnd(range: DateRange): Date {
   return new Date(range.endExclusive.getTime() - 1);
@@ -90,7 +117,7 @@ export class AnalyticsService {
     let endExclusive: Date;
 
     if (query.to) {
-      const to = new Date(query.to);
+      const to = parseQueryDate(query.to, "to");
       endExclusive = new Date(
         to.getTime() + (DATE_ONLY.test(query.to) ? DAY_MS : 1),
       );
@@ -99,12 +126,8 @@ export class AnalyticsService {
     }
 
     const from = query.from
-      ? new Date(query.from)
+      ? parseQueryDate(query.from, "from")
       : new Date(endExclusive.getTime() - DEFAULT_RANGE_DAYS * DAY_MS);
-
-    if (Number.isNaN(from.getTime()) || Number.isNaN(endExclusive.getTime())) {
-      throw new BadRequestException("`from`/`to` must be valid dates");
-    }
 
     if (from.getTime() >= endExclusive.getTime()) {
       throw new BadRequestException("`from` must be before or equal to `to`");

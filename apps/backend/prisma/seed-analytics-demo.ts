@@ -1,22 +1,34 @@
 /**
  * Demo data for the analytics dashboard.
  *
- * SAFETY RULES (do not break them):
- *  - Everything this script creates hangs off ONE dedicated restaurant
+ * !! ONLY RUN IT ON A DEDICATED DEMO/TEST DATABASE !!
+ * It creates menu categories and dishes, and the menu module lists every row,
+ * so on the shared development database the demo dishes would show up in the
+ * real menu. For that reason it refuses to run unless the database NAME
+ * contains "demo" or "test" (e.g. picasso_demo), see assertDemoDatabase().
+ *
+ * Other safety rules (do not break them):
+ *  - Everything it creates hangs off ONE dedicated restaurant
  *    (DEMO_RESTAURANT_NAME). That restaurant is the ONLY thing it ever deletes
  *    data from; it never touches other restaurants' orders, payments, etc.
- *  - Lookup tables (roles, payment methods, categories, menu items...)
- *    are found by NAME and created only if missing. Nothing is deleted there and
+ *  - Lookup tables (roles, payment methods, categories, menu items...) are
+ *    found by NAME and created only if missing. Nothing is deleted there and
  *    no fixed ids are assumed.
- *  - The wipe + re-creation of the demo orders runs inside a single transaction:
- *    if anything fails, the previous demo data is left exactly as it was.
- *  - It refuses to run with NODE_ENV=production unless ALLOW_DEMO_SEED=1.
+ *  - The wipe + re-creation of the demo orders runs inside a single
+ *    transaction: if anything fails, the previous demo data stays as it was.
+ *  - It refuses to run with NODE_ENV=production.
  *
- * Run it with:  npm run seed:analytics --workspace @picasso/backend
+ * How to run it (from the repo root):
+ *   1. Create an empty database, e.g. picasso_demo.
+ *   2. DATABASE_URL=postgresql://USER:PASS@HOST:5432/picasso_demo?schema=public \
+ *        npx prisma migrate deploy --schema apps/backend/prisma/schema.prisma
+ *   3. DATABASE_URL=<same url> npm run seed:analytics --workspace @picasso/backend
  *
  * (It is independent from prisma/seed.ts, the general seed of the project.)
  */
 import { OrderStatus, OrderType, Prisma, PrismaClient } from "@prisma/client";
+
+import { assertDemoDatabase } from "../src/analytics/lib/demo-database.util";
 
 const prisma = new PrismaClient();
 
@@ -172,13 +184,12 @@ async function ensureLookups() {
 }
 
 async function main() {
-  if (process.env.NODE_ENV === "production" && process.env.ALLOW_DEMO_SEED !== "1") {
-    throw new Error(
-      "Refusing to seed demo data with NODE_ENV=production (set ALLOW_DEMO_SEED=1 to override).",
-    );
-  }
+  const databaseName = assertDemoDatabase(
+    process.env.DATABASE_URL,
+    process.env.NODE_ENV,
+  );
 
-  console.log("Seeding demo data for the analytics dashboard...");
+  console.log(`Seeding demo data for the analytics dashboard into "${databaseName}"...`);
 
   const { restaurant, employee, table, paymentMethods, menuItems } =
     await ensureLookups();

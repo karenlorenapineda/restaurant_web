@@ -1,8 +1,11 @@
 import { BadRequestException } from "@nestjs/common";
 import { OrderStatus, Prisma } from "@prisma/client";
+import { plainToInstance } from "class-transformer";
+import { validate } from "class-validator";
 
 import { PrismaService } from "../database/prisma.service";
 import { NON_SALE_STATUSES, SALE_ORDER_FILTER } from "./analytics.constants";
+import { AnalyticsQueryDto } from "./dto/analytics-query.dto";
 import { AnalyticsService, inclusiveEnd } from "./analytics.service";
 
 function makePrisma() {
@@ -127,6 +130,49 @@ describe("AnalyticsService", () => {
       ).toThrow(BadRequestException);
     });
 
+    it.each([
+      ["to", { from: "2026-01-01", to: "2026-02-30" }],
+      ["to", { from: "2026-01-01", to: "2026-02-29" }], // 2026 is not a leap year
+      ["to", { from: "2026-01-01", to: "2026-04-31" }],
+      ["to", { from: "2026-01-01", to: "2026-02-30T10:00:00Z" }],
+      ["from", { from: "2026-02-30", to: "2026-03-31" }],
+      ["from", { from: "2026-06-00", to: "2026-07-01" }],
+    ])(
+      "rejects a day that is not in the calendar instead of rolling it over (%s: %j)",
+      (_field, query) => {
+        const { service } = makeService();
+
+        expect(() => service.resolveDateRange(query)).toThrow(
+          BadRequestException,
+        );
+      },
+    );
+
+    it("accepts 29 February in a leap year and the last day of every month", () => {
+      const { service } = makeService();
+
+      expect(
+        service.resolveDateRange({ from: "2028-02-01", to: "2028-02-29" })
+          .endExclusive.toISOString(),
+      ).toBe("2028-03-01T00:00:00.000Z");
+      expect(() =>
+        service.resolveDateRange({ from: "2026-04-01", to: "2026-04-30" }),
+      ).not.toThrow();
+      expect(() =>
+        service.resolveDateRange({ from: "2026-12-01", to: "2026-12-31" }),
+      ).not.toThrow();
+    });
+
+    it("the query DTO also rejects 2026-02-30 (strict ISO date, HTTP 400)", async () => {
+      const dto = plainToInstance(AnalyticsQueryDto, { to: "2026-02-30" });
+      const errors = await validate(dto);
+
+      expect(errors.map((e) => e.property)).toContain("to");
+      expect(
+        await validate(plainToInstance(AnalyticsQueryDto, { to: "2026-02-28" })),
+      ).toHaveLength(0);
+    });
+
     it("passes the half-open window to the order queries", async () => {
       const { service, prisma } = makeService();
       await service.getSummary({
@@ -208,5 +254,26 @@ describe("AnalyticsService", () => {
         expect(sql.values).toEqual(expect.arrayContaining(["cancelled"]));
       },
     );
+  });
+  describe("CSV export", () => {
+    it("neutralises dish names that Excel would run as formulas", async () => {
+      const { service, prisma } = makeService();
+      prisma.$queryRaw.mockResolvedValue([
+        {
+          item_id: 1,
+          name: "=1+1",
+          category: "+SUM(A1)",
+          quantity_sold: 2n,
+          revenue: 20,
+        },
+      ]);
+
+      const { content } = await service.exportCsv({
+        report: "top-menu-items",
+      } as never);
+
+      expect(content).toContain("'=1+1");
+      expect(content).not.toMatch(/(^|,)=1\+1/m);
+    });
   });
 });

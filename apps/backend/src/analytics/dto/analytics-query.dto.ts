@@ -8,11 +8,11 @@ import { IsDateString, IsInt, IsOptional, Min } from "class-validator";
  */
 export class AnalyticsQueryDto {
   @IsOptional()
-  @IsDateString()
+  @IsDateString({ strict: true })
   from?: string;
 
   @IsOptional()
-  @IsDateString()
+  @IsDateString({ strict: true })
   to?: string;
 
   @IsOptional()
