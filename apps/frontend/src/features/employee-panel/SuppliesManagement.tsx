@@ -103,7 +103,7 @@ export function SuppliesManagement({
                   onUpdate(supply.id, "name", event.target.value)
                 }
                 readOnly={!canEdit}
-                value={supply.name}
+                value={t(supply.name)}
               />
             </Field>
             <Field label={t("Unidad")}>
@@ -149,7 +149,7 @@ export function SuppliesManagement({
             {canEdit ? (
               <div className="flex items-end justify-end pb-2">
                 <DeleteButton
-                  label={`Eliminar ${supply.name}`}
+                  label={`Eliminar ${t(supply.name)}`}
                   onClick={() => onDelete(supply.id)}
                 />
               </div>
