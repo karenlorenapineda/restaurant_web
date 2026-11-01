@@ -2,6 +2,7 @@ import { TablesModule } from "./tables/tables.module";
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 
+import { AnalyticsModule } from "./analytics/analytics.module";
 import { DatabaseModule } from "./database/database.module";
 import { HealthModule } from "./health/health.module";
 import { MenuModule } from "./menu/menu.module";
@@ -45,6 +46,7 @@ function validateEnvironment(config: Record<string, unknown>) {
     OrdersModule,
     RestaurantModule,
     ChatModule,
+    AnalyticsModule,
   ],
 })
 export class AppModule {}
