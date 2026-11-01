@@ -17,16 +17,16 @@ Las URLs HTTP son relativas (`/api/...`); Vite y Nginx las reenvían al backend.
 
 ## 3. Conectar los flujos
 
-| Pantalla             | Fuente y escrituras                                                                           |
-| -------------------- | --------------------------------------------------------------------------------------------- |
-| Inicio y carta       | GET `/menu`; utiliza imágenes y galería guardadas; muestra hasta tres platos disponibles en inicio                                 |
-| Pedido online        | GET `/menu`, POST `/orders`; toma ID y total del servidor                                     |
-| Platos               | GET `/menu/management`, `/categories`; POST/PATCH/DELETE `/menu`                              |
-| Insumos e inventario | GET/POST/PATCH/DELETE de cada módulo; unidades desde `/units`                                 |
-| Pedidos internos     | GET `/orders`, POST `/orders`, PATCH `/orders/:id/status`; permite exclusiones por `recipeId` |
-| Recetas              | GET/POST/PATCH/DELETE `/recipes`; edición de cantidades y unidades                            |
-| Empleados            | GET/POST/PATCH `/employees`; activar/desactivar por sus rutas específicas                     |
-| Chat interno         | GET historial + Socket.IO `join`, `sendMessage`, `newMessage`                                 |
+| Pantalla             | Fuente y escrituras                                                                                |
+| -------------------- | -------------------------------------------------------------------------------------------------- |
+| Inicio y carta       | GET `/menu`; utiliza imágenes y galería guardadas; muestra hasta tres platos disponibles en inicio |
+| Pedido online        | GET `/menu`, POST `/orders`; toma ID y total del servidor                                          |
+| Platos               | GET `/menu/management`, `/categories`; POST/PATCH/DELETE `/menu`                                   |
+| Insumos e inventario | GET/POST/PATCH/DELETE de cada módulo; unidades desde `/units`                                      |
+| Pedidos internos     | GET `/orders`, POST `/orders`, PATCH `/orders/:id/status`; permite exclusiones por `recipeId`      |
+| Recetas              | GET/POST/PATCH/DELETE `/recipes`; edición de cantidades y unidades                                 |
+| Empleados            | GET/POST/PATCH `/employees`; activar/desactivar por sus rutas específicas                          |
+| Chat interno         | GET historial + Socket.IO `join`, `sendMessage`, `newMessage`                                      |
 
 El panel conectado recupera el diseño original: selector de vistas admin/sala/cocina, barra lateral, métricas de platos, formularios, tablero y conversaciones. Reutiliza `MenuManagement`, `SuppliesManagement`, `EmployeesManagement`, `OrdersManagement` y `ChatManagement`; la conexión se concentra en `useConnectedPanel` y `api/employeePanel.ts`. Las vistas de sala/cocina mantienen sus opciones y campos de consulta. El selector es exclusivamente de desarrollo y no concede permisos en el servidor.
 
@@ -110,6 +110,12 @@ El widget público de chat de demostración no se muestra en modo API: el backen
 - Migrar los registros antiguos sin perderlos. Las pruebas sobre una base vacía no validan la migración de la base anterior.
 - Las descripciones nuevas y los mensajes escritos por usuarios se muestran como contenido; no se traducen automáticamente.
 - Analytics #12 no está incluido en `main` y no forma parte de esta integración.
+
+## Búsqueda e idiomas en el modo conectado
+
+La carta y la gestión de platos comparten búsqueda por texto, categoría, rango de precios COP, ordenación y paginación. La búsqueda se realiza en el navegador sobre los datos recibidos de la API; no añade endpoints ni paginación en el servidor. El panel permite además filtrar disponibilidad. La carta pública solo muestra platos disponibles.
+
+Los controles y mensajes siguen el idioma seleccionado (español, inglés o portugués). Cambiar de idioma conserva filtros y borradores. Los identificadores de categorías, unidades, ingredientes y platos se mantienen como valores de las peticiones aunque cambien las etiquetas visibles.
 
 ## 8. Comprobaciones
 

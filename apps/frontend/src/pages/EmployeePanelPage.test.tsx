@@ -49,7 +49,7 @@ describe("EmployeePanelPage", () => {
     expect(screen.queryByPlaceholderText("Admin2026")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
 
-    startRolePreview("Admin preview");
+    startRolePreview("Vista de administrador");
 
     expect(
       await screen.findByText("Gestion interna del asadero"),
@@ -59,7 +59,7 @@ describe("EmployeePanelPage", () => {
 
   it("shows every management area to the admin preview", () => {
     renderEmployeePanel();
-    startRolePreview("Admin preview");
+    startRolePreview("Vista de administrador");
 
     ["Carta", "Empleados", "Insumos", "Inventario", "Pedidos", "Chat"].forEach(
       (tabName) => {
@@ -81,7 +81,7 @@ describe("EmployeePanelPage", () => {
 
   it("limits the service preview to its allowed management areas", () => {
     renderEmployeePanel();
-    startRolePreview("Service preview");
+    startRolePreview("Vista de sala");
 
     expect(
       screen.queryByRole("button", { name: "Carta" }),
@@ -103,7 +103,7 @@ describe("EmployeePanelPage", () => {
 
   it("lets the kitchen preview read recipes and update order status only", () => {
     renderEmployeePanel();
-    startRolePreview("Kitchen preview");
+    startRolePreview("Vista de cocina");
 
     expect(screen.getByRole("button", { name: "Carta" })).toBeInTheDocument();
     expect(
@@ -129,7 +129,7 @@ describe("EmployeePanelPage", () => {
 
   it("discounts stock on order confirmation and restores it on deletion", () => {
     renderEmployeePanel();
-    startRolePreview("Admin preview");
+    startRolePreview("Vista de administrador");
     fireEvent.click(screen.getByRole("button", { name: "Pedidos" }));
     fireEvent.click(screen.getByRole("button", { name: "Anadir pedido" }));
 
@@ -151,7 +151,7 @@ describe("EmployeePanelPage", () => {
 
   it("creates, publishes and deletes a preview dish", () => {
     const employeePanel = renderEmployeePanel();
-    startRolePreview("Admin preview");
+    startRolePreview("Vista de administrador");
     fireEvent.click(screen.getByRole("button", { name: "Anadir plato" }));
 
     fireEvent.change(screen.getByLabelText("Nombre"), {
@@ -172,7 +172,7 @@ describe("EmployeePanelPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Guardar cambios" }));
 
     expect(
-      screen.getByText("Preview menu updated for this session."),
+      screen.getByText("Menú de prueba actualizado para esta sesión."),
     ).toBeInTheDocument();
     expect(screen.getByText("Integration test dish")).toBeInTheDocument();
 
@@ -185,7 +185,7 @@ describe("EmployeePanelPage", () => {
 
     publicMenu.unmount();
     renderEmployeePanel();
-    startRolePreview("Admin preview");
+    startRolePreview("Vista de administrador");
     fireEvent.click(
       screen.getByRole("button", {
         name: "Eliminar Integration test dish",

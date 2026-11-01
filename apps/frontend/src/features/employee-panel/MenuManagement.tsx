@@ -1,7 +1,12 @@
+import {
+  DishSearch,
+  SearchPagination,
+  useDishSearch,
+} from "../../search/DishSearch";
 import { parseCop } from "../../api/client";
 import { useIntegrationCopy } from "../../integrationCopy";
 import type { UnitOption } from "../../api/employeePanel";
-import { T, t } from "../../i18n";
+import { T, t, useLocale } from "../../i18n";
 import type { FormEvent } from "react";
 
 import type { RecipeSupply } from "../../data/menu";
@@ -77,6 +82,8 @@ export function MenuManagement({
     value: string | boolean | string[] | RecipeSupply[],
   ) => void;
 }) {
+  useLocale();
+  const search = useDishSearch(dishes);
   const labels = useIntegrationCopy();
   return (
     <>
@@ -108,8 +115,14 @@ export function MenuManagement({
               </button>
             ) : null}
           </div>
+          <DishSearch search={search} />
+          {!search.total && (
+            <p className="mt-5 text-zinc-300">
+              {t("No hay platos que coincidan con los filtros.")}
+            </p>
+          )}
           <div className="mt-5 grid gap-3">
-            {dishes.map((dish) => (
+            {search.visible.map((dish) => (
               <div
                 className={`rounded-sm border p-4 text-left transition ${
                   getEditableDishKey(dish) === selectedDishKey &&
@@ -125,9 +138,9 @@ export function MenuManagement({
                     onClick={() => selectDish(dish)}
                     type="button"
                   >
-                    <p className="font-bold text-zinc-100">{dish.name}</p>
+                    <p className="font-bold text-zinc-100">{t(dish.name)}</p>
                     <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#e8b45f]">
-                      {dish.categoryTitle}
+                      {t(dish.categoryTitle)}
                       {isGalleryDish(dish, galleryKeys)
                         ? ` / ${t("Galeria")}`
                         : ""}
@@ -138,7 +151,7 @@ export function MenuManagement({
                   </span>
                   {canEdit ? (
                     <DeleteButton
-                      label={`Eliminar ${dish.name}`}
+                      label={t("Eliminar {value0}", { value0: t(dish.name) })}
                       onClick={() => deleteDish(dish)}
                     />
                   ) : null}
@@ -146,6 +159,7 @@ export function MenuManagement({
               </div>
             ))}
           </div>
+          <SearchPagination search={search} />
         </Panel>
 
         <Panel>
@@ -299,7 +313,7 @@ export function MenuManagement({
 
               {saveMessage ? (
                 <p className="text-sm font-semibold text-[#e8b45f]">
-                  {saveMessage}
+                  {t(saveMessage)}
                 </p>
               ) : null}
 
@@ -444,7 +458,7 @@ function RecipeSuppliesEditor({
                     key={supply.id}
                     value={apiMode ? supply.id : supply.name}
                   >
-                    {supply.name}
+                    {t(supply.name)}
                   </option>
                 ))}
                 {!apiMode &&
@@ -516,7 +530,9 @@ function RecipeSuppliesEditor({
               {canEdit ? (
                 <div className="flex items-end justify-end pb-2">
                   <DeleteButton
-                    label={`Quitar ${recipeSupply.supplyName}`}
+                    label={t("Quitar {value0}", {
+                      value0: recipeSupply.supplyName,
+                    })}
                     onClick={() => removeRecipeSupply(index)}
                   />
                 </div>

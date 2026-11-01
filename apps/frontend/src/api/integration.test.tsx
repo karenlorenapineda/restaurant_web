@@ -432,4 +432,100 @@ describe("backend integration", () => {
       ingredients: [{ id: 71, ingredientId: 5, unitId: 7, quantity: 2 }],
     });
   });
+  it("searches and paginates API dishes while preserving filters across languages", async () => {
+    const items = Array.from({ length: 8 }, (_, index) => ({
+      ...dish,
+      id: 101 + index,
+      name: `Plato API ${index + 1}`,
+      description: "Limón fresco",
+      price: `$${index + 1}.000,50 COP`,
+    }));
+    const fetch = vi
+      .fn()
+      .mockResolvedValue(response([{ title: "Pizzas", items }]));
+    vi.stubGlobal("fetch", fetch);
+    render(<MenuPage navigate={vi.fn()} />);
+    await screen.findByRole("img", { name: "Plato API 1" });
+    expect(screen.getAllByRole("img")).toHaveLength(6);
+    fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
+    expect(
+      screen.getByRole("img", { name: "Plato API 8" }),
+    ).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Buscar platos"), {
+      target: { value: "limon" },
+    });
+    expect(screen.getByText("Página 1 / 2")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Precio mínimo (COP)"), {
+      target: { value: "3000.5" },
+    });
+    fireEvent.change(screen.getByLabelText("Precio máximo (COP)"), {
+      target: { value: "6000.5" },
+    });
+    fireEvent.change(screen.getByLabelText("Ordenar por"), {
+      target: { value: "price-desc" },
+    });
+    expect(
+      screen.getAllByRole("img").map((image) => image.getAttribute("alt")),
+    ).toEqual(["Plato API 6", "Plato API 5", "Plato API 4", "Plato API 3"]);
+    act(() => setLocale("en"));
+    expect(screen.getByLabelText("Search dishes")).toHaveValue("limon");
+    expect(screen.getByLabelText("Minimum price (COP)")).toHaveValue(3000.5);
+    act(() => setLocale("pt"));
+    expect(screen.getByLabelText("Pesquisar pratos")).toHaveValue("limon");
+    expect(screen.getAllByRole("img")).toHaveLength(4);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+  it("combines connected panel search and availability without losing an edited draft", async () => {
+    const fetch = panelFetch();
+    const base = fetch.getMockImplementation()!;
+    fetch.mockImplementation(async (url: string, options?: RequestInit) => {
+      if (url === "/api/menu/management" && options?.method === "GET") {
+        return response(
+          Array.from({ length: 8 }, (_, index) => ({
+            ...dish,
+            id: 101 + index,
+            name: `Plato API ${index + 1}`,
+            description: "Limón fresco",
+            category: "Pizzas",
+            categoryId: 2,
+            active: index !== 7,
+            featured: false,
+            showImage: false,
+            recipe: null,
+          })),
+        );
+      }
+      return base(url, options);
+    });
+    vi.stubGlobal("fetch", fetch);
+    render(<BackendEmployeePanel />);
+    fireEvent.click(
+      screen.getByRole("button", { name: /Vista de administrador/ }),
+    );
+    await screen.findByText("Plato API 1");
+    fireEvent.change(screen.getByRole("textbox", { name: "Nombre" }), {
+      target: { value: "My draft" },
+    });
+    fireEvent.change(screen.getByLabelText("Buscar platos"), {
+      target: { value: "limon" },
+    });
+    fireEvent.change(screen.getByLabelText("Disponibilidad"), {
+      target: { value: "unavailable" },
+    });
+    expect(screen.getByText("Plato API 8")).toBeInTheDocument();
+    expect(screen.queryByText("Plato API 1")).not.toBeInTheDocument();
+    act(() => setLocale("en"));
+    expect(screen.getByLabelText("Availability")).toHaveValue("unavailable");
+    expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue(
+      "My draft",
+    );
+    act(() => setLocale("pt"));
+    expect(screen.getByLabelText("Pesquisar pratos")).toHaveValue("limon");
+    expect(screen.getByRole("textbox", { name: "Nome" })).toHaveValue(
+      "My draft",
+    );
+    expect(
+      fetch.mock.calls.every(([, options]) => options?.method === "GET"),
+    ).toBe(true);
+  });
 });

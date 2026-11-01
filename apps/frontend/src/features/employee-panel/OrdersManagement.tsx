@@ -1,7 +1,7 @@
 import { transitions } from "../../api/orders";
 import type { ApiOrderStatus } from "../../api/orders";
 import { useIntegrationCopy } from "../../integrationCopy";
-import { T, t } from "../../i18n";
+import { T, t, useLocale } from "../../i18n";
 import { isOnlineOrder } from "../../onlineOrderStore";
 import type { FormEvent } from "react";
 
@@ -91,6 +91,7 @@ export function OrdersManagement({
   pendingOrder: OrderRecord | null;
   selectedOrderId: number | null;
 }) {
+  useLocale();
   const labels = useIntegrationCopy();
   const statuses = apiMode
     ? (["queued", "preparing", "ready", "completed", "cancelled"] as const)
@@ -501,10 +502,10 @@ export function OrdersManagement({
                         className="grid gap-3 rounded-sm border border-white/10 bg-zinc-950/60 p-3 text-sm font-semibold text-zinc-200 sm:grid-cols-[1fr_90px]"
                         key={dishKey}
                       >
-                        <span>{dish.name}</span>
+                        <span>{t(dish.name)}</span>
                         <input
                           className="w-full rounded-sm border border-zinc-700 bg-zinc-950 px-3 py-2 text-white outline-none transition focus:border-[#e8b45f]"
-                          aria-label={`${t("Cantidad")} ${dish.name}`}
+                          aria-label={`${t("Cantidad")} ${t(dish.name)}`}
                           max={apiMode ? 99 : undefined}
                           min="0"
                           onChange={(event) =>
@@ -583,7 +584,7 @@ export function OrdersManagement({
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <h5 className="font-display text-2xl font-bold">
-                          {dish.name}
+                          {t(dish.name)}
                         </h5>
                         <p className="mt-2 text-sm font-bold text-[#e8b45f]">
                           {orderLine?.quantity ?? 1}x · {dish.price}

@@ -1,4 +1,4 @@
-import { T, t } from "../i18n";
+import { T, t, useLocale } from "../i18n";
 
 import { ChatWidget } from "../components/ChatWidget";
 import { ContactSection } from "../components/ContactSection";
@@ -8,6 +8,7 @@ import { MenuStatus, usePublicMenu } from "../api/usePublicMenu";
 import { demoMode } from "../api/client";
 
 export function HomePage({ navigate, goToContact }: NavigationHandlers) {
+  useLocale();
   const { sections, ...menuState } = usePublicMenu();
   const homeDishes = sections
     .flatMap((section) => section.items)
@@ -24,7 +25,7 @@ export function HomePage({ navigate, goToContact }: NavigationHandlers) {
       <MenuStatus {...menuState} />
       <section className="relative grid min-h-[100svh] place-items-center overflow-hidden px-5 py-28 text-center text-white sm:px-6 sm:py-36">
         <img
-          alt="Mesa familiar de restaurante con ambiente calido"
+          alt={t("Mesa familiar de restaurante con ambiente calido")}
           className="absolute inset-0 h-full w-full object-cover brightness-[0.55]"
           src="/images/restaurante_vacio.png"
         />
@@ -108,7 +109,7 @@ export function HomePage({ navigate, goToContact }: NavigationHandlers) {
 
       <section className="relative flex min-h-[100svh] items-center overflow-hidden bg-black px-5 py-24 sm:px-6 sm:py-32">
         <img
-          alt="Mesa servida para reservar en familia"
+          alt={t("Mesa servida para reservar en familia")}
           className="absolute inset-0 h-full w-full object-cover opacity-25"
           src="/images/Cocina.png"
         />
@@ -132,7 +133,7 @@ export function HomePage({ navigate, goToContact }: NavigationHandlers) {
             </a>
           </div>
           <img
-            alt="Fachada del asadero familiar"
+            alt={t("Fachada del asadero familiar")}
             className="h-72 w-full rounded-sm object-cover grayscale sm:h-[520px]"
             src="/images/restaurante_entrada.png"
           />

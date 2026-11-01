@@ -1,10 +1,11 @@
-import { T, t } from "../i18n";
+import { T, t, useLocale } from "../i18n";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { useState } from "react";
 
 import type { NavigationHandlers } from "../navigation";
 
 export function Header({ navigate, goToContact }: NavigationHandlers) {
+  useLocale();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (

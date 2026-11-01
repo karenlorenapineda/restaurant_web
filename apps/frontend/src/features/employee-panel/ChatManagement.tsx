@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { T, t } from "../../i18n";
+import { T, t, useLocale } from "../../i18n";
 import type { FormEvent } from "react";
 
 import type { RecipeSupply } from "../../data/menu";
@@ -65,6 +65,7 @@ export function ChatManagement({
   selectedEmployeeId: number;
   session: EmployeeSession;
 }) {
+  useLocale();
   const availableEmployees = employees.filter(
     (employee) =>
       employee.active &&

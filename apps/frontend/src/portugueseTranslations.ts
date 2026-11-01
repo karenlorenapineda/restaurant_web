@@ -1,5 +1,22 @@
 // Portuguese translations shared by the public pages and employee preview.
 export const ptBySource: Record<string, string> = {
+  "Carta, galeria, equipo, inventario y chat interno preparados para conectarse despues a la base de datos.":
+    "Menu, galeria, equipa, inventário e chat interno preparados para futura ligação à base de dados.",
+  "Vista previa del panel de empleados":
+    "Pré-visualização do painel de funcionários",
+  "Vista previa de operaciones del restaurante":
+    "Pré-visualização das operações do restaurante",
+  "Elige un rol para explorar el panel. Esta vista no autentica usuarios, concede permisos reales ni sustituye el control de acceso del servidor.":
+    "Escolha uma função para explorar o painel. Esta vista não autentica utilizadores, não concede permissões reais nem substitui o controlo de acesso do servidor.",
+  "Rol de prueba": "Função de teste",
+  "Modo de prueba: los cambios solo permanecen en este navegador. Antes de publicar se necesita autenticación real en el servidor.":
+    "Modo de teste: as alterações ficam apenas neste navegador. Antes da publicação é necessária autenticação real no servidor.",
+  "Vista de administrador": "Vista de administrador",
+  "Vista de sala": "Vista de sala",
+  "Vista de cocina": "Vista de cozinha",
+  "Menú de prueba actualizado para esta sesión.":
+    "Menu de teste atualizado para esta sessão.",
+
   Home: "Início",
   HOME: "INÍCIO",
   Menu: "Menu",

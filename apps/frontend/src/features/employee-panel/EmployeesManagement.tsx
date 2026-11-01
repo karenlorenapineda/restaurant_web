@@ -1,6 +1,6 @@
 import { useIntegrationCopy } from "../../integrationCopy";
 import { Button, Input, Select } from "../../components/ui/controls";
-import { T, t } from "../../i18n";
+import { T, t, useLocale } from "../../i18n";
 import type { FormEvent } from "react";
 
 import type { RecipeSupply } from "../../data/menu";
@@ -60,6 +60,7 @@ export function EmployeesManagement({
     value: string | boolean,
   ) => void;
 }) {
+  useLocale();
   const labels = useIntegrationCopy();
   return (
     <Panel className="mt-6">
@@ -255,7 +256,7 @@ export function EmployeesManagement({
               )}
               {(!apiMode || employee.id < 0) && (
                 <DeleteButton
-                  label={`Eliminar ${employee.name}`}
+                  label={t("Eliminar {value0}", { value0: employee.name })}
                   onClick={() => onDelete(employee.id)}
                 />
               )}

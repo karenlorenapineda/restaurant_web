@@ -209,7 +209,9 @@ describe("OrderPage", () => {
 
     customer.unmount();
     const panel = render(<EmployeePanelPage navigate={vi.fn()} />);
-    fireEvent.click(screen.getByRole("button", { name: /Admin preview/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /Vista de administrador/i }),
+    );
     fireEvent.click(screen.getByRole("button", { name: "Pedidos" }));
     const newOrder = screen.getByRole("button", {
       name: /Domicilio.*Sara Prueba/i,
@@ -223,7 +225,9 @@ describe("OrderPage", () => {
 
     panel.unmount();
     render(<EmployeePanelPage navigate={vi.fn()} />);
-    fireEvent.click(screen.getByRole("button", { name: /Admin preview/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /Vista de administrador/i }),
+    );
     fireEvent.click(screen.getByRole("button", { name: "Pedidos" }));
     expect(screen.getByRole("combobox")).toHaveValue("preparando");
   });
