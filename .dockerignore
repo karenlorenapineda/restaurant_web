@@ -8,3 +8,11 @@ coverage
 .env.*
 !.env.example
 *.log
+
+.worktrees
+**/*Zone.Identifier
+revision-pr-12-13.md
+
+**/.env
+**/.env.*
+!**/.env.example

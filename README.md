@@ -34,6 +34,8 @@ npm run dev
 Frontend: http://localhost:5173
 Backend: http://localhost:3000/api/health
 
+Deployment startup and legacy menu migration: [validated procedure](docs/DESPLIEGUE_Y_MIGRACION.md).
+
 ## Run everything with Docker
 
 Set `DATABASE_URL` in the root `.env` to use `database:5432`:

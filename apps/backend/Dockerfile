@@ -13,17 +13,25 @@ FROM dependencies AS build
 COPY tsconfig.base.json ./
 COPY apps/backend apps/backend
 
-RUN npm run build --workspace @picasso/backend \
-    && npm prune --omit=dev
+RUN npm run build --workspace @picasso/backend
+
+FROM build AS migrations
+
+ENV NODE_ENV=production
+USER node
+CMD ["node", "node_modules/prisma/build/index.js", "migrate", "deploy", "--schema", "apps/backend/prisma/schema.prisma"]
+
+FROM build AS production-dependencies
+RUN npm prune --omit=dev
 
 FROM node:22-alpine AS runtime
 
 ENV NODE_ENV=production
 WORKDIR /app
 
-COPY --from=build --chown=node:node /app/node_modules ./node_modules
-COPY --from=build --chown=node:node /app/apps/backend/dist ./apps/backend/dist
-COPY --from=build --chown=node:node /app/apps/backend/prisma ./apps/backend/prisma
+COPY --from=production-dependencies --chown=node:node /app/node_modules ./node_modules
+COPY --from=production-dependencies --chown=node:node /app/apps/backend/dist ./apps/backend/dist
+COPY --from=production-dependencies --chown=node:node /app/apps/backend/prisma ./apps/backend/prisma
 
 USER node
 
