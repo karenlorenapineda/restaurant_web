@@ -15,6 +15,7 @@ export class InventoryService {
 		});
 		return items.map((item) => ({
 			id: item.id,
+			unitId: item.unitId,
 			const: `$${Number(item.unitCost).toLocaleString('es-CO')} COP`,
 			name: item.name,
 			stock: item.currentStock.toString(),

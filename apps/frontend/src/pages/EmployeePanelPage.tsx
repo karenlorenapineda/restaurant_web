@@ -1,4 +1,4 @@
-import { T, t } from "../i18n";
+import { T, t, useLocale } from "../i18n";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import type { EditableDish } from "../menuStore";
@@ -7,12 +7,9 @@ import {
   flattenMenu,
   getEditableDishKey,
   getMenuForEditing,
-  loadFeaturedDishKeys,
   loadGalleryDishKeys,
-  saveFeaturedDishKeys,
   saveGalleryDishKeys,
   saveStoredMenu,
-  setFeaturedDish,
   setGalleryDish,
   updateDishInSections,
 } from "../menuStore";
@@ -118,6 +115,7 @@ function createEmptyOrder(dishes: EditableDish[]): OrderRecord {
 export function EmployeePanelPage({
   navigate,
 }: Pick<NavigationHandlers, "navigate">) {
+  useLocale();
   const [session, setSession] = useState<EmployeeSession | null>(null);
   const [activeTab, setActiveTab] = useState<DashboardTab>("menu");
   const [sections, setSections] = useState(getMenuForEditing);
@@ -130,7 +128,6 @@ export function EmployeePanelPage({
     dishes[0];
   const [draft, setDraft] = useState<EditableDish | null>(selectedDish ?? null);
   const [isCreatingDish, setIsCreatingDish] = useState(false);
-  const [featuredKeys, setFeaturedKeys] = useState(loadFeaturedDishKeys);
   const [galleryKeys, setGalleryKeys] = useState(loadGalleryDishKeys);
   const [employees, setEmployees] = useState(() => MOCK_EMPLOYEES);
   const [supplies, setSupplies] = useState(() => MOCK_SUPPLIES);
@@ -271,14 +268,11 @@ export function EmployeePanelPage({
       ),
     }));
     const nextDishes = flattenMenu(nextSections);
-    const nextFeaturedKeys = featuredKeys.filter((key) => key !== dishKey);
     const nextGalleryKeys = galleryKeys.filter((key) => key !== dishKey);
 
     setSections(nextSections);
-    setFeaturedKeys(nextFeaturedKeys);
     setGalleryKeys(nextGalleryKeys);
     saveStoredMenu(nextSections);
-    saveFeaturedDishKeys(nextFeaturedKeys);
     saveGalleryDishKeys(nextGalleryKeys);
 
     const nextSelectedDish = nextDishes[0] ?? null;
@@ -288,20 +282,6 @@ export function EmployeePanelPage({
     setDraft(nextSelectedDish);
     setIsCreatingDish(false);
     setSaveMessage("Plato eliminado de la carta.");
-  }
-
-  function toggleFeaturedDish(isFeatured: boolean) {
-    if (!isAdmin) {
-      return;
-    }
-
-    if (!draft) {
-      return;
-    }
-
-    const nextKeys = setFeaturedDish(draft, isFeatured, featuredKeys);
-    setFeaturedKeys(nextKeys);
-    saveFeaturedDishKeys(nextKeys);
   }
 
   function toggleGalleryDish(isSelectedForGallery: boolean) {
@@ -724,7 +704,7 @@ export function EmployeePanelPage({
                   type="button"
                 >
                   <span className="block font-bold text-white">
-                    {previewSession.name}
+                    {t(previewSession.name)}
                   </span>
                   <span className="mt-1 block text-sm text-zinc-400">
                     <T>Role: </T>
@@ -754,7 +734,7 @@ export function EmployeePanelPage({
               <T>Sesion activa</T>
             </p>
             <h1 className="mt-3 whitespace-normal break-normal font-display text-[1.7rem] font-bold leading-tight tracking-[0.015em] text-white xl:text-3xl">
-              {session.name}
+              {t(session.name)}
             </h1>
             <p className="mt-3 text-xs font-bold uppercase tracking-[0.12em] text-[#e8b45f]">
               <T>Rol: </T>
@@ -828,10 +808,16 @@ export function EmployeePanelPage({
               </h2>
               <p className="mt-5 max-w-3xl text-lg leading-9 text-zinc-300">
                 {isAdmin
-                  ? "Carta, favoritos, galeria, equipo, inventario y chat interno preparados para conectarse despues a la base de datos."
+                  ? t(
+                      "Carta, galeria, equipo, inventario y chat interno preparados para conectarse despues a la base de datos.",
+                    )
                   : session.role === "cocina"
-                    ? "Consulta la carta, revisa insumos, mira pedidos activos y conversa con el equipo desde el chat interno."
-                    : "Consulta insumos, mira pedidos activos y conversa con el equipo desde el chat interno."}
+                    ? t(
+                        "Consulta la carta, revisa insumos, mira pedidos activos y conversa con el equipo desde el chat interno.",
+                      )
+                    : t(
+                        "Consulta insumos, mira pedidos activos y conversa con el equipo desde el chat interno.",
+                      )}
               </p>
             </div>
 
@@ -840,18 +826,18 @@ export function EmployeePanelPage({
                 canEdit={isAdmin}
                 dishes={dishes}
                 draft={draft}
-                featuredKeys={featuredKeys}
+
                 galleryKeys={galleryKeys}
                 isCreatingDish={isCreatingDish}
                 saveDish={saveDish}
-                saveMessage={saveMessage}
+                saveMessage={t(saveMessage)}
                 sections={sections}
                 selectedDishKey={selectedDishKey}
                 selectDish={selectDish}
                 startNewDish={startNewDish}
                 supplies={supplies}
                 deleteDish={deleteDish}
-                toggleFeaturedDish={toggleFeaturedDish}
+
                 toggleGalleryDish={toggleGalleryDish}
                 updateDraft={updateDraft}
               />

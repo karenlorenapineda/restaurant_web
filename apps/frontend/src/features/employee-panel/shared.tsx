@@ -1,10 +1,11 @@
+import { t } from "../../i18n";
 import type React from "react";
 
 export function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="ui-metric">
       <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#e8b45f]">
-        {label}
+        {t(label)}
       </p>
       <p className="mt-3 font-display text-4xl font-bold">{value}</p>
     </div>
@@ -37,7 +38,7 @@ export function TabButton({
       onClick={onClick}
       type="button"
     >
-      {label}
+      {t(label)}
     </button>
   );
 }
@@ -51,7 +52,7 @@ export function Field({
 }) {
   return (
     <label className="ui-field">
-      {label}
+      {t(label)}
       {children}
     </label>
   );
@@ -74,13 +75,13 @@ export function Checkbox({
         onChange={(event) => onChange(event.target.checked)}
         type="checkbox"
       />
-      {label}
+      {t(label)}
     </label>
   );
 }
 
 export function StatusPill({ label }: { label: string }) {
-  return <span className="ui-status">{label}</span>;
+  return <span className="ui-status">{t(label)}</span>;
 }
 
 export const inputClassName =
@@ -101,7 +102,7 @@ export function DeleteButton({
 }) {
   return (
     <button
-      aria-label={label}
+      aria-label={t(label)}
       className="ui-delete"
       onClick={onClick}
       type="button"

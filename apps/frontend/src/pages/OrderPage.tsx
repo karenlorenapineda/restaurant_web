@@ -1,16 +1,18 @@
 import { Button, Input } from "../components/ui/controls";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
 import { t, useLocale } from "../i18n";
 import { OrderPaymentStep } from "../components/OrderPaymentStep";
 import { ORDER_COPY } from "../orderCopy";
-import { menuSections } from "../data/menu";
-import type { MenuSection } from "../data/menu";
-import { flattenMenu, getEditableDishKey, loadStoredMenu } from "../menuStore";
+import { flattenMenu, getEditableDishKey } from "../menuStore";
 import type { NavigationHandlers } from "../navigation";
 import { addOnlineOrder } from "../onlineOrderStore";
 import type { OnlineOrder } from "../onlineOrderStore";
+import { demoMode, errorMessage, parseCop } from "../api/client";
+import { createOrder } from "../api/orders";
+import { MenuStatus, usePublicMenu } from "../api/usePublicMenu";
+import { useIntegrationCopy } from "../integrationCopy";
 
 type OrderStep = "dishes" | "details" | "payment";
 const ORDER_STEPS: OrderStep[] = ["dishes", "details", "payment"];
@@ -38,17 +40,20 @@ const CURRENCY_FORMATTERS = {
   pt: new Intl.NumberFormat("pt-PT", {
     style: "currency",
     currency: "COP",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
   }),
   es: new Intl.NumberFormat("es-CO", {
     style: "currency",
     currency: "COP",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
   }),
   en: new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "COP",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
   }),
 };
 
@@ -63,18 +68,38 @@ function orderBasePath() {
 }
 
 function parsePrice(price: string): number | null {
-  const match = price.trim().match(/^\$?\s*(\d+(?:[.,]\d{3})*)\s*(?:COP)?$/i);
-  if (!match?.[1]) return null;
-  const amount = Number(match[1].replace(/[.,]/g, ""));
-  return Number.isSafeInteger(amount) && amount >= 0 ? amount : null;
+  try {
+    const amount = parseCop(price);
+    return amount >= 0 && amount <= Number.MAX_SAFE_INTEGER ? amount : null;
+  } catch {
+    return null;
+  }
 }
 
 export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
   const locale = useLocale();
-  const copy = ORDER_COPY[locale];
-  const [sections, setSections] = useState<MenuSection[]>(
-    loadStoredMenu() ?? menuSections,
-  );
+  const integration = useIntegrationCopy();
+  const copy = demoMode()
+    ? ORDER_COPY[locale]
+    : {
+        ...ORDER_COPY[locale],
+        preview: integration.payment,
+        place: integration.confirm,
+        successText: integration.success,
+        saveError: integration.failure,
+        paymentIntro: integration.payment,
+        payment: integration.review,
+        nextPayment: integration.review,
+        paymentPreview: integration.notSent,
+        steps: [
+          ORDER_COPY[locale].steps[0]!,
+          ORDER_COPY[locale].steps[1]!,
+          integration.review,
+        ],
+      };
+  const { sections, ...menuState } = usePublicMenu();
+  const [submitting, setSubmitting] = useState(false);
+  const submitLock = useRef(false);
   const [cart, setCart] = useState<Record<string, number>>({});
   const [category, setCategory] = useState("Todos");
   const [query, setQuery] = useState("");
@@ -86,12 +111,6 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
   const [step, setStep] = useState<OrderStep>(stepFromPath);
   const [contact, setContact] = useState<CustomerDetails>(EMPTY_CONTACT);
   const [paymentMethod, setPaymentMethod] = useState<"card" | "pse">("card");
-
-  useEffect(() => {
-    const syncMenu = () => setSections(loadStoredMenu() ?? menuSections);
-    window.addEventListener("picasso-menu-updated", syncMenu);
-    return () => window.removeEventListener("picasso-menu-updated", syncMenu);
-  }, []);
 
   useEffect(() => {
     const syncStep = () => setStep(stepFromPath());
@@ -184,7 +203,8 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
     setError("");
   }
 
-  function placeOrder() {
+  async function placeOrder() {
+    if (submitLock.current) return;
     if (
       cartLines.length === 0 ||
       !contact.name.trim() ||
@@ -228,14 +248,47 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
       removedIngredientsByDish: {},
       cartItems,
     };
+    submitLock.current = true;
+    setSubmitting(true);
     try {
-      addOnlineOrder(order);
+      if (demoMode()) addOnlineOrder(order);
+      else {
+        if (
+          cartLines.some(
+            (line) =>
+              !Number.isSafeInteger(line.dish.id) || Number(line.dish.id) < 1,
+          )
+        )
+          throw new Error("Invalid dish ID");
+        const saved = await createOrder({
+          type: fulfillment === "pickup" ? "takeaway" : "delivery",
+          customerName: name,
+          customerPhone: phone,
+          ...(fulfillment === "delivery" ? { customerAddress: address } : {}),
+          items: cartLines.map(({ dish, quantity }) => ({
+            itemId: dish.id!,
+            quantity,
+            ...(notes ? { notes } : {}),
+          })),
+        });
+        order.id = saved.id;
+        order.createdAt = saved.orderDate;
+        order.total = `$${Number(saved.total).toLocaleString("es-CO")} COP`;
+        window.dispatchEvent(new Event("picasso-orders-updated"));
+      }
       setConfirmation(order);
       setCart({});
       setError("");
       window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch {
-      setError(copy.saveError);
+    } catch (error) {
+      setError(
+        demoMode()
+          ? copy.saveError
+          : `${copy.saveError} ${errorMessage(error)}. ${integration.duplicate}`,
+      );
+    } finally {
+      submitLock.current = false;
+      setSubmitting(false);
     }
   }
 
@@ -261,12 +314,14 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
             ))}
             <p className="mt-4 font-bold">
               {copy.subtotal}:{" "}
-              {currency(
-                confirmation.cartItems.reduce(
-                  (sum, item) => sum + item.quantity * item.unitPrice,
-                  0,
-                ),
-              )}
+              {demoMode()
+                ? currency(
+                    confirmation.cartItems.reduce(
+                      (sum, item) => sum + item.quantity * item.unitPrice,
+                      0,
+                    ),
+                  )
+                : confirmation.total}
             </p>
           </div>
           <div className="mt-8 flex flex-wrap gap-3">
@@ -296,6 +351,7 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
   return (
     <section className="min-h-screen bg-[#242424] px-5 pb-20 pt-28 text-zinc-100 sm:px-6 sm:pt-36">
       <div className="mx-auto max-w-7xl">
+        <MenuStatus {...menuState} />
         <h1 className="font-display text-4xl font-bold sm:text-5xl">
           {copy.title}
         </h1>
@@ -518,7 +574,8 @@ export function OrderPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
               fulfillment={fulfillment}
               onBack={() => goToStep("details")}
               onPaymentMethodChange={setPaymentMethod}
-              onRegister={placeOrder}
+              onRegister={() => void placeOrder()}
+              submitting={submitting}
               paymentMethod={paymentMethod}
             />
           )}

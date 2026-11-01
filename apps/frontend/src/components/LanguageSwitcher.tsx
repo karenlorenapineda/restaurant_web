@@ -1,4 +1,4 @@
-import { setLocale, useLocale } from "../i18n";
+import { setLocale, useLocale, t } from "../i18n";
 import type { Locale } from "../i18n";
 
 export function LanguageSwitcher() {
@@ -11,7 +11,7 @@ export function LanguageSwitcher() {
 
   return (
     <div
-      aria-label={locale === "en" ? "Language" : "Idioma"}
+      aria-label={t("Idioma")}
       className="inline-flex shrink-0 rounded-sm border border-white/30 bg-black/20 p-0.5 text-xs font-bold text-white"
       role="group"
     >

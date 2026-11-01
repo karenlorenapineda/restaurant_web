@@ -1,8 +1,13 @@
+import { uiTranslations } from "./uiTranslations";
 import { useSyncExternalStore } from "react";
 import { employeeEnByEs, employeeEsByEn } from "./employeeTranslations";
 import { ptBySource } from "./portugueseTranslations";
 
 export type Locale = "es" | "en" | "pt";
+
+function lookup(dictionary: Record<string, string>, key: string) {
+  return Object.hasOwn(dictionary, key) ? dictionary[key] : undefined;
+}
 
 const storageKey = "picasso-locale";
 
@@ -21,6 +26,7 @@ const enByEs: Record<string, string> = {
   "Buena comida, grandes momentos": "Good food, great moments",
   "Platos colombianos, carnes al asador y recetas de casa para sentarse en familia y compartir sin prisa.":
     "Colombian dishes, grilled meats and home recipes to enjoy together at your own pace.",
+  "Una selección de nuestra carta.": "A selection from our menu.",
   "Especiales de hoy": "Today's specials",
   "Favoritos editables desde el panel de empleados.":
     "Favorites selected in the employee dashboard.",
@@ -179,15 +185,28 @@ export function useLocale(): Locale {
   return useSyncExternalStore(subscribe, getLocale, () => "es");
 }
 
-export function t(text: string): string {
+export function t(
+  text: string,
+  values: Record<string, string | number> = {},
+): string {
+  const translated = translate(text);
+  return translated.replace(/\{(\w+)\}/g, (match, key: string) =>
+    String(values[key] ?? match),
+  );
+}
+
+function translate(text: string): string {
   const key = text.replace(/\s+/g, " ").trim();
+  if (currentLocale !== "es" && Object.hasOwn(uiTranslations, key))
+    return uiTranslations[key]![currentLocale];
   if (currentLocale === "pt") {
-    const spanishKey = esByEn[key] ?? employeeEsByEn[key] ?? key;
-    return ptBySource[key] ?? ptBySource[spanishKey] ?? text;
+    const spanishKey =
+      lookup(esByEn, key) ?? lookup(employeeEsByEn, key) ?? key;
+    return lookup(ptBySource, key) ?? lookup(ptBySource, spanishKey) ?? text;
   }
   return currentLocale === "en"
-    ? (enByEs[key] ?? employeeEnByEs[key] ?? text)
-    : (esByEn[key] ?? employeeEsByEn[key] ?? text);
+    ? (lookup(enByEs, key) ?? lookup(employeeEnByEs, key) ?? text)
+    : (lookup(esByEn, key) ?? lookup(employeeEsByEn, key) ?? text);
 }
 
 export function T({ children }: { children: string }) {

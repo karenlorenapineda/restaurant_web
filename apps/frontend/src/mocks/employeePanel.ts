@@ -13,6 +13,12 @@ export interface EmployeeSession {
 }
 
 export interface EmployeeRecord {
+  userId?: number;
+  firstName?: string;
+  lastName?: string;
+  positionId?: number;
+  restaurantId?: number;
+  roleName?: string;
   id: number;
   active: boolean;
   email: string;
@@ -23,6 +29,7 @@ export interface EmployeeRecord {
 }
 
 export interface SupplyRecord {
+  unitId?: number;
   id: number;
   cost: string;
   name: string;
@@ -32,15 +39,23 @@ export interface SupplyRecord {
 }
 
 export interface ChatMessage {
+  senderId?: number;
+  receiverId?: number;
   id: number;
   author: string;
   recipient?: string;
   role: EmployeeRole;
   text: string;
   time: string;
+  roleName?: string;
 }
 
 export interface OrderRecord {
+  apiItems?: {itemId:number;name:string;quantity:number;unitPrice:string;notes:string|null;removedIngredients:string[]}[];
+  type?: "dine_in" | "takeaway" | "delivery";
+  tableId?: string;
+  phone?: string;
+  address?: string;
   id: number;
   customer: string;
   dishKeys?: string[];
@@ -48,7 +63,7 @@ export interface OrderRecord {
   notes: string;
   orderLines?: OrderLine[];
   removedIngredientsByDish?: Record<string, string[]>;
-  status: OrderStatus | "recibido" | "en cocina" | "listo" | "entregado";
+  status: OrderStatus | "recibido" | "en cocina" | "listo" | "entregado" | "queued" | "preparing" | "ready" | "completed" | "cancelled";
   table: string;
   total: string;
 }

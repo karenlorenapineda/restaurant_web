@@ -8,8 +8,13 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/api": {
-        target: "http://localhost:3000",
+        target: process.env.BACKEND_PROXY_TARGET ?? "http://localhost:3000",
         changeOrigin: true,
+      },
+      "/socket.io": {
+        target: process.env.BACKEND_PROXY_TARGET ?? "http://localhost:3000",
+        changeOrigin: true,
+        ws: true,
       },
     },
   },

@@ -1,4 +1,6 @@
 import { t } from "../../i18n";
+import type { UnitOption } from "../../api/employeePanel";
+import { Button } from "../../components/ui/controls";
 import type { FormEvent } from "react";
 
 import type { RecipeSupply } from "../../data/menu";
@@ -36,6 +38,9 @@ import {
   StatusPill,
 } from "./shared";
 export function SuppliesManagement({
+  apiMode = false,
+  units = [],
+  onSave,
   addLabel,
   canEdit,
   description,
@@ -47,6 +52,9 @@ export function SuppliesManagement({
   onUpdate,
   title,
 }: {
+  apiMode?: boolean;
+  units?: UnitOption[];
+  onSave?: (id: number) => void;
   addLabel: string;
   canEdit: boolean;
   description: string;
@@ -103,21 +111,44 @@ export function SuppliesManagement({
                   onUpdate(supply.id, "name", event.target.value)
                 }
                 readOnly={!canEdit}
-                value={supply.name}
+                value={t(supply.name)}
               />
             </Field>
             <Field label={t("Unidad")}>
-              <input
-                className={getInputClassName(canEdit)}
-                onChange={(event) =>
-                  onUpdate(supply.id, "unit", event.target.value)
-                }
-                readOnly={!canEdit}
-                value={supply.unit}
-              />
+              {apiMode ? (
+                <select
+                  className={getInputClassName(canEdit)}
+                  disabled={!canEdit}
+                  value={supply.unitId ?? ""}
+                  onChange={(event) =>
+                    onUpdate(supply.id, "unitId", event.target.value)
+                  }
+                >
+                  <option value="" disabled>
+                    —
+                  </option>
+                  {units.map((unit) => (
+                    <option key={unit.id} value={unit.id}>
+                      {unit.abbreviation}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  className={getInputClassName(canEdit)}
+                  onChange={(event) =>
+                    onUpdate(supply.id, "unit", event.target.value)
+                  }
+                  readOnly={!canEdit}
+                  value={supply.unit}
+                />
+              )}
             </Field>
             <Field label={t("Stock")}>
               <input
+                type={apiMode ? "number" : "text"}
+                min="0"
+                step="any"
                 className={getInputClassName(canEdit)}
                 onChange={(event) =>
                   onUpdate(supply.id, "stock", event.target.value)
@@ -128,6 +159,9 @@ export function SuppliesManagement({
             </Field>
             <Field label={t("Costo")}>
               <input
+                type={apiMode ? "number" : "text"}
+                min="0"
+                step="any"
                 className={getInputClassName(canEdit)}
                 onChange={(event) =>
                   onUpdate(supply.id, "cost", event.target.value)
@@ -138,6 +172,9 @@ export function SuppliesManagement({
             </Field>
             <Field label={t("Minimo")}>
               <input
+                type={apiMode ? "number" : "text"}
+                min="0"
+                step="any"
                 className={getInputClassName(canEdit)}
                 onChange={(event) =>
                   onUpdate(supply.id, "threshold", event.target.value)
@@ -148,8 +185,13 @@ export function SuppliesManagement({
             </Field>
             {canEdit ? (
               <div className="flex items-end justify-end pb-2">
+                {apiMode && (
+                  <Button type="button" onClick={() => onSave?.(supply.id)}>
+                    {t("Guardar cambios")}
+                  </Button>
+                )}
                 <DeleteButton
-                  label={`Eliminar ${supply.name}`}
+                  label={`Eliminar ${t(supply.name)}`}
                   onClick={() => onDelete(supply.id)}
                 />
               </div>

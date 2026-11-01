@@ -1,4 +1,4 @@
-import { T, t } from "../i18n";
+import { T, t, useLocale } from "../i18n";
 import {
   MOCK_ADDRESS_LABEL,
   MOCK_CONTACT_HIGHLIGHTS,
@@ -6,6 +6,7 @@ import {
 } from "../mocks/restaurantContent";
 
 export function ContactSection() {
+  useLocale();
   return (
     <section
       id="contacto"

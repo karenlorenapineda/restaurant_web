@@ -1,9 +1,14 @@
-import { T, t } from "../i18n";
-import { useEffect, useMemo, useState } from "react";
+import { MenuStatus, usePublicMenu } from "../api/usePublicMenu";
+import {
+  DishSearch,
+  SearchPagination,
+  useDishSearch,
+} from "../search/DishSearch";
+import { T, t, useLocale } from "../i18n";
+import { useMemo, useState } from "react";
 
-import { menuSections } from "../data/menu";
-import type { Dish, MenuSection } from "../data/menu";
-import { flattenMenu, getEditableDishKey, loadStoredMenu } from "../menuStore";
+import type { Dish } from "../data/menu";
+import { flattenMenu, getEditableDishKey } from "../menuStore";
 import type { NavigationHandlers } from "../navigation";
 
 function getDishKey(dish: Dish) {
@@ -11,47 +16,23 @@ function getDishKey(dish: Dish) {
 }
 
 export function MenuPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
-  const [sections, setSections] = useState<MenuSection[]>(
-    loadStoredMenu() ?? menuSections,
-  );
-  const [selectedCategory, setSelectedCategory] = useState("Todos");
+  useLocale();
+  const { sections, ...menuState } = usePublicMenu();
   const [selectedDishKey, setSelectedDishKey] = useState<string | null>(null);
 
-  useEffect(() => {
-    function syncStoredMenu() {
-      setSections(loadStoredMenu() ?? menuSections);
-    }
-
-    window.addEventListener("picasso-menu-updated", syncStoredMenu);
-
-    return () => {
-      window.removeEventListener("picasso-menu-updated", syncStoredMenu);
-    };
-  }, []);
-
-  const categories = useMemo(
-    () => ["Todos", ...sections.map((section) => section.title)],
+  const dishes = useMemo(
+    () => flattenMenu(sections).filter((dish) => dish.available),
     [sections],
   );
-
-  const dishes = useMemo(() => flattenMenu(sections), [sections]);
-  const visibleDishes = dishes.filter(
-    (dish) =>
-      dish.available &&
-      (selectedCategory === "Todos" || dish.categoryTitle === selectedCategory),
-  );
-  const selectedDish = visibleDishes.find(
+  const search = useDishSearch(dishes, true);
+  const selectedDish = search.visible.find(
     (dish) => getDishKey(dish) === selectedDishKey,
   );
-
-  function selectCategory(category: string) {
-    setSelectedCategory(category);
-    setSelectedDishKey(null);
-  }
 
   return (
     <section className="min-h-[100svh] bg-[#242424] px-5 pb-20 pt-28 sm:px-6 sm:pb-28 sm:pt-36">
       <div className="mx-auto max-w-7xl">
+        <MenuStatus {...menuState} />
         <a
           className="text-sm font-semibold text-[#e8b45f] transition hover:text-white sm:text-base"
           href="/"
@@ -82,25 +63,15 @@ export function MenuPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
           </a>
         </div>
 
-        <div className="mt-10 flex flex-wrap gap-3 sm:mt-16 sm:gap-4">
-          {categories.map((category) => (
-            <button
-              className={`rounded-sm px-4 py-2 text-sm font-bold transition sm:px-5 sm:py-3 sm:text-base ${
-                selectedCategory === category
-                  ? "bg-[#e8b45f] text-zinc-950"
-                  : "border border-zinc-700 bg-[#333333] text-zinc-300 hover:border-[#e8b45f]"
-              }`}
-              key={category}
-              onClick={() => selectCategory(category)}
-              type="button"
-            >
-              {t(category)}
-            </button>
-          ))}
-        </div>
+        <DishSearch search={search} publicMenu />
+        {!menuState.loading && !menuState.error && !search.total && (
+          <p className="mt-6 text-zinc-300">
+            {t("No hay platos que coincidan con los filtros.")}
+          </p>
+        )}
 
         <div className="mt-8 grid gap-6 sm:mt-10 md:grid-cols-2 md:gap-9 xl:grid-cols-3">
-          {visibleDishes.map((dish) => (
+          {search.visible.map((dish) => (
             <button
               className={`overflow-hidden rounded-lg border text-left shadow-xl shadow-black/25 transition hover:-translate-y-1 ${
                 getDishKey(dish) === selectedDishKey
@@ -114,9 +85,7 @@ export function MenuPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
               <img
                 alt={t(dish.name)}
                 className="h-64 w-full object-cover sm:h-80"
-                src={
-                  dish.image ?? "/images/Plato01.png"
-                }
+                src={dish.image ?? "/images/Plato01.png"}
               />
               <div className="p-5 sm:p-7">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[#e8b45f] sm:text-sm">
@@ -137,6 +106,7 @@ export function MenuPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
             </button>
           ))}
         </div>
+        <SearchPagination search={search} />
       </div>
 
       {selectedDish ? (
@@ -150,9 +120,7 @@ export function MenuPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
             <img
               alt={t(selectedDish.name)}
               className="h-[min(44vh,420px)] w-full object-cover"
-              src={
-                selectedDish.image ?? "/images/Plato01.png"
-              }
+              src={selectedDish.image ?? "/images/Plato01.png"}
             />
             <div className="p-6 sm:p-8">
               <div className="flex items-start justify-between gap-5">

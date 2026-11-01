@@ -1,4 +1,5 @@
-import { T } from "../../i18n";
+import type { ReactNode } from "react";
+import { T, t, useLocale } from "../../i18n";
 import type { FormEvent } from "react";
 
 import type { RecipeSupply } from "../../data/menu";
@@ -36,6 +37,7 @@ import {
   StatusPill,
 } from "./shared";
 export function ChatManagement({
+  connection,
   employees,
   messages,
   onSelectEmployee,
@@ -43,6 +45,16 @@ export function ChatManagement({
   selectedEmployeeId,
   session,
 }: {
+  connection?: {
+    senderId: number;
+    header: ReactNode;
+    connected: boolean;
+    loading: boolean;
+    sending: boolean;
+    error: string;
+    text: string;
+    setText: (text: string) => void;
+  };
   employees: EmployeeRecord[];
   messages: ChatMessage[];
   onSelectEmployee: (employeeId: number) => void;
@@ -53,19 +65,28 @@ export function ChatManagement({
   selectedEmployeeId: number;
   session: EmployeeSession;
 }) {
+  useLocale();
   const availableEmployees = employees.filter(
-    (employee) => employee.active && employee.name !== session.name,
+    (employee) =>
+      employee.active &&
+      (connection
+        ? Boolean(employee.userId) && employee.userId !== connection.senderId
+        : employee.name !== session.name),
   );
   const selectedEmployee =
     availableEmployees.find((employee) => employee.id === selectedEmployeeId) ??
     availableEmployees[0];
   const conversationMessages = selectedEmployee
-    ? messages.filter(
-        (message) =>
-          (message.author === session.name &&
-            message.recipient === selectedEmployee.name) ||
-          (message.author === selectedEmployee.name &&
-            (!message.recipient || message.recipient === session.name)),
+    ? messages.filter((message) =>
+        connection
+          ? (message.senderId === connection.senderId &&
+              message.receiverId === selectedEmployee.userId) ||
+            (message.receiverId === connection.senderId &&
+              message.senderId === selectedEmployee.userId)
+          : (message.author === session.name &&
+              message.recipient === selectedEmployee.name) ||
+            (message.author === selectedEmployee.name &&
+              (!message.recipient || message.recipient === session.name)),
       )
     : [];
 
@@ -80,6 +101,12 @@ export function ChatManagement({
         </p>
       </div>
 
+      {connection?.header}
+      {connection?.error && (
+        <p role="alert" className="mt-4 text-red-200">
+          {connection.error}
+        </p>
+      )}
       <div className="mt-6 grid gap-5 lg:grid-cols-[280px_1fr]">
         <div className="grid max-h-[620px] gap-3 overflow-auto rounded-sm border border-white/10 bg-zinc-950/45 p-3">
           {availableEmployees.map((employee) => (
@@ -95,7 +122,8 @@ export function ChatManagement({
             >
               <p className="font-bold text-white">{employee.name}</p>
               <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#e8b45f]">
-                {employee.position} · {employee.role}
+                {employee.position} ·{" "}
+                {connection ? employee.roleName : employee.role}
               </p>
             </button>
           ))}
@@ -114,7 +142,9 @@ export function ChatManagement({
           <div className="mt-4 grid max-h-[520px] min-h-[360px] gap-4 overflow-auto rounded-sm border border-white/10 bg-zinc-950/55 p-4">
             {conversationMessages.length > 0 ? (
               conversationMessages.map((message) => {
-                const isOwnMessage = message.author === session.name;
+                const isOwnMessage = connection
+                  ? message.senderId === connection.senderId
+                  : message.author === session.name;
 
                 return (
                   <article
@@ -128,7 +158,7 @@ export function ChatManagement({
                     <div className="flex flex-wrap items-center gap-3">
                       <p className="font-bold text-white">{message.author}</p>
                       <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[#e8b45f]">
-                        {message.role}
+                        {connection ? message.roleName : message.role}
                       </span>
                       <span className="text-xs text-zinc-500">
                         {message.time}
@@ -155,10 +185,32 @@ export function ChatManagement({
               <input
                 className="min-h-12 flex-1 rounded-sm border border-zinc-700 bg-zinc-950 px-4 py-3 text-white outline-none transition focus:border-[#e8b45f]"
                 name="message"
+                aria-label={t("Mensaje")}
+                required
+                maxLength={connection ? 5000 : undefined}
+                disabled={
+                  connection &&
+                  (!connection.connected ||
+                    connection.loading ||
+                    connection.sending)
+                }
+                value={connection?.text}
+                onChange={
+                  connection
+                    ? (event) => connection.setText(event.target.value)
+                    : undefined
+                }
                 placeholder={`Mensaje para ${selectedEmployee.name}`}
               />
               <button
                 className="rounded-sm bg-[#e8b45f] px-6 py-3 text-sm font-bold uppercase tracking-[0.12em] text-zinc-950 transition hover:bg-white"
+                disabled={
+                  connection &&
+                  (!connection.connected ||
+                    connection.loading ||
+                    connection.sending ||
+                    !connection.text.trim())
+                }
                 type="submit"
               >
                 <T>Enviar</T>
