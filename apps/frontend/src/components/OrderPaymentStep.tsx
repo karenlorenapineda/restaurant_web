@@ -1,5 +1,6 @@
 import { Button, Input, Select } from "./ui/controls";
 import type { OrderCopy } from "../orderCopy";
+import { demoMode } from "../api/client";
 
 const PAYMENT_METHODS = ["card", "pse"] as const;
 const PAYMENT_FIELDS = [
@@ -17,6 +18,7 @@ interface Props {
   onPaymentMethodChange: (method: "card" | "pse") => void;
   onRegister: () => void;
   paymentMethod: "card" | "pse";
+  submitting?: boolean;
 }
 
 export function OrderPaymentStep({
@@ -28,6 +30,7 @@ export function OrderPaymentStep({
   onPaymentMethodChange,
   onRegister,
   paymentMethod,
+  submitting = false,
 }: Props) {
   return (
     <div className="min-w-0">
@@ -36,49 +39,56 @@ export function OrderPaymentStep({
       <p className="mt-6 border-l-2 border-[#e8b45f] pl-4 text-sm leading-6 text-zinc-400">
         {copy.paymentPreview}
       </p>
-      <h3 className="mt-10 text-sm font-bold uppercase text-[#e8b45f]">
-        {copy.paymentMethod}
-      </h3>
-      <div
-        className="mt-3 grid max-w-2xl grid-cols-2 gap-3"
-        role="group"
-        aria-label={copy.paymentMethod}
-      >
-        {PAYMENT_METHODS.map((method) => (
-          <Button
-            variant="secondary"
-            aria-pressed={paymentMethod === method}
-            className={`rounded-sm border px-4 py-4 text-left font-semibold ${paymentMethod === method ? "border-[#e8b45f] bg-[#333333]" : "border-white/20"}`}
-            key={method}
-            onClick={() => onPaymentMethodChange(method)}
-            type="button"
+      {demoMode() && (
+        <>
+          <h3 className="mt-10 text-sm font-bold uppercase text-[#e8b45f]">
+            {copy.paymentMethod}
+          </h3>
+          <div
+            className="mt-3 grid max-w-2xl grid-cols-2 gap-3"
+            role="group"
+            aria-label={copy.paymentMethod}
           >
-            {method === "card" ? copy.card : copy.bank}
-          </Button>
-        ))}
-      </div>
-      {/* The payment provider must supply hosted fields; do not collect card data here. */}
-      {paymentMethod === "card" ? (
-        <fieldset className="mt-6 grid max-w-2xl gap-4 sm:grid-cols-2" disabled>
-          {PAYMENT_FIELDS.map(({ key, placeholder, wide }) => (
-            <label
-              className={`grid gap-2 text-sm font-semibold ${wide ? "sm:col-span-2" : ""}`}
-              key={key}
+            {PAYMENT_METHODS.map((method) => (
+              <Button
+                variant="secondary"
+                aria-pressed={paymentMethod === method}
+                className={`rounded-sm border px-4 py-4 text-left font-semibold ${paymentMethod === method ? "border-[#e8b45f] bg-[#333333]" : "border-white/20"}`}
+                key={method}
+                onClick={() => onPaymentMethodChange(method)}
+                type="button"
+              >
+                {method === "card" ? copy.card : copy.bank}
+              </Button>
+            ))}
+          </div>
+          {/* The payment provider must supply hosted fields; do not collect card data here. */}
+          {paymentMethod === "card" ? (
+            <fieldset
+              className="mt-6 grid max-w-2xl gap-4 sm:grid-cols-2"
+              disabled
             >
-              {copy[key]}
-              <Input placeholder={placeholder} type="text" />
+              {PAYMENT_FIELDS.map(({ key, placeholder, wide }) => (
+                <label
+                  className={`grid gap-2 text-sm font-semibold ${wide ? "sm:col-span-2" : ""}`}
+                  key={key}
+                >
+                  {copy[key]}
+                  <Input placeholder={placeholder} type="text" />
+                </label>
+              ))}
+            </fieldset>
+          ) : (
+            <label className="mt-6 grid max-w-2xl gap-2 text-sm font-semibold">
+              {copy.selectBank}
+              <Select disabled>
+                <option>{copy.selectBank}</option>
+              </Select>
             </label>
-          ))}
-        </fieldset>
-      ) : (
-        <label className="mt-6 grid max-w-2xl gap-2 text-sm font-semibold">
-          {copy.selectBank}
-          <Select disabled>
-            <option>{copy.selectBank}</option>
-          </Select>
-        </label>
+          )}
+          <p className="mt-4 text-sm text-zinc-400">{copy.paymentPending}</p>
+        </>
       )}
-      <p className="mt-4 text-sm text-zinc-400">{copy.paymentPending}</p>
       <dl className="mt-10 grid max-w-2xl gap-3 border-y border-white/15 py-5 text-sm sm:grid-cols-2">
         <div>
           <dt className="text-zinc-400">{copy.name}</dt>
@@ -111,11 +121,12 @@ export function OrderPaymentStep({
           variant="secondary"
 
           onClick={onBack}
+          disabled={submitting}
           type="button"
         >
           {copy.backToDetails}
         </Button>
-        <Button onClick={onRegister} type="button">
+        <Button onClick={onRegister} loading={submitting} type="button">
           {copy.place}
         </Button>
       </div>

@@ -161,6 +161,10 @@ describe('MenuService', () => {
 						name: 'Hamburguesa',
 						description: 'Con queso',
 						price: 12,
+						imageUrl: null,
+						isAvailable: true,
+						isFavorite: true,
+						showImageInGallery: false,
 					},
 				],
 			},
@@ -175,6 +179,10 @@ describe('MenuService', () => {
 						name: 'Hamburguesa',
 						description: 'Con queso',
 						price: '$12 COP',
+						image: null,
+						available: true,
+						featured: true,
+						showImage: false,
 					},
 				],
 			},
@@ -185,7 +193,7 @@ describe('MenuService', () => {
 		const result = await service.getMenuSections();
 
 		expect(prisma.menuCategory.findMany).toHaveBeenCalledWith({
-			include: { items: true },
+			include: { items: { where: { isAvailable: true } } },
 		});
 
 		expect(result).toEqual(expected);

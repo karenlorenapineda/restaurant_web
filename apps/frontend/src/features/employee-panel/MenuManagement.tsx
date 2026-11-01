@@ -1,3 +1,6 @@
+import { parseCop } from "../../api/client";
+import { useIntegrationCopy } from "../../integrationCopy";
+import type { UnitOption } from "../../api/employeePanel";
 import { T, t } from "../../i18n";
 import type { FormEvent } from "react";
 
@@ -7,7 +10,6 @@ import {
   countExistingSelectedDishes,
   getEditableDishKey,
   getMenuForEditing,
-  isFeaturedDish,
   isGalleryDish,
 } from "../../menuStore";
 import { ORDER_STATUS_LABELS, ORDER_STATUSES } from "../../mocks/employeePanel";
@@ -36,11 +38,12 @@ import {
   StatusPill,
 } from "./shared";
 export function MenuManagement({
+  apiMode = false,
+  units = [],
   canEdit,
   deleteDish,
   dishes,
   draft,
-  featuredKeys,
   galleryKeys,
   isCreatingDish,
   saveDish,
@@ -50,15 +53,15 @@ export function MenuManagement({
   selectDish,
   startNewDish,
   supplies,
-  toggleFeaturedDish,
   toggleGalleryDish,
   updateDraft,
 }: {
+  apiMode?: boolean;
+  units?: UnitOption[];
   canEdit: boolean;
   deleteDish: (dish: EditableDish) => void;
   dishes: EditableDish[];
   draft: EditableDish | null;
-  featuredKeys: string[];
   galleryKeys: string[];
   isCreatingDish: boolean;
   saveDish: () => void;
@@ -68,24 +71,20 @@ export function MenuManagement({
   selectDish: (dish: EditableDish) => void;
   startNewDish: () => void;
   supplies: SupplyRecord[];
-  toggleFeaturedDish: (isFeatured: boolean) => void;
   toggleGalleryDish: (isGallery: boolean) => void;
   updateDraft: (
     field: keyof EditableDish,
     value: string | boolean | string[] | RecipeSupply[],
   ) => void;
 }) {
+  const labels = useIntegrationCopy();
   return (
     <>
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
         <Metric label={t("Platos")} value={String(dishes.length)} />
         <Metric
           label={t("Disponibles")}
           value={String(dishes.filter((dish) => dish.available).length)}
-        />
-        <Metric
-          label={t("Favoritos")}
-          value={String(countExistingSelectedDishes(featuredKeys, dishes))}
         />
         <Metric
           label={t("Galeria")}
@@ -129,8 +128,9 @@ export function MenuManagement({
                     <p className="font-bold text-zinc-100">{dish.name}</p>
                     <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#e8b45f]">
                       {dish.categoryTitle}
-                      {isFeaturedDish(dish, featuredKeys) ? " / Favorito" : ""}
-                      {isGalleryDish(dish, galleryKeys) ? " / Galeria" : ""}
+                      {isGalleryDish(dish, galleryKeys)
+                        ? ` / ${t("Galeria")}`
+                        : ""}
                     </p>
                   </button>
                   <span className="text-sm font-bold text-[#e8b45f]">
@@ -151,10 +151,8 @@ export function MenuManagement({
         <Panel>
           <h3 className="font-display text-3xl font-bold">
             {canEdit
-              ? isCreatingDish
-                ? "Nuevo plato"
-                : "Editar plato"
-              : "Detalle del plato"}
+              ? t(isCreatingDish ? "Nuevo plato" : "Editar plato")
+              : t("Detalle del plato")}
           </h3>
           {!canEdit ? (
             <p className="mt-4 rounded-sm border border-white/10 bg-black/25 p-4 text-sm text-zinc-300">
@@ -166,7 +164,13 @@ export function MenuManagement({
             </p>
           ) : null}
           {draft ? (
-            <form className="mt-6 grid gap-5">
+            <form
+              className="mt-6 grid gap-5"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (canEdit) saveDish();
+              }}
+            >
               <Field label={t("Nombre")}>
                 <input
                   className={getInputClassName(canEdit)}
@@ -183,24 +187,40 @@ export function MenuManagement({
                     className={getInputClassName(canEdit)}
                     disabled={!canEdit}
                     onChange={(event) =>
-                      updateDraft("categoryTitle", event.target.value)
+                      updateDraft(
+                        apiMode ? "categoryId" : "categoryTitle",
+                        event.target.value,
+                      )
                     }
-                    value={draft.categoryTitle}
+                    value={
+                      apiMode ? (draft.categoryId ?? "") : draft.categoryTitle
+                    }
                   >
                     {sections.map((section) => (
-                      <option key={section.title}>{section.title}</option>
+                      <option
+                        key={section.id ?? section.title}
+                        value={apiMode ? section.id : section.title}
+                      >
+                        {section.title}
+                      </option>
                     ))}
                   </select>
                 </Field>
-                <Field label={t("Precio")}>
+                <Field label={apiMode ? labels.price : t("Precio")}>
                   <input
                     className={getInputClassName(canEdit)}
                     onChange={(event) =>
                       updateDraft("price", event.target.value)
                     }
                     readOnly={!canEdit}
-                    type="text"
-                    value={draft.price}
+                    type={apiMode ? "number" : "text"}
+                    min="0"
+                    step="0.01"
+                    value={
+                      apiMode && /COP|\$/.test(draft.price)
+                        ? parseCop(draft.price)
+                        : draft.price
+                    }
                   />
                 </Field>
               </div>
@@ -239,6 +259,8 @@ export function MenuManagement({
               </Field>
 
               <RecipeSuppliesEditor
+                apiMode={apiMode}
+                units={units}
                 canEdit={canEdit}
                 onChange={(recipeSupplies) =>
                   updateDraft("recipeSupplies", recipeSupplies)
@@ -255,27 +277,15 @@ export function MenuManagement({
                     onChange={(checked) => updateDraft("available", checked)}
                   />
                   <Checkbox
-                    checked={isFeaturedDish(draft, featuredKeys)}
-                    label={t("Mostrar como favorito en la pagina principal")}
-                    onChange={toggleFeaturedDish}
-                  />
-                  <Checkbox
                     checked={isGalleryDish(draft, galleryKeys)}
                     label={t("Mostrar imagen del plato en la galeria")}
                     onChange={toggleGalleryDish}
                   />
                 </>
               ) : (
-                <div className="grid gap-3 text-sm font-semibold text-zinc-300 sm:grid-cols-3">
+                <div className="grid gap-3 text-sm font-semibold text-zinc-300 sm:grid-cols-2">
                   <StatusPill
                     label={draft.available ? "Disponible" : "No disponible"}
-                  />
-                  <StatusPill
-                    label={
-                      isFeaturedDish(draft, featuredKeys)
-                        ? "Favorito"
-                        : "No favorito"
-                    }
                   />
                   <StatusPill
                     label={
@@ -315,11 +325,15 @@ export function MenuManagement({
 }
 
 function RecipeSuppliesEditor({
+  apiMode = false,
+  units = [],
   canEdit,
   onChange,
   recipeSupplies,
   supplies,
 }: {
+  apiMode?: boolean;
+  units?: UnitOption[];
   canEdit: boolean;
   onChange: (recipeSupplies: RecipeSupply[]) => void;
   recipeSupplies: RecipeSupply[];
@@ -346,6 +360,9 @@ function RecipeSuppliesEditor({
       ...recipeSupplies,
       {
         quantity: "1",
+        ...(apiMode
+          ? { ingredientId: firstSupply?.id, unitId: firstSupply?.unitId }
+          : {}),
         supplyName: firstSupply?.name ?? "Nuevo insumo",
         unit: firstSupply?.unit ?? "und",
       },
@@ -367,6 +384,7 @@ function RecipeSuppliesEditor({
         {canEdit ? (
           <button
             className="rounded-sm border border-[#e8b45f] px-4 py-2 text-xs font-bold uppercase tracking-[0.1em] text-[#e8b45f] transition hover:bg-[#e8b45f] hover:text-zinc-950"
+            disabled={apiMode && !supplies.length}
             onClick={addRecipeSupply}
             type="button"
           >
@@ -384,14 +402,16 @@ function RecipeSuppliesEditor({
                   ? "md:grid-cols-[1fr_0.45fr_0.45fr_auto]"
                   : "md:grid-cols-[1fr_0.45fr_0.45fr]"
               }`}
-              key={`${recipeSupply.supplyName}-${index}`}
+              key={index}
             >
               <select
                 className={getInputClassName(canEdit)}
                 disabled={!canEdit}
                 onChange={(event) => {
-                  const selectedSupply = supplies.find(
-                    (supply) => supply.name === event.target.value,
+                  const selectedSupply = supplies.find((supply) =>
+                    apiMode
+                      ? supply.id === Number(event.target.value)
+                      : supply.name === event.target.value,
                   );
 
                   onChange(
@@ -399,24 +419,45 @@ function RecipeSuppliesEditor({
                       currentIndex === index
                         ? {
                             ...recipeSupplyItem,
-                            supplyName: event.target.value,
+                            supplyName:
+                              selectedSupply?.name ?? event.target.value,
+                            ...(apiMode
+                              ? {
+                                  ingredientId: selectedSupply?.id,
+                                  unitId: selectedSupply?.unitId,
+                                }
+                              : {}),
                             unit: selectedSupply?.unit ?? recipeSupplyItem.unit,
                           }
                         : recipeSupplyItem,
                     ),
                   );
                 }}
-                value={recipeSupply.supplyName}
+                value={
+                  apiMode
+                    ? (recipeSupply.ingredientId ?? "")
+                    : recipeSupply.supplyName
+                }
               >
                 {supplies.map((supply) => (
-                  <option key={supply.id} value={supply.name}>
+                  <option
+                    key={supply.id}
+                    value={apiMode ? supply.id : supply.name}
+                  >
                     {supply.name}
                   </option>
                 ))}
-                {!supplies.some(
+                {!apiMode &&
+                !supplies.some(
                   (supply) => supply.name === recipeSupply.supplyName,
                 ) ? (
-                  <option value={recipeSupply.supplyName}>
+                  <option
+                    value={
+                      apiMode
+                        ? (recipeSupply.ingredientId ?? "")
+                        : recipeSupply.supplyName
+                    }
+                  >
                     {recipeSupply.supplyName}
                   </option>
                 ) : null}
@@ -429,14 +470,49 @@ function RecipeSuppliesEditor({
                 readOnly={!canEdit}
                 value={recipeSupply.quantity}
               />
-              <input
-                className={getInputClassName(canEdit)}
-                onChange={(event) =>
-                  updateRecipeSupply(index, "unit", event.target.value)
-                }
-                readOnly={!canEdit}
-                value={recipeSupply.unit}
-              />
+              {apiMode ? (
+                <select
+                  aria-label={t("Unidad")}
+                  className={getInputClassName(canEdit)}
+                  disabled={!canEdit}
+                  value={recipeSupply.unitId ?? ""}
+                  onChange={(event) =>
+                    onChange(
+                      recipeSupplies.map((item, i) =>
+                        i === index
+                          ? {
+                              ...item,
+                              unitId: Number(event.target.value),
+                              unit:
+                                units.find(
+                                  (unit) =>
+                                    unit.id === Number(event.target.value),
+                                )?.abbreviation ?? "",
+                            }
+                          : item,
+                      ),
+                    )
+                  }
+                >
+                  <option value="" disabled>
+                    —
+                  </option>
+                  {units.map((unit) => (
+                    <option key={unit.id} value={unit.id}>
+                      {unit.abbreviation}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  className={getInputClassName(canEdit)}
+                  onChange={(event) =>
+                    updateRecipeSupply(index, "unit", event.target.value)
+                  }
+                  readOnly={!canEdit}
+                  value={recipeSupply.unit}
+                />
+              )}
               {canEdit ? (
                 <div className="flex items-end justify-end pb-2">
                   <DeleteButton

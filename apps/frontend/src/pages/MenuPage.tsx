@@ -1,33 +1,19 @@
 import { T, t } from "../i18n";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
-import { menuSections } from "../data/menu";
-import type { Dish, MenuSection } from "../data/menu";
-import { flattenMenu, getEditableDishKey, loadStoredMenu } from "../menuStore";
+import type { Dish } from "../data/menu";
+import { flattenMenu, getEditableDishKey } from "../menuStore";
 import type { NavigationHandlers } from "../navigation";
+import { MenuStatus, usePublicMenu } from "../api/usePublicMenu";
 
 function getDishKey(dish: Dish) {
   return getEditableDishKey(dish);
 }
 
 export function MenuPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
-  const [sections, setSections] = useState<MenuSection[]>(
-    loadStoredMenu() ?? menuSections,
-  );
+  const { sections, ...menuState } = usePublicMenu();
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [selectedDishKey, setSelectedDishKey] = useState<string | null>(null);
-
-  useEffect(() => {
-    function syncStoredMenu() {
-      setSections(loadStoredMenu() ?? menuSections);
-    }
-
-    window.addEventListener("picasso-menu-updated", syncStoredMenu);
-
-    return () => {
-      window.removeEventListener("picasso-menu-updated", syncStoredMenu);
-    };
-  }, []);
 
   const categories = useMemo(
     () => ["Todos", ...sections.map((section) => section.title)],
@@ -52,6 +38,7 @@ export function MenuPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
   return (
     <section className="min-h-[100svh] bg-[#242424] px-5 pb-20 pt-28 sm:px-6 sm:pb-28 sm:pt-36">
       <div className="mx-auto max-w-7xl">
+        <MenuStatus {...menuState} />
         <a
           className="text-sm font-semibold text-[#e8b45f] transition hover:text-white sm:text-base"
           href="/"
@@ -114,9 +101,7 @@ export function MenuPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
               <img
                 alt={t(dish.name)}
                 className="h-64 w-full object-cover sm:h-80"
-                src={
-                  dish.image ?? "/images/Plato01.png"
-                }
+                src={dish.image ?? "/images/Plato01.png"}
               />
               <div className="p-5 sm:p-7">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[#e8b45f] sm:text-sm">
@@ -150,9 +135,7 @@ export function MenuPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
             <img
               alt={t(selectedDish.name)}
               className="h-[min(44vh,420px)] w-full object-cover"
-              src={
-                selectedDish.image ?? "/images/Plato01.png"
-              }
+              src={selectedDish.image ?? "/images/Plato01.png"}
             />
             <div className="p-6 sm:p-8">
               <div className="flex items-start justify-between gap-5">

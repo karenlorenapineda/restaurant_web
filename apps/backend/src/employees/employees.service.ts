@@ -21,6 +21,11 @@ export class EmployeesService {
 		});
 		return employess.map((employee) => ({
 			id: employee.id,
+			userId: employee.userId,
+			firstName: employee.firstName,
+			lastName: employee.lastName,
+			positionId: employee.positionId,
+			restaurantId: employee.restaurantId,
 			name: `${employee.firstName} ${employee.lastName}`,
 			phone: employee.phone,
 			active: employee.isActive,

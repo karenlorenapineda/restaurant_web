@@ -21,6 +21,7 @@ const enByEs: Record<string, string> = {
   "Buena comida, grandes momentos": "Good food, great moments",
   "Platos colombianos, carnes al asador y recetas de casa para sentarse en familia y compartir sin prisa.":
     "Colombian dishes, grilled meats and home recipes to enjoy together at your own pace.",
+  "Una selección de nuestra carta.": "A selection from our menu.",
   "Especiales de hoy": "Today's specials",
   "Favoritos editables desde el panel de empleados.":
     "Favorites selected in the employee dashboard.",

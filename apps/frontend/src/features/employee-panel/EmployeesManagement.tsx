@@ -1,3 +1,4 @@
+import { useIntegrationCopy } from "../../integrationCopy";
 import { Button, Input, Select } from "../../components/ui/controls";
 import { T, t } from "../../i18n";
 import type { FormEvent } from "react";
@@ -37,12 +38,18 @@ import {
   StatusPill,
 } from "./shared";
 export function EmployeesManagement({
+  apiMode = false,
+  restaurants = [],
+  onSave,
   employees,
   isAdmin,
   onAdd,
   onDelete,
   onUpdate,
 }: {
+  apiMode?: boolean;
+  restaurants?: { id: number; name: string }[];
+  onSave?: (id: number) => void;
   employees: EmployeeRecord[];
   isAdmin: boolean;
   onAdd: () => void;
@@ -53,6 +60,7 @@ export function EmployeesManagement({
     value: string | boolean,
   ) => void;
 }) {
+  const labels = useIntegrationCopy();
   return (
     <Panel className="mt-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -61,15 +69,21 @@ export function EmployeesManagement({
             <T>Gestion de empleados</T>
           </h3>
           <p className="mt-3 text-sm leading-7 text-zinc-400">
-            <T>
-              Los roles siguen la idea de RolesUsuario y Empleados de la base de
-              datos. Solo admin puede cambiarlos.
-            </T>
+            {apiMode ? (
+              labels.noEmployeeEdit
+            ) : (
+              <T>
+                Los roles siguen la idea de RolesUsuario y Empleados de la base
+                de datos. Solo admin puede cambiarlos.
+              </T>
+            )}
           </p>
         </div>
-        <Button onClick={onAdd} type="button">
-          <T>Anadir empleado</T>
-        </Button>
+        {isAdmin && (
+          <Button onClick={onAdd} type="button">
+            <T>Anadir empleado</T>
+          </Button>
+        )}
       </div>
 
       {!isAdmin ? (
@@ -87,56 +101,143 @@ export function EmployeesManagement({
             className="grid gap-4 rounded-sm border border-white/10 bg-zinc-950/60 p-4 lg:grid-cols-[1.1fr_1fr_0.85fr_0.7fr_0.6fr_auto]"
             key={employee.id}
           >
-            <Field label={t("Nombre")}>
-              <Input
-                className="mt-2"
-                onChange={(event) =>
-                  onUpdate(employee.id, "name", event.target.value)
-                }
-                value={employee.name}
-              />
-            </Field>
-            <Field label={t("Email")}>
-              <Input
-                className="mt-2"
-                onChange={(event) =>
-                  onUpdate(employee.id, "email", event.target.value)
-                }
-                type="email"
-                value={employee.email}
-              />
-            </Field>
-            <Field label={t("Cargo")}>
-              <Input
-                className="mt-2"
-                onChange={(event) =>
-                  onUpdate(employee.id, "position", event.target.value)
-                }
-                value={employee.position}
-              />
-            </Field>
-            <Field label={t("Rol")}>
-              <Select
-                className="mt-2"
-                disabled={!isAdmin}
-                onChange={(event) =>
-                  onUpdate(employee.id, "role", event.target.value)
-                }
-                value={employee.role}
-              >
-                <option value="admin">
-                  <T>admin</T>
-                </option>
-                <option value="empleado">
-                  <T>empleado</T>
-                </option>
-                <option value="cocina">
-                  <T>cocina</T>
-                </option>
-              </Select>
-            </Field>
+            {apiMode ? (
+              <>
+                <Field label={labels.firstName}>
+                  <Input
+                    value={employee.firstName ?? ""}
+                    readOnly={!isAdmin}
+                    onChange={(e) =>
+                      onUpdate(employee.id, "firstName", e.target.value)
+                    }
+                  />
+                </Field>
+                <Field label={labels.lastName}>
+                  <Input
+                    value={employee.lastName ?? ""}
+                    readOnly={!isAdmin}
+                    onChange={(e) =>
+                      onUpdate(employee.id, "lastName", e.target.value)
+                    }
+                  />
+                </Field>
+                <Field label={labels.phone}>
+                  <Input
+                    type="tel"
+                    value={employee.phone}
+                    readOnly={!isAdmin}
+                    onChange={(e) =>
+                      onUpdate(employee.id, "phone", e.target.value)
+                    }
+                  />
+                </Field>
+                <Field label={labels.positionId}>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={employee.positionId ?? ""}
+                    readOnly={!isAdmin}
+                    onChange={(e) =>
+                      onUpdate(employee.id, "positionId", e.target.value)
+                    }
+                  />
+                </Field>
+                {employee.id < 0 ? (
+                  <>
+                    <Field label={labels.userId}>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={employee.userId ?? ""}
+                        onChange={(e) =>
+                          onUpdate(employee.id, "userId", e.target.value)
+                        }
+                      />
+                    </Field>
+                    <Field label={labels.restaurantId}>
+                      <Select
+                        value={employee.restaurantId ?? ""}
+                        onChange={(e) =>
+                          onUpdate(employee.id, "restaurantId", e.target.value)
+                        }
+                      >
+                        <option value="" disabled>
+                          —
+                        </option>
+                        {restaurants.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                  </>
+                ) : (
+                  <>
+                    <Field label={t("Email")}>
+                      <Input value={employee.email} readOnly />
+                    </Field>
+                    <Field label={t("Rol")}>
+                      <Input value={employee.roleName ?? ""} readOnly />
+                    </Field>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <Field label={t("Nombre")}>
+                  <Input
+                    className="mt-2"
+                    onChange={(event) =>
+                      onUpdate(employee.id, "name", event.target.value)
+                    }
+                    value={employee.name}
+                  />
+                </Field>
+                <Field label={t("Email")}>
+                  <Input
+                    className="mt-2"
+                    onChange={(event) =>
+                      onUpdate(employee.id, "email", event.target.value)
+                    }
+                    type="email"
+                    value={employee.email}
+                  />
+                </Field>
+                <Field label={t("Cargo")}>
+                  <Input
+                    className="mt-2"
+                    onChange={(event) =>
+                      onUpdate(employee.id, "position", event.target.value)
+                    }
+                    value={employee.position}
+                  />
+                </Field>
+                <Field label={t("Rol")}>
+                  <Select
+                    className="mt-2"
+                    disabled={!isAdmin}
+                    onChange={(event) =>
+                      onUpdate(employee.id, "role", event.target.value)
+                    }
+                    value={employee.role}
+                  >
+                    <option value="admin">
+                      <T>admin</T>
+                    </option>
+                    <option value="empleado">
+                      <T>empleado</T>
+                    </option>
+                    <option value="cocina">
+                      <T>cocina</T>
+                    </option>
+                  </Select>
+                </Field>
+              </>
+            )}
             <label className="flex items-end gap-3 pb-3 text-sm font-semibold text-zinc-200">
               <input
+                disabled={apiMode && (!isAdmin || employee.id < 0)}
                 checked={employee.active}
                 className="h-5 w-5 accent-[#e8b45f]"
                 onChange={(event) =>
@@ -147,10 +248,17 @@ export function EmployeesManagement({
               <T>Activo</T>
             </label>
             <div className="flex items-end justify-end pb-2">
-              <DeleteButton
-                label={`Eliminar ${employee.name}`}
-                onClick={() => onDelete(employee.id)}
-              />
+              {apiMode && isAdmin && (
+                <Button onClick={() => onSave?.(employee.id)} type="button">
+                  {t("Guardar cambios")}
+                </Button>
+              )}
+              {(!apiMode || employee.id < 0) && (
+                <DeleteButton
+                  label={`Eliminar ${employee.name}`}
+                  onClick={() => onDelete(employee.id)}
+                />
+              )}
             </div>
           </div>
         ))}

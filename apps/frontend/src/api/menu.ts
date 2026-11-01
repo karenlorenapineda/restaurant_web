@@ -18,9 +18,17 @@ function isMenuSection(value: unknown): value is MenuSection {
       const dish = item as Record<string, unknown>;
 
       return (
+        Number.isSafeInteger(dish.id) &&
+        Number(dish.id) > 0 &&
         typeof dish.name === "string" &&
-        typeof dish.description === "string" &&
-        typeof dish.price === "string"
+        (typeof dish.description === "string" || dish.description === null) &&
+        typeof dish.price === "string" &&
+        (dish.image === undefined ||
+          dish.image === null ||
+          typeof dish.image === "string") &&
+        ["available", "featured", "showImage"].every(
+          (key) => dish[key] === undefined || typeof dish[key] === "boolean",
+        )
       );
     })
   );
@@ -42,5 +50,12 @@ export async function fetchMenu(signal?: AbortSignal) {
     throw new Error("Invalid menu response");
   }
 
-  return menu;
+  return menu.map((section) => ({
+    ...section,
+    items: section.items.map((item) => ({
+      ...item,
+      description: item.description ?? "",
+      ...(item.image === null ? { image: undefined } : {}),
+    })),
+  }));
 }

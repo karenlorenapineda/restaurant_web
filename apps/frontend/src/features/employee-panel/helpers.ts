@@ -35,6 +35,9 @@ export function getDishRecipeSupplies(dish: EditableDish) {
 export function normalizeOrderStatus(
   status: OrderRecord["status"],
 ): OrderStatus {
+  if (status === "queued") return "cola";
+  if (status === "preparing") return "preparando";
+  if (status === "ready" || status === "completed" || status === "cancelled") return "terminado";
   if (status === "en cocina") {
     return "preparando";
   }

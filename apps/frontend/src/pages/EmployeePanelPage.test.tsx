@@ -167,9 +167,6 @@ describe("EmployeePanelPage", () => {
       target: { value: "Dish created from the employee panel test." },
     });
     fireEvent.click(
-      screen.getByLabelText("Mostrar como favorito en la pagina principal"),
-    );
-    fireEvent.click(
       screen.getByLabelText("Mostrar imagen del plato en la galeria"),
     );
     fireEvent.click(screen.getByRole("button", { name: "Guardar cambios" }));

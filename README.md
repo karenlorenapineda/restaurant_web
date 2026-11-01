@@ -2,6 +2,9 @@
 
 Requires Docker and Node.js 22.12 or newer.
 
+Frontend/backend integration, isolated test database and endpoint coverage:
+[step-by-step guide](docs/INTEGRACION.md).
+
 ## Run locally
 
 Start PostgreSQL with its development port, without starting a second backend:

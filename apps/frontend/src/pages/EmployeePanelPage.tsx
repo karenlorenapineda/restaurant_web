@@ -7,12 +7,9 @@ import {
   flattenMenu,
   getEditableDishKey,
   getMenuForEditing,
-  loadFeaturedDishKeys,
   loadGalleryDishKeys,
-  saveFeaturedDishKeys,
   saveGalleryDishKeys,
   saveStoredMenu,
-  setFeaturedDish,
   setGalleryDish,
   updateDishInSections,
 } from "../menuStore";
@@ -130,7 +127,6 @@ export function EmployeePanelPage({
     dishes[0];
   const [draft, setDraft] = useState<EditableDish | null>(selectedDish ?? null);
   const [isCreatingDish, setIsCreatingDish] = useState(false);
-  const [featuredKeys, setFeaturedKeys] = useState(loadFeaturedDishKeys);
   const [galleryKeys, setGalleryKeys] = useState(loadGalleryDishKeys);
   const [employees, setEmployees] = useState(() => MOCK_EMPLOYEES);
   const [supplies, setSupplies] = useState(() => MOCK_SUPPLIES);
@@ -271,14 +267,11 @@ export function EmployeePanelPage({
       ),
     }));
     const nextDishes = flattenMenu(nextSections);
-    const nextFeaturedKeys = featuredKeys.filter((key) => key !== dishKey);
     const nextGalleryKeys = galleryKeys.filter((key) => key !== dishKey);
 
     setSections(nextSections);
-    setFeaturedKeys(nextFeaturedKeys);
     setGalleryKeys(nextGalleryKeys);
     saveStoredMenu(nextSections);
-    saveFeaturedDishKeys(nextFeaturedKeys);
     saveGalleryDishKeys(nextGalleryKeys);
 
     const nextSelectedDish = nextDishes[0] ?? null;
@@ -288,20 +281,6 @@ export function EmployeePanelPage({
     setDraft(nextSelectedDish);
     setIsCreatingDish(false);
     setSaveMessage("Plato eliminado de la carta.");
-  }
-
-  function toggleFeaturedDish(isFeatured: boolean) {
-    if (!isAdmin) {
-      return;
-    }
-
-    if (!draft) {
-      return;
-    }
-
-    const nextKeys = setFeaturedDish(draft, isFeatured, featuredKeys);
-    setFeaturedKeys(nextKeys);
-    saveFeaturedDishKeys(nextKeys);
   }
 
   function toggleGalleryDish(isSelectedForGallery: boolean) {
@@ -828,7 +807,7 @@ export function EmployeePanelPage({
               </h2>
               <p className="mt-5 max-w-3xl text-lg leading-9 text-zinc-300">
                 {isAdmin
-                  ? "Carta, favoritos, galeria, equipo, inventario y chat interno preparados para conectarse despues a la base de datos."
+                  ? "Carta, galeria, equipo, inventario y chat interno preparados para conectarse despues a la base de datos."
                   : session.role === "cocina"
                     ? "Consulta la carta, revisa insumos, mira pedidos activos y conversa con el equipo desde el chat interno."
                     : "Consulta insumos, mira pedidos activos y conversa con el equipo desde el chat interno."}
@@ -840,7 +819,7 @@ export function EmployeePanelPage({
                 canEdit={isAdmin}
                 dishes={dishes}
                 draft={draft}
-                featuredKeys={featuredKeys}
+
                 galleryKeys={galleryKeys}
                 isCreatingDish={isCreatingDish}
                 saveDish={saveDish}
@@ -851,7 +830,7 @@ export function EmployeePanelPage({
                 startNewDish={startNewDish}
                 supplies={supplies}
                 deleteDish={deleteDish}
-                toggleFeaturedDish={toggleFeaturedDish}
+
                 toggleGalleryDish={toggleGalleryDish}
                 updateDraft={updateDraft}
               />

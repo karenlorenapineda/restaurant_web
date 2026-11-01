@@ -1,3 +1,6 @@
+import { transitions } from "../../api/orders";
+import type { ApiOrderStatus } from "../../api/orders";
+import { useIntegrationCopy } from "../../integrationCopy";
 import { T, t } from "../../i18n";
 import { isOnlineOrder } from "../../onlineOrderStore";
 import type { FormEvent } from "react";
@@ -37,6 +40,7 @@ import {
   StatusPill,
 } from "./shared";
 export function OrdersManagement({
+  apiMode = false,
   canEdit,
   canViewRecipe,
   dishes,
@@ -55,6 +59,7 @@ export function OrdersManagement({
   pendingOrder,
   selectedOrderId,
 }: {
+  apiMode?: boolean;
   canEdit: boolean;
   canViewRecipe: boolean;
   dishes: EditableDish[];
@@ -86,6 +91,14 @@ export function OrdersManagement({
   pendingOrder: OrderRecord | null;
   selectedOrderId: number | null;
 }) {
+  const labels = useIntegrationCopy();
+  const statuses = apiMode
+    ? (["queued", "preparing", "ready", "completed", "cancelled"] as const)
+    : ORDER_STATUSES;
+  const statusLabel = (status: string) =>
+    apiMode
+      ? labels[status as ApiOrderStatus]
+      : ORDER_STATUS_LABELS[status as keyof typeof ORDER_STATUS_LABELS];
   const isPendingOrder = Boolean(pendingOrder);
   const selectedOrder =
     pendingOrder ??
@@ -105,9 +118,13 @@ export function OrdersManagement({
             <T>Pedidos</T>
           </h3>
           <p className="mt-3 text-sm leading-7 text-zinc-400">
-            <T>
-              Tablero visual basado en pedidos: cola, preparacion y terminado.
-            </T>
+            {apiMode ? (
+              labels.stockNote
+            ) : (
+              <T>
+                Tablero visual basado en pedidos: cola, preparacion y terminado.
+              </T>
+            )}
           </p>
         </div>
         {canEdit ? (
@@ -117,7 +134,7 @@ export function OrdersManagement({
             onClick={onAdd}
             type="button"
           >
-            {isPendingOrder ? "Pedido pendiente" : "Anadir pedido"}
+            {t(isPendingOrder ? "Pedido pendiente" : "Anadir pedido")}
           </button>
         ) : null}
       </div>
@@ -133,17 +150,25 @@ export function OrdersManagement({
 
       {isPendingOrder ? (
         <p className="mt-5 rounded-sm border border-[#e8b45f]/60 bg-black/25 p-4 text-sm font-semibold text-zinc-200">
-          <T>
-            Pedido sin confirmar: puedes revisarlo y cambiar platos/opciones.
-            Los insumos se descontaran solo al confirmar.
-          </T>
+          {apiMode ? (
+            <>
+              {labels.unsaved}. {labels.stockNote}
+            </>
+          ) : (
+            <T>
+              Pedido sin confirmar: puedes revisarlo y cambiar platos/opciones.
+              Los insumos se descontaran solo al confirmar.
+            </T>
+          )}
         </p>
       ) : null}
 
       <div className="mt-6 grid gap-4 xl:grid-cols-3">
-        {ORDER_STATUSES.map((status) => {
+        {statuses.map((status) => {
           const statusOrders = orders.filter(
-            (order) => normalizeOrderStatus(order.status) === status,
+            (order) =>
+              (apiMode ? order.status : normalizeOrderStatus(order.status)) ===
+              status,
           );
 
           return (
@@ -153,7 +178,7 @@ export function OrdersManagement({
             >
               <div className="flex items-center justify-between gap-3">
                 <h4 className="font-display text-2xl font-bold">
-                  {ORDER_STATUS_LABELS[status]}
+                  {statusLabel(status)}
                 </h4>
                 <span className="rounded-sm bg-black/35 px-3 py-1 text-xs font-bold text-[#e8b45f]">
                   {statusOrders.length}
@@ -214,7 +239,10 @@ export function OrdersManagement({
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <h4 className="font-display text-3xl font-bold">
-                {t(selectedOrder.table)} · {selectedOrder.customer}
+                {apiMode && isPendingOrder
+                  ? labels.unsaved
+                  : t(selectedOrder.table)}{" "}
+                · {selectedOrder.customer}
               </h4>
               <p className="mt-3 max-w-3xl leading-7 text-zinc-300">
                 {selectedIsOnline && isOnlineOrder(selectedOrder)
@@ -229,17 +257,38 @@ export function OrdersManagement({
             </div>
             <div className="flex flex-wrap gap-3">
               <select
+                aria-label={t("Estado")}
+                disabled={
+                  apiMode &&
+                  (isPendingOrder ||
+                    !transitions[selectedOrder.status as ApiOrderStatus]
+                      ?.length)
+                }
                 className="rounded-sm border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm font-bold uppercase tracking-[0.1em] text-white outline-none transition focus:border-[#e8b45f]"
                 onChange={(event) =>
                   isPendingOrder
                     ? onUpdatePending("status", event.target.value)
                     : onUpdate(selectedOrder.id, "status", event.target.value)
                 }
-                value={normalizeOrderStatus(selectedOrder.status)}
+                value={
+                  apiMode
+                    ? selectedOrder.status
+                    : normalizeOrderStatus(selectedOrder.status)
+                }
               >
-                {ORDER_STATUSES.map((status) => (
+                {(apiMode
+                  ? [
+                      selectedOrder.status,
+                      ...(!isPendingOrder
+                        ? (transitions[
+                            selectedOrder.status as ApiOrderStatus
+                          ] ?? [])
+                        : []),
+                    ]
+                  : ORDER_STATUSES
+                ).map((status) => (
                   <option key={status} value={status}>
-                    {ORDER_STATUS_LABELS[status]}
+                    {statusLabel(status)}
                   </option>
                 ))}
               </select>
@@ -260,9 +309,17 @@ export function OrdersManagement({
                     <T>Cancelar</T>
                   </button>
                 </>
-              ) : canEdit ? (
+              ) : canEdit &&
+                (!apiMode ||
+                  transitions[selectedOrder.status as ApiOrderStatus]?.includes(
+                    "cancelled",
+                  )) ? (
                 <DeleteButton
-                  label={`Eliminar pedido ${selectedOrder.table}`}
+                  label={
+                    apiMode
+                      ? labels.cancel
+                      : `Eliminar pedido ${selectedOrder.table}`
+                  }
                   onClick={() => onDelete(selectedOrder.id)}
                 />
               ) : null}
@@ -309,19 +366,75 @@ export function OrdersManagement({
             </div>
           ) : null}
 
-          {canEdit && !selectedIsOnline ? (
+          {canEdit && !selectedIsOnline && (!apiMode || isPendingOrder) ? (
             <div className="mt-5 grid gap-4 md:grid-cols-4">
-              <Field label={t("Mesa")}>
-                <input
-                  className={inputClassName}
-                  onChange={(event) =>
-                    isPendingOrder
-                      ? onUpdatePending("table", event.target.value)
-                      : onUpdate(selectedOrder.id, "table", event.target.value)
-                  }
-                  value={selectedOrder.table}
-                />
-              </Field>
+              {apiMode ? (
+                <>
+                  <Field label={labels.type}>
+                    <select
+                      className={inputClassName}
+                      value={selectedOrder.type}
+                      onChange={(e) => onUpdatePending("type", e.target.value)}
+                    >
+                      {(["dine_in", "takeaway", "delivery"] as const).map(
+                        (type) => (
+                          <option key={type} value={type}>
+                            {labels[type]}
+                          </option>
+                        ),
+                      )}
+                    </select>
+                  </Field>
+                  {selectedOrder.type === "dine_in" && (
+                    <Field label={labels.tableId}>
+                      <input
+                        className={inputClassName}
+                        min="1"
+                        type="number"
+                        value={selectedOrder.tableId ?? ""}
+                        onChange={(e) =>
+                          onUpdatePending("tableId", e.target.value)
+                        }
+                      />
+                    </Field>
+                  )}
+                  <Field label={labels.customerPhone}>
+                    <input
+                      className={inputClassName}
+                      type="tel"
+                      value={selectedOrder.phone ?? ""}
+                      onChange={(e) => onUpdatePending("phone", e.target.value)}
+                    />
+                  </Field>
+                  {selectedOrder.type === "delivery" && (
+                    <Field label={labels.customerAddress}>
+                      <input
+                        className={inputClassName}
+                        value={selectedOrder.address ?? ""}
+                        onChange={(e) =>
+                          onUpdatePending("address", e.target.value)
+                        }
+                      />
+                    </Field>
+                  )}
+                </>
+              ) : (
+                <Field label={t("Mesa")}>
+                  <input
+                    className={inputClassName}
+                    onChange={(event) =>
+                      isPendingOrder
+                        ? onUpdatePending("table", event.target.value)
+                        : onUpdate(
+                            selectedOrder.id,
+                            "table",
+                            event.target.value,
+                          )
+                    }
+                    value={selectedOrder.table}
+                  />
+                </Field>
+              )}
               <Field label={t("Cliente")}>
                 <input
                   className={inputClassName}
@@ -337,17 +450,23 @@ export function OrdersManagement({
                   value={selectedOrder.customer}
                 />
               </Field>
-              <Field label={t("Total")}>
-                <input
-                  className={inputClassName}
-                  onChange={(event) =>
-                    isPendingOrder
-                      ? onUpdatePending("total", event.target.value)
-                      : onUpdate(selectedOrder.id, "total", event.target.value)
-                  }
-                  value={selectedOrder.total}
-                />
-              </Field>
+              {!apiMode && (
+                <Field label={t("Total")}>
+                  <input
+                    className={inputClassName}
+                    onChange={(event) =>
+                      isPendingOrder
+                        ? onUpdatePending("total", event.target.value)
+                        : onUpdate(
+                            selectedOrder.id,
+                            "total",
+                            event.target.value,
+                          )
+                    }
+                    value={selectedOrder.total}
+                  />
+                </Field>
+              )}
               <Field label={t("Notas")}>
                 <input
                   className={inputClassName}
@@ -362,7 +481,7 @@ export function OrdersManagement({
             </div>
           ) : null}
 
-          {canEdit && !selectedIsOnline ? (
+          {canEdit && !selectedIsOnline && (!apiMode || isPendingOrder) ? (
             <div className="mt-6">
               <p className="text-sm font-bold uppercase tracking-[0.14em] text-[#e8b45f]">
                 <T>Platos del pedido</T>
@@ -385,6 +504,8 @@ export function OrdersManagement({
                         <span>{dish.name}</span>
                         <input
                           className="w-full rounded-sm border border-zinc-700 bg-zinc-950 px-3 py-2 text-white outline-none transition focus:border-[#e8b45f]"
+                          aria-label={`${t("Cantidad")} ${dish.name}`}
+                          max={apiMode ? 99 : undefined}
                           min="0"
                           onChange={(event) =>
                             isPendingOrder
@@ -408,102 +529,142 @@ export function OrdersManagement({
             </div>
           ) : null}
 
-          <div className="mt-6 grid gap-4 xl:grid-cols-2">
-            {selectedOrderDishes.map((dish) => {
-              const dishKey = getEditableDishKey(dish);
-              const orderLine = getOrderLines(selectedOrder, dishes).find(
-                (currentOrderLine) => currentOrderLine.dishKey === dishKey,
-              );
-              const removedIngredients =
-                selectedOrder.removedIngredientsByDish?.[dishKey] ?? [];
-              const recipeSupplies = getDishRecipeSupplies(dish);
-
-              return (
+          {apiMode && !isPendingOrder && (
+            <div className="mt-6 grid gap-4 xl:grid-cols-2">
+              {selectedOrder.apiItems?.map((line, index) => (
                 <article
+                  key={index}
                   className="rounded-sm border border-white/10 bg-zinc-950/55 p-4"
-                  key={dishKey}
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h5 className="font-display text-2xl font-bold">
-                        {dish.name}
-                      </h5>
-                      <p className="mt-2 text-sm font-bold text-[#e8b45f]">
-                        {orderLine?.quantity ?? 1}x · {dish.price}
-                      </p>
-                    </div>
-                    {removedIngredients.length > 0 ? (
-                      <span className="rounded-sm border border-[#e8b45f]/60 px-3 py-2 text-xs font-bold uppercase tracking-[0.1em] text-[#e8b45f]">
-                        <T>Con cambios</T>
-                      </span>
-                    ) : null}
-                  </div>
-
-                  {canViewRecipe ? (
-                    <div className="mt-4 rounded-sm border border-white/10 bg-black/25 p-4">
-                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#e8b45f]">
-                        <T>Receta cocina</T>
-                      </p>
-                      <p className="mt-2 leading-7 text-zinc-300">
-                        {getDishRecipe(dish)}
-                      </p>
-                    </div>
-                  ) : null}
-
-                  {recipeSupplies.length > 0 ? (
-                    <div className="mt-4">
-                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#e8b45f]">
-                        <T>Insumos y opciones</T>
-                      </p>
-                      <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                        {recipeSupplies.map((recipeSupply) => {
-                          const ingredient = recipeSupply.supplyName;
-                          const isRemoved =
-                            removedIngredients.includes(ingredient);
-
-                          return (
-                            <label
-                              className={`flex items-center gap-3 rounded-sm border p-3 text-sm font-semibold ${
-                                isRemoved
-                                  ? "border-[#e8b45f] bg-[#333333] text-white"
-                                  : "border-white/10 bg-black/20 text-zinc-300"
-                              }`}
-                              key={`${ingredient}-${recipeSupply.quantity}-${recipeSupply.unit}`}
-                            >
-                              <input
-                                checked={isRemoved}
-                                className="h-5 w-5 accent-[#e8b45f]"
-                                disabled={!canEdit || selectedIsOnline}
-                                onChange={(event) =>
-                                  isPendingOrder
-                                    ? onTogglePendingRemovedIngredient(
-                                        dish,
-                                        ingredient,
-                                        event.target.checked,
-                                      )
-                                    : onToggleRemovedIngredient(
-                                        selectedOrder.id,
-                                        dish,
-                                        ingredient,
-                                        event.target.checked,
-                                      )
-                                }
-                                type="checkbox"
-                              />
-                              <T>Sin </T>
-                              {ingredient}
-                              <span className="ml-auto text-xs text-zinc-500">
-                                {recipeSupply.quantity} {recipeSupply.unit}
-                              </span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ) : null}
+                  <h5 className="font-display text-2xl font-bold">
+                    {line.name}
+                  </h5>
+                  <p className="mt-2 text-sm font-bold text-[#e8b45f]">
+                    {line.quantity}x ·{" "}
+                    {new Intl.NumberFormat("es-CO", {
+                      style: "currency",
+                      currency: "COP",
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 2,
+                    }).format(Number(line.unitPrice))}
+                  </p>
+                  {line.removedIngredients.length > 0 && (
+                    <p className="mt-3">
+                      {t("Sin ")}
+                      {line.removedIngredients.join(", ")}
+                    </p>
+                  )}
+                  {line.notes && <p className="mt-3">{line.notes}</p>}
+                  {canViewRecipe && (
+                    <p className="mt-3 whitespace-pre-wrap">
+                      {dishes.find((dish) => dish.id === line.itemId)?.recipe}
+                    </p>
+                  )}
                 </article>
-              );
-            })}
+              ))}
+            </div>
+          )}
+          <div className="mt-6 grid gap-4 xl:grid-cols-2">
+            {(!apiMode || isPendingOrder) &&
+              selectedOrderDishes.map((dish) => {
+                const dishKey = getEditableDishKey(dish);
+                const orderLine = getOrderLines(selectedOrder, dishes).find(
+                  (currentOrderLine) => currentOrderLine.dishKey === dishKey,
+                );
+                const removedIngredients =
+                  selectedOrder.removedIngredientsByDish?.[dishKey] ?? [];
+                const recipeSupplies = getDishRecipeSupplies(dish);
+
+                return (
+                  <article
+                    className="rounded-sm border border-white/10 bg-zinc-950/55 p-4"
+                    key={dishKey}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h5 className="font-display text-2xl font-bold">
+                          {dish.name}
+                        </h5>
+                        <p className="mt-2 text-sm font-bold text-[#e8b45f]">
+                          {orderLine?.quantity ?? 1}x · {dish.price}
+                        </p>
+                      </div>
+                      {removedIngredients.length > 0 ? (
+                        <span className="rounded-sm border border-[#e8b45f]/60 px-3 py-2 text-xs font-bold uppercase tracking-[0.1em] text-[#e8b45f]">
+                          <T>Con cambios</T>
+                        </span>
+                      ) : null}
+                    </div>
+
+                    {canViewRecipe ? (
+                      <div className="mt-4 rounded-sm border border-white/10 bg-black/25 p-4">
+                        <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#e8b45f]">
+                          <T>Receta cocina</T>
+                        </p>
+                        <p className="mt-2 leading-7 text-zinc-300">
+                          {getDishRecipe(dish)}
+                        </p>
+                      </div>
+                    ) : null}
+
+                    {recipeSupplies.length > 0 ? (
+                      <div className="mt-4">
+                        <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#e8b45f]">
+                          <T>Insumos y opciones</T>
+                        </p>
+                        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                          {recipeSupplies.map((recipeSupply) => {
+                            const ingredient = recipeSupply.supplyName;
+                            const isRemoved =
+                              removedIngredients.includes(ingredient);
+
+                            return (
+                              <label
+                                className={`flex items-center gap-3 rounded-sm border p-3 text-sm font-semibold ${
+                                  isRemoved
+                                    ? "border-[#e8b45f] bg-[#333333] text-white"
+                                    : "border-white/10 bg-black/20 text-zinc-300"
+                                }`}
+                                key={`${ingredient}-${recipeSupply.quantity}-${recipeSupply.unit}`}
+                              >
+                                <input
+                                  checked={isRemoved}
+                                  className="h-5 w-5 accent-[#e8b45f]"
+                                  disabled={
+                                    !canEdit ||
+                                    selectedIsOnline ||
+                                    (apiMode && !isPendingOrder)
+                                  }
+                                  onChange={(event) =>
+                                    isPendingOrder
+                                      ? onTogglePendingRemovedIngredient(
+                                          dish,
+                                          ingredient,
+                                          event.target.checked,
+                                        )
+                                      : onToggleRemovedIngredient(
+                                          selectedOrder.id,
+                                          dish,
+                                          ingredient,
+                                          event.target.checked,
+                                        )
+                                  }
+                                  type="checkbox"
+                                />
+                                <T>Sin </T>
+                                {ingredient}
+                                <span className="ml-auto text-xs text-zinc-500">
+                                  {recipeSupply.quantity} {recipeSupply.unit}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null}
+                  </article>
+                );
+              })}
           </div>
         </div>
       ) : (

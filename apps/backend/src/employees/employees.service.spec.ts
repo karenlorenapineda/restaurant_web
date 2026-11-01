@@ -51,6 +51,7 @@ describe('EmployeesService', () => {
       prismaMock.employee.findMany.mockResolvedValue([
         {
           id: 1,
+          userId: 41, positionId: 3, restaurantId: 5,
           firstName: 'Alex',
           lastName: 'Smith',
           phone: '+34123456789',
@@ -64,6 +65,7 @@ describe('EmployeesService', () => {
         },
         {
           id: 2,
+          userId: 42, positionId: 4, restaurantId: 5,
           firstName: 'Sam',
           lastName: 'Jones',
           phone: null,
@@ -79,6 +81,7 @@ describe('EmployeesService', () => {
       await expect(service.getEmployees()).resolves.toEqual([
         {
           id: 1,
+          userId: 41, positionId: 3, restaurantId: 5, firstName: 'Alex', lastName: 'Smith',
           name: 'Alex Smith',
           phone: '+34123456789',
           active: true,
@@ -88,6 +91,7 @@ describe('EmployeesService', () => {
         },
         {
           id: 2,
+          userId: 42, positionId: 4, restaurantId: 5, firstName: 'Sam', lastName: 'Jones',
           name: 'Sam Jones',
           phone: null,
           active: false,

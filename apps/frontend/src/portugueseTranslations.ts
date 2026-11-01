@@ -19,6 +19,7 @@ export const ptBySource: Record<string, string> = {
   "Buena comida, grandes momentos": "Boa comida, grandes momentos",
   "Platos colombianos, carnes al asador y recetas de casa para sentarse en familia y compartir sin prisa.":
     "Pratos colombianos, carnes grelhadas e receitas caseiras para reunir a família e partilhar sem pressa.",
+  "Una selección de nuestra carta.": "Uma seleção do nosso menu.",
   "Especiales de hoy": "Especialidades de hoje",
   "Favoritos editables desde el panel de empleados.":
     "Favoritos editáveis no painel de funcionários.",
