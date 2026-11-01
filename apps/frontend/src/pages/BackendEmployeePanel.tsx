@@ -281,6 +281,7 @@ function ConnectedPanel({ navigate }: Pick<NavigationHandlers, "navigate">) {
                 <EmployeesManagement
                   apiMode
                   restaurants={data.restaurants}
+                  positions={data.positions}
                   onSave={saveEmployee}
                   employees={employees}
                   isAdmin={isAdmin}
@@ -334,6 +335,7 @@ function ConnectedPanel({ navigate }: Pick<NavigationHandlers, "navigate">) {
 
               {activeTab === "orders" ? (
                 <OrdersManagement
+                  tables={data.tables}
                   apiMode
                   canEdit={canAddOrders}
                   canViewRecipe={canViewMenu}

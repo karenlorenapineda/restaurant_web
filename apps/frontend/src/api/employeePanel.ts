@@ -15,7 +15,18 @@ export interface UnitOption {
   abbreviation: string;
   type: string;
 }
+export interface TableOption {
+  id: number;
+  tableNumber: string;
+  capacity: number;
+}
+export interface PositionOption {
+  id: number;
+  name: string;
+}
 export interface PanelData {
+  positions: PositionOption[];
+  tables: TableOption[];
   sections: MenuSection[];
   employees: EmployeeRecord[];
   supplies: SupplyRecord[];
@@ -26,6 +37,8 @@ export interface PanelData {
   recipes: Record<string, RecipeGroup>;
 }
 export const emptyPanelData: PanelData = {
+  positions: [],
+  tables: [],
   sections: [],
   employees: [],
   supplies: [],
@@ -57,6 +70,8 @@ export async function fetchPanelData(signal?: AbortSignal): Promise<PanelData> {
     unitRows,
     restaurants,
     recipes,
+    positions,
+    tables,
   ] = await Promise.all([
     listRows("categories", signal),
     listRows("menu/management", signal),
@@ -67,6 +82,8 @@ export async function fetchPanelData(signal?: AbortSignal): Promise<PanelData> {
     listRows("units", signal),
     listRows("restaurant", signal),
     fetchRecipes(signal),
+    listRows("employees/positions", signal),
+    listRows("tables", signal),
   ]);
   const units = unitRows as unknown as UnitOption[];
   const stock = (rows: Row[]): SupplyRecord[] =>
@@ -149,6 +166,12 @@ export async function fetchPanelData(signal?: AbortSignal): Promise<PanelData> {
     };
   });
   return {
+    positions: positions.map((row) => ({ id: row.id, name: String(row.name) })),
+    tables: tables.map((row) => ({
+      id: row.id,
+      tableNumber: String(row.tableNumber),
+      capacity: Number(row.capacity),
+    })),
     sections,
     employees,
     supplies: stock(supplyRows),

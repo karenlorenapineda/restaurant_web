@@ -98,6 +98,12 @@ export async function listRows(
             item.removedIngredients.every(text),
         )
       );
+    if (path === "tables")
+      return (
+        text(row.tableNumber) &&
+        Number.isSafeInteger(row.capacity) &&
+        Number(row.capacity) > 0
+      );
     if (!text(row.name)) return false;
     if (path === "menu/management")
       return (

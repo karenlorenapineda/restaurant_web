@@ -101,10 +101,10 @@ El widget público de chat de demostración no se muestra en modo API: el backen
 ## 7. Límites que debe resolver el equipo de backend
 
 - Autenticación, autorización por rol y asociación del usuario al restaurante. El backend aún crea pedidos con la identidad temporal restaurante 1 / empleado 1.
-- Catálogos/gestión de usuarios y puestos. Crear empleado requiere `userId` y `positionId` existentes. La UI no inventa usuarios ni permite editar emails o roles con endpoints inexistentes.
+- Catálogo y gestión de usuarios pendientes del módulo de autenticación. Los puestos se consultan con GET `/api/employees/positions`. Crear empleado requiere `userId` existente y un puesto seleccionado del catálogo. La UI no inventa usuarios ni permite editar emails o roles con endpoints inexistentes.
 - GET de empleados ahora devuelve nombre y apellidos separados, además del nombre completo. PATCH recibe esos campos sin dividir nombres compuestos. La API no admite vaciar un teléfono guardado; el formulario lo indica como error y conserva los datos.
 - Los cambios de receta existentes se envían con el plato. Altas y bajas de ingredientes usan peticiones separadas: si alguna falla tras guardar el plato, se informa del resultado parcial y se recargan los datos para evitar repetir altas inadvertidamente.
-- Catálogo de mesas: en pedidos en local se introduce el ID existente; no hay endpoint de consulta de mesas.
+- GET `/api/tables` devuelve mesas existentes con número y capacidad. En pedidos en local se selecciona una mesa del catálogo; no se introducen IDs manualmente. Un catálogo vacío impide confirmar pedidos en local. El modelo actual de mesas es global y no incorpora asociación por restaurante.
 - Edición de platos o cantidades de pedidos ya enviados y devolución de stock al cancelar después de preparar no están implementadas en la API. La UI no las simula.
 - No existe clave de idempotencia para crear pedidos. Se bloquea el doble clic, pero ante una interrupción de red hay que comprobar el panel antes de reenviar.
 - Migrar los registros antiguos sin perderlos. Las pruebas sobre una base vacía no validan la migración de la base anterior.

@@ -1,6 +1,12 @@
 import { useLocale } from "./i18n";
 const messages = {
   es: {
+    noPositions: "No hay puestos disponibles.",
+    noTables: "No hay mesas disponibles.",
+    seats: "plazas",
+    existingUserNote:
+      "Vincula un usuario ya existente mediante su ID. La creación de cuentas y el selector de usuarios se incorporarán con autenticación.",
+
     panel: "Panel de empleados",
     pending:
       "Conexión de desarrollo: la autenticación y los permisos del servidor aún están pendientes. Los cambios se guardan en la base de datos.",
@@ -39,7 +45,7 @@ const messages = {
     minimumStock: "Mínimo",
     userId: "ID del usuario existente",
     restaurantId: "Restaurante",
-    positionId: "ID del puesto existente",
+    positionId: "Puesto",
     itemId: "Plato",
     ingredientId: "Ingrediente",
     quantity: "Cantidad",
@@ -51,7 +57,7 @@ const messages = {
     dine_in: "En el local",
     takeaway: "Para llevar",
     delivery: "A domicilio",
-    tableId: "ID de mesa",
+    tableId: "Mesa",
     customerName: "Cliente",
     customerPhone: "Teléfono",
     customerAddress: "Dirección",
@@ -71,7 +77,7 @@ const messages = {
     identity:
       "Usa IDs de usuario, no IDs de empleado. El backend todavía no permite consultar usuarios ni iniciar sesión.",
     noEmployeeEdit:
-      "Email y rol son de consulta. El puesto se cambia por su ID; faltan los catálogos de usuarios y puestos y las APIs de permisos.",
+      "Email y rol son de consulta. Selecciona un puesto del catálogo. La gestión de cuentas y permisos sigue pendiente.",
     payment:
       "El pedido se envía al restaurante. El pago online todavía no está disponible.",
     success: "Pedido enviado al restaurante",
@@ -108,6 +114,12 @@ const messages = {
     existing: "Selecciona un registro o crea uno nuevo.",
   },
   en: {
+    noPositions: "No positions available.",
+    noTables: "No tables available.",
+    seats: "seats",
+    existingUserNote:
+      "Link an existing user by ID. Account creation and user selection will be added with authentication.",
+
     panel: "Employee dashboard",
     pending:
       "Development connection: server authentication and permissions are still pending. Changes are saved to the database.",
@@ -146,7 +158,7 @@ const messages = {
     minimumStock: "Minimum",
     userId: "Existing user ID",
     restaurantId: "Restaurant",
-    positionId: "Existing position ID",
+    positionId: "Position",
     itemId: "Dish",
     ingredientId: "Ingredient",
     quantity: "Quantity",
@@ -158,7 +170,7 @@ const messages = {
     dine_in: "Dine in",
     takeaway: "Takeaway",
     delivery: "Delivery",
-    tableId: "Table ID",
+    tableId: "Table",
     customerName: "Customer",
     customerPhone: "Phone",
     customerAddress: "Address",
@@ -178,7 +190,7 @@ const messages = {
     identity:
       "Use user IDs, not employee IDs. The backend does not yet support listing users or signing in.",
     noEmployeeEdit:
-      "Email and role are read-only. Positions are changed by ID; user/position catalogs and permission APIs are pending.",
+      "Email and role are read-only. Select a position from the catalog. Account and permission management is still pending.",
     payment:
       "The order is sent to the restaurant. Online payment is not available yet.",
     success: "Order sent to the restaurant",
@@ -213,6 +225,12 @@ const messages = {
     existing: "Select a record or create a new one.",
   },
   pt: {
+    noPositions: "Não há cargos disponíveis.",
+    noTables: "Não há mesas disponíveis.",
+    seats: "lugares",
+    existingUserNote:
+      "Associe um utilizador existente pelo ID. A criação de contas e a seleção de utilizadores serão incluídas com a autenticação.",
+
     panel: "Painel de funcionários",
     pending:
       "Ligação de desenvolvimento: a autenticação e as permissões do servidor ainda estão pendentes. As alterações são guardadas na base de dados.",
@@ -251,7 +269,7 @@ const messages = {
     minimumStock: "Mínimo",
     userId: "ID do utilizador existente",
     restaurantId: "Restaurante",
-    positionId: "ID do cargo existente",
+    positionId: "Cargo",
     itemId: "Prato",
     ingredientId: "Ingrediente",
     quantity: "Quantidade",
@@ -263,7 +281,7 @@ const messages = {
     dine_in: "No restaurante",
     takeaway: "Para levar",
     delivery: "Entrega",
-    tableId: "ID da mesa",
+    tableId: "Mesa",
     customerName: "Cliente",
     customerPhone: "Telefone",
     customerAddress: "Morada",
@@ -283,7 +301,7 @@ const messages = {
     identity:
       "Use IDs de utilizador, não de funcionário. Ainda não há consulta de utilizadores nem início de sessão no backend.",
     noEmployeeEdit:
-      "Email e função são de consulta. O cargo muda pelo ID; faltam os catálogos de utilizadores e cargos e as APIs de permissões.",
+      "Email e função são de consulta. Selecione um cargo do catálogo. A gestão de contas e permissões continua pendente.",
     payment:
       "O pedido é enviado ao restaurante. O pagamento online ainda não está disponível.",
     success: "Pedido enviado ao restaurante",

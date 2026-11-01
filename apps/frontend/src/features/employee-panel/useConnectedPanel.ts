@@ -520,7 +520,7 @@ export function useConnectedPanel() {
         if (
           !row.firstName?.trim() ||
           !row.lastName?.trim() ||
-          !positive(row.positionId)
+          !data.positions.some((item) => item.id === row.positionId)
         )
           throw new Error(
             labels.firstName +
@@ -682,7 +682,8 @@ export function useConnectedPanel() {
         }
         if (type === "dine_in") {
           const id = Number(pending.tableId);
-          if (!positive(id)) throw new Error(labels.tableId);
+          if (!positive(id) || !data.tables.some((table) => table.id === id))
+            throw new Error(labels.tableId);
           payload.tableId = id;
         }
         const saved = await createOrder(payload);

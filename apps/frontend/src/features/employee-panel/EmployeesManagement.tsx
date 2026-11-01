@@ -1,3 +1,4 @@
+import type { PositionOption } from "../../api/employeePanel";
 import { useIntegrationCopy } from "../../integrationCopy";
 import { Button, Input, Select } from "../../components/ui/controls";
 import { T, t, useLocale } from "../../i18n";
@@ -40,6 +41,7 @@ import {
 export function EmployeesManagement({
   apiMode = false,
   restaurants = [],
+  positions = [],
   onSave,
   employees,
   isAdmin,
@@ -48,6 +50,7 @@ export function EmployeesManagement({
   onUpdate,
 }: {
   apiMode?: boolean;
+  positions?: PositionOption[];
   restaurants?: { id: number; name: string }[];
   onSave?: (id: number) => void;
   employees: EmployeeRecord[];
@@ -133,18 +136,40 @@ export function EmployeesManagement({
                   />
                 </Field>
                 <Field label={labels.positionId}>
-                  <Input
-                    type="number"
-                    min="1"
+                  <Select
+                    aria-label={labels.positionId}
                     value={employee.positionId ?? ""}
-                    readOnly={!isAdmin}
+                    disabled={!isAdmin || !positions.length}
                     onChange={(e) =>
                       onUpdate(employee.id, "positionId", e.target.value)
                     }
-                  />
+                  >
+                    <option value="" disabled>
+                      {labels.select}
+                    </option>
+                    {employee.positionId &&
+                      !positions.some(
+                        (item) => item.id === employee.positionId,
+                      ) && (
+                        <option value={employee.positionId} disabled>
+                          {employee.position || labels.select}
+                        </option>
+                      )}
+                    {positions.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </Select>
+                  {!positions.length && (
+                    <p role="status">{labels.noPositions}</p>
+                  )}
                 </Field>
                 {employee.id < 0 ? (
                   <>
+                    <p className="text-sm text-zinc-300">
+                      {labels.existingUserNote}
+                    </p>
                     <Field label={labels.userId}>
                       <Input
                         type="number"

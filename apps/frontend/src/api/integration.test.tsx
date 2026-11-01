@@ -157,6 +157,8 @@ describe("backend integration", () => {
             status,
           );
         const values: Record<string, unknown> = {
+          "/api/employees/positions": [{ id: 8, name: "Cocina" }],
+          "/api/tables": [{ id: 42, tableNumber: "Terraza 7", capacity: 4 }],
           "/api/categories": [{ id: 2, name: "Pizzas" }],
           "/api/units": [
             {
@@ -527,5 +529,129 @@ describe("backend integration", () => {
     expect(
       fetch.mock.calls.every(([, options]) => options?.method === "GET"),
     ).toBe(true);
+  });
+  it("selects a position by name and submits its ID without changing account data", async () => {
+    const fetch = panelFetch();
+    const base = fetch.getMockImplementation()!;
+    fetch.mockImplementation(async (url: string, options?: RequestInit) =>
+      url === "/api/employees/positions"
+        ? response([
+            { id: 8, name: "Cocina" },
+            { id: 91, name: "Sala" },
+          ])
+        : base(url, options),
+    );
+    vi.stubGlobal("fetch", fetch);
+    render(<BackendEmployeePanel />);
+    fireEvent.click(
+      screen.getByRole("button", { name: /Vista de administrador/ }),
+    );
+    await screen.findByText("Pizza API");
+    fireEvent.click(screen.getByRole("button", { name: "Empleados" }));
+    fireEvent.change(screen.getByRole("combobox", { name: "Puesto" }), {
+      target: { value: "91" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Guardar cambios" }));
+    await waitFor(() =>
+      expect(
+        fetch.mock.calls.some(
+          ([url, options]) =>
+            url === "/api/employees/31" && options?.method === "PATCH",
+        ),
+      ).toBe(true),
+    );
+    const call = fetch.mock.calls.find(
+      ([url, options]) =>
+        url === "/api/employees/31" && options?.method === "PATCH",
+    )!;
+    expect(JSON.parse(call[1].body)).toEqual({
+      firstName: "Sara",
+      lastName: "API",
+      phone: "600123456",
+      positionId: 91,
+    });
+  });
+  it("shows table labels and submits the actual table ID for dine-in orders", async () => {
+    const fetch = panelFetch();
+    const base = fetch.getMockImplementation()!;
+    fetch.mockImplementation(async (url: string, options?: RequestInit) =>
+      options?.method === "POST"
+        ? response(
+            {
+              id: 77,
+              total: "25000.50",
+              status: "queued",
+              orderDate: "2026-11-01T12:00:00Z",
+            },
+            201,
+          )
+        : base(url, options),
+    );
+    vi.stubGlobal("fetch", fetch);
+    render(<BackendEmployeePanel />);
+    fireEvent.click(
+      screen.getByRole("button", { name: /Vista de administrador/ }),
+    );
+    await screen.findByText("Pizza API");
+    fireEvent.click(screen.getByRole("button", { name: "Pedidos" }));
+    fireEvent.click(screen.getByRole("button", { name: "Anadir pedido" }));
+    fireEvent.change(
+      screen.getByRole("spinbutton", { name: "Cantidad Pizza API" }),
+      { target: { value: "1" } },
+    );
+    fireEvent.change(screen.getByRole("combobox", { name: "Tipo" }), {
+      target: { value: "dine_in" },
+    });
+    expect(
+      screen.getByRole("option", { name: "Terraza 7 · 4 plazas" }),
+    ).toHaveValue("42");
+    fireEvent.change(screen.getByRole("combobox", { name: "Mesa" }), {
+      target: { value: "42" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar pedido" }));
+    await waitFor(() =>
+      expect(
+        fetch.mock.calls.some(
+          ([url, options]) =>
+            url === "/api/orders" && options?.method === "POST",
+        ),
+      ).toBe(true),
+    );
+    const call = fetch.mock.calls.find(
+      ([url, options]) => url === "/api/orders" && options?.method === "POST",
+    )!;
+    expect(JSON.parse(call[1].body)).toMatchObject({
+      type: "dine_in",
+      tableId: 42,
+    });
+  });
+  it("prevents a dine-in order when the table catalog is empty", async () => {
+    const fetch = panelFetch();
+    const base = fetch.getMockImplementation()!;
+    fetch.mockImplementation(async (url: string, options?: RequestInit) =>
+      url === "/api/tables" ? response([]) : base(url, options),
+    );
+    vi.stubGlobal("fetch", fetch);
+    render(<BackendEmployeePanel />);
+    fireEvent.click(
+      screen.getByRole("button", { name: /Vista de administrador/ }),
+    );
+    await screen.findByText("Pizza API");
+    fireEvent.click(screen.getByRole("button", { name: "Pedidos" }));
+    fireEvent.click(screen.getByRole("button", { name: "Anadir pedido" }));
+    fireEvent.change(
+      screen.getByRole("spinbutton", { name: "Cantidad Pizza API" }),
+      { target: { value: "1" } },
+    );
+    fireEvent.change(screen.getByRole("combobox", { name: "Tipo" }), {
+      target: { value: "dine_in" },
+    });
+    expect(screen.getByRole("combobox", { name: "Mesa" })).toBeDisabled();
+    expect(screen.getByText("No hay mesas disponibles.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar pedido" }));
+    await screen.findByRole("alert");
+    expect(
+      fetch.mock.calls.some(([, options]) => options?.method === "POST"),
+    ).toBe(false);
   });
 });

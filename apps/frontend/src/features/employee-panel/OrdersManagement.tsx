@@ -1,3 +1,4 @@
+import type { TableOption } from "../../api/employeePanel";
 import { transitions } from "../../api/orders";
 import type { ApiOrderStatus } from "../../api/orders";
 import { useIntegrationCopy } from "../../integrationCopy";
@@ -41,6 +42,7 @@ import {
 } from "./shared";
 export function OrdersManagement({
   apiMode = false,
+  tables = [],
   canEdit,
   canViewRecipe,
   dishes,
@@ -60,6 +62,7 @@ export function OrdersManagement({
   selectedOrderId,
 }: {
   apiMode?: boolean;
+  tables?: TableOption[];
   canEdit: boolean;
   canViewRecipe: boolean;
   dishes: EditableDish[];
@@ -388,15 +391,26 @@ export function OrdersManagement({
                   </Field>
                   {selectedOrder.type === "dine_in" && (
                     <Field label={labels.tableId}>
-                      <input
+                      <select
+                        aria-label={labels.tableId}
                         className={inputClassName}
-                        min="1"
-                        type="number"
                         value={selectedOrder.tableId ?? ""}
+                        disabled={!tables.length}
                         onChange={(e) =>
                           onUpdatePending("tableId", e.target.value)
                         }
-                      />
+                      >
+                        <option value="" disabled>
+                          {labels.select}
+                        </option>
+                        {tables.map((table) => (
+                          <option key={table.id} value={table.id}>
+                            {table.tableNumber} · {table.capacity}{" "}
+                            {labels.seats}
+                          </option>
+                        ))}
+                      </select>
+                      {!tables.length && <p role="status">{labels.noTables}</p>}
                     </Field>
                   )}
                   <Field label={labels.customerPhone}>

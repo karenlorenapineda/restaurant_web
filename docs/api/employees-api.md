@@ -12,15 +12,15 @@ Sin body.
 
 ```json
 [
- {
-  "id": 7,
-  "name": "Ana Pérez",
-  "phone": null,
-  "active": true,
-  "email": "ana@example.com",
-  "position": "Mesero",
-  "role": "Employee"
- }
+  {
+    "id": 7,
+    "name": "Ana Pérez",
+    "phone": null,
+    "active": true,
+    "email": "ana@example.com",
+    "position": "Mesero",
+    "role": "Employee"
+  }
 ]
 ```
 
@@ -32,11 +32,11 @@ Crear empleado asociado a usuario existente (201).
 
 ```json
 {
- "userId": 12,
- "firstName": "Ana",
- "lastName": "Pérez",
- "restaurantId": 1,
- "positionId": 2
+  "userId": 12,
+  "firstName": "Ana",
+  "lastName": "Pérez",
+  "restaurantId": 1,
+  "positionId": 2
 }
 ```
 
@@ -44,17 +44,17 @@ Crear empleado asociado a usuario existente (201).
 
 ```json
 {
- "id": 7,
- "userId": 12,
- "firstName": "Ana",
- "lastName": "Pérez",
- "phone": null,
- "restaurantId": 1,
- "positionId": 2,
- "birthDate": null,
- "hireDate": "2026-10-16T20:00:00.000Z",
- "terminationDate": null,
- "isActive": true
+  "id": 7,
+  "userId": 12,
+  "firstName": "Ana",
+  "lastName": "Pérez",
+  "phone": null,
+  "restaurantId": 1,
+  "positionId": 2,
+  "birthDate": null,
+  "hireDate": "2026-10-16T20:00:00.000Z",
+  "terminationDate": null,
+  "isActive": true
 }
 ```
 
@@ -66,8 +66,8 @@ Editar los campos enviados (200).
 
 ```json
 {
- "firstName": "Ana",
- "positionId": 2
+  "firstName": "Ana",
+  "positionId": 2
 }
 ```
 
@@ -75,17 +75,17 @@ Editar los campos enviados (200).
 
 ```json
 {
- "id": 7,
- "userId": 12,
- "firstName": "Ana",
- "lastName": "Pérez",
- "phone": null,
- "restaurantId": 1,
- "positionId": 2,
- "birthDate": null,
- "hireDate": "2026-10-16T20:00:00.000Z",
- "terminationDate": null,
- "isActive": true
+  "id": 7,
+  "userId": 12,
+  "firstName": "Ana",
+  "lastName": "Pérez",
+  "phone": null,
+  "restaurantId": 1,
+  "positionId": 2,
+  "birthDate": null,
+  "hireDate": "2026-10-16T20:00:00.000Z",
+  "terminationDate": null,
+  "isActive": true
 }
 ```
 
@@ -99,17 +99,17 @@ Sin body.
 
 ```json
 {
- "id": 7,
- "userId": 12,
- "firstName": "Ana",
- "lastName": "Pérez",
- "phone": null,
- "restaurantId": 1,
- "positionId": 2,
- "birthDate": null,
- "hireDate": "2026-10-16T20:00:00.000Z",
- "terminationDate": null,
- "isActive": true
+  "id": 7,
+  "userId": 12,
+  "firstName": "Ana",
+  "lastName": "Pérez",
+  "phone": null,
+  "restaurantId": 1,
+  "positionId": 2,
+  "birthDate": null,
+  "hireDate": "2026-10-16T20:00:00.000Z",
+  "terminationDate": null,
+  "isActive": true
 }
 ```
 
@@ -123,17 +123,17 @@ Sin body.
 
 ```json
 {
- "id": 7,
- "userId": 12,
- "firstName": "Ana",
- "lastName": "Pérez",
- "phone": null,
- "restaurantId": 1,
- "positionId": 2,
- "birthDate": null,
- "hireDate": "2026-10-16T20:00:00.000Z",
- "terminationDate": "2026-10-17T12:00:00.000Z",
- "isActive": false
+  "id": 7,
+  "userId": 12,
+  "firstName": "Ana",
+  "lastName": "Pérez",
+  "phone": null,
+  "restaurantId": 1,
+  "positionId": 2,
+  "birthDate": null,
+  "hireDate": "2026-10-16T20:00:00.000Z",
+  "terminationDate": "2026-10-17T12:00:00.000Z",
+  "isActive": false
 }
 ```
 
@@ -144,3 +144,7 @@ Sin body.
 - PATCH permite `firstName`, `lastName`, `phone`, `positionId`, `birthDate`, todos opcionales.
 - Respuesta escrita: `id` = empleado, `isActive` = estado, `hireDate` = contratación, `terminationDate` = baja; fechas ISO o null donde corresponda.
 - GET: `name` concatena nombre y apellido, `active` es estado del empleado, `email`/`role` pertenecen al usuario, `position` es nombre del puesto.
+
+## Position catalog
+
+`GET /api/employees/positions` returns existing positions as `[{ "id": 8, "name": "Cocina" }]`, sorted by name and ID, or `[]` when empty. It does not access or create user accounts. The employee form displays the position name and sends its numeric `positionId`. User account selection remains pending authentication integration; employee creation still requires an existing `userId`.
