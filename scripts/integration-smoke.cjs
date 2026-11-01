@@ -3,6 +3,8 @@ const assert = require("node:assert/strict");
 const { spawn } = require("node:child_process");
 const { PrismaClient } = require("@prisma/client");
 const { io } = require("socket.io-client");
+const { createServer } = require("node:net");
+const { once } = require("node:events");
 if (
   new URL(process.env.DATABASE_URL || "http://invalid").pathname !==
   "/picasso_integration"
@@ -10,12 +12,16 @@ if (
   throw new Error("Use only the disposable picasso_integration database");
 const prisma = new PrismaClient();
 const port = 3001;
-const base = `http://127.0.0.1:${port}`;
+const backendBase = `http://127.0.0.1:${port}`;
+const frontendPort = 5175;
+const base = `http://127.0.0.1:${frontendPort}`;
+let frontend;
 let backend;
 const clients = [];
 async function api(path, method = "GET", body) {
   const response = await fetch(`${base}/api/${path}`, {
     method,
+    signal: AbortSignal.timeout(10000),
     headers: { "Content-Type": "application/json" },
     ...(body ? { body: JSON.stringify(body) } : {}),
   });
@@ -33,7 +39,11 @@ const emit = (socket, event, payload) =>
       ),
   );
 async function connect() {
-  const client = io(base);
+  const client = io(base, {
+    transports: ["websocket"],
+    timeout: 5000,
+    reconnection: false,
+  });
   clients.push(client);
   await new Promise((resolve, reject) => {
     client.once("connect", resolve);
@@ -41,7 +51,68 @@ async function connect() {
   });
   return client;
 }
+async function waitForUrl(url, errors = () => "") {
+  for (let attempt = 0; attempt < 80; attempt++) {
+    try {
+      if ((await fetch(url, { signal: AbortSignal.timeout(1000) })).ok) return;
+    } catch {}
+    await pause(100);
+  }
+  throw new Error(`Service did not start at ${url}: ${errors()}`);
+}
+async function checkPort(port) {
+  const server = createServer();
+  await new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(port, "127.0.0.1", resolve);
+  });
+  await new Promise((resolve) => server.close(resolve));
+}
+async function stop(child) {
+  if (!child || child.exitCode !== null || child.signalCode !== null) return;
+  const exited = once(child, "exit");
+  child.kill("SIGTERM");
+  let timer;
+  try {
+    await Promise.race([
+      exited,
+      new Promise((resolve) => {
+        timer = setTimeout(() => {
+          child.kill("SIGKILL");
+          resolve();
+        }, 3000);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+async function startBackend() {
+  const child = spawn(process.execPath, ["apps/backend/dist/main.js"], {
+    env: { ...process.env, PORT: String(port) },
+    stdio: ["ignore", "ignore", "pipe"],
+  });
+  let stderr = "";
+  backend = child;
+  child.stderr.on("data", (chunk) => (stderr += chunk));
+  let ready = false;
+  for (let attempt = 0; attempt < 60; attempt++) {
+    try {
+      ready = (
+        await fetch(`${backendBase}/api/health`, {
+          signal: AbortSignal.timeout(1000),
+        })
+      ).ok;
+      if (ready) break;
+    } catch {}
+    await pause(100);
+  }
+  assert.ok(ready, `Backend did not start: ${stderr}`);
+  return child;
+}
 async function main() {
+  await checkPort(port);
+  await checkPort(frontendPort);
   assert.equal(await prisma.user.count(), 0, "Use a fresh disposable database");
   const role = await prisma.userRole.create({ data: { name: "Integration" } });
   const language = await prisma.language.create({
@@ -67,7 +138,7 @@ async function main() {
       languageId: language.id,
     },
   });
-  await prisma.employee.create({
+  const initialEmployee = await prisma.employee.create({
     data: {
       firstName: "Test",
       lastName: "Employee",
@@ -82,21 +153,55 @@ async function main() {
   const unit = await prisma.unitOfMeasure.create({
     data: { name: "Gram", abbreviation: "g", type: "weight", baseFactor: 1 },
   });
-  backend = spawn(process.execPath, ["apps/backend/dist/main.js"], {
-    env: { ...process.env, PORT: String(port) },
-    stdio: ["ignore", "ignore", "pipe"],
+  backend = await startBackend();
+  frontend = spawn(
+    process.execPath,
+    [
+      "node_modules/vite/bin/vite.js",
+      "apps/frontend",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      String(frontendPort),
+      "--strictPort",
+    ],
+    {
+      env: {
+        ...process.env,
+        VITE_DATA_MODE: "api",
+        BACKEND_PROXY_TARGET: backendBase,
+      },
+      stdio: ["ignore", "ignore", "pipe"],
+    },
+  );
+  let frontendErrors = "";
+  frontend.stderr.on("data", (chunk) => (frontendErrors += chunk));
+  await waitForUrl(base, () => frontendErrors);
+  assert.match(await (await fetch(base)).text(), /src\/main.tsx/);
+  assert.equal((await api("health")).status, "ok");
+  const table = await prisma.table.create({
+    data: { tableNumber: "Terraza 7", capacity: 4 },
   });
-  let stderr = "";
-  backend.stderr.on("data", (chunk) => (stderr += chunk));
-  let ready = false;
-  for (let attempt = 0; attempt < 60; attempt++) {
-    try {
-      ready = (await fetch(`${base}/api/health`)).ok;
-      if (ready) break;
-    } catch {}
-    await pause(100);
-  }
-  assert.ok(ready, `Backend did not start: ${stderr}`);
+  assert.deepEqual(await api("tables"), [table]);
+  assert.deepEqual(await api("employees/positions"), [
+    { id: position.id, name: position.name },
+  ]);
+  const createdEmployee = await api("employees", "POST", {
+    userId: other.id,
+    firstName: "Ana",
+    lastName: "García López",
+    restaurantId: restaurant.id,
+    positionId: position.id,
+  });
+  await api(`employees/${createdEmployee.id}`, "PATCH", {
+    firstName: "Ana María",
+    phone: "600000123",
+  });
+  assert.equal(
+    (await api("employees")).find((row) => row.id === createdEmployee.id)
+      .firstName,
+    "Ana María",
+  );
   const supply = await api("supplies", "POST", {
     name: "Flour",
     unitId: unit.id,
@@ -125,6 +230,17 @@ async function main() {
   });
   await api(`inventory/${stock.id}`, "PATCH", { currentStock: 18 });
   assert.equal((await api("inventory"))[0].stock, "18");
+  const dineIn = await api("orders", "POST", {
+    type: "dine_in",
+    tableId: table.id,
+    items: [{ itemId: dish.id, quantity: 1 }],
+  });
+  assert.equal(
+    (await api(`orders/${dineIn.id}`)).tableOrLocation,
+    "Mesa Terraza 7",
+  );
+  await api(`orders/${dineIn.id}/status`, "PATCH", { status: "cancelled" });
+  assert.equal((await api("supplies"))[0].stock, "1000");
   const order = await api("orders", "POST", {
     type: "delivery",
     customerName: "Ana",
@@ -157,9 +273,13 @@ async function main() {
   await api("recipes", "PATCH", {
     ingredients: [{ id: recipe.id, quantity: 90 }],
   });
-  await api(`employees/1/deactivate`, "PATCH");
-  assert.equal((await api("employees"))[0].active, false);
-  await api("employees/1/activate", "PATCH");
+  await api(`employees/${initialEmployee.id}/deactivate`, "PATCH");
+  assert.equal(
+    (await api("employees")).find((row) => row.id === initialEmployee.id)
+      .active,
+    false,
+  );
+  await api(`employees/${initialEmployee.id}/activate`, "PATCH");
   const sender = await connect();
   const receiver = await connect();
   await emit(receiver, "join", { userId: other.id });
@@ -182,9 +302,52 @@ async function main() {
     (await api(`chat/conversation/${user.id}/${other.id}`))[0].message,
     "Integration hello",
   );
+  const storedMessage = await prisma.chatMessage.findUniqueOrThrow({
+    where: { id: ack.id },
+  });
+  assert.notEqual(storedMessage.message, "Integration hello");
+  sender.disconnect();
+  receiver.disconnect();
+  await stop(backend);
+  backend = await startBackend();
+  assert.equal((await api(`orders/${order.id}`)).status, "completed");
+  assert.equal((await api("supplies"))[0].stock, "800");
+  assert.equal((await api("menu/management"))[0].active, false);
+  assert.equal(
+    (await api("employees")).find((row) => row.id === createdEmployee.id)
+      .firstName,
+    "Ana María",
+  );
+  assert.deepEqual(await api("tables"), [table]);
+  assert.equal(
+    Object.values(await api("recipes"))[0].ingredients[0].quantity,
+    "90",
+  );
+  assert.equal(
+    (await api(`chat/conversation/${user.id}/${other.id}`))[0].message,
+    "Integration hello",
+  );
+  const reconnectedReceiver = await connect();
+  await emit(reconnectedReceiver, "join", { userId: other.id });
+  const afterRestart = new Promise((resolve) =>
+    reconnectedReceiver.once("newMessage", resolve),
+  );
+  const reconnectedSender = await connect();
+  await emit(reconnectedSender, "sendMessage", {
+    senderId: user.id,
+    receiverId: other.id,
+    message: "After restart",
+  });
+  const restored = await Promise.race([
+    afterRestart,
+    pause(5000).then(() => {
+      throw new Error("Chat after restart timed out");
+    }),
+  ]);
+  assert.equal(restored.message, "After restart");
   await api(`inventory/${stock.id}`, "DELETE");
   console.log(
-    "PASS: HTTP CRUD, nullable menu, decimal totals, order states, concurrent stock deduction, soft deletion, recipes, employees and Socket.IO history/delivery.",
+    "PASS: real PostgreSQL + frontend HTTP/WebSocket proxy; employee/position/table catalogs; CRUD; decimal totals; dine-in/delivery orders; concurrent stock deduction; recipes; backend restart persistence; encrypted chat history and delivery after reconnect.",
   );
 }
 main()
@@ -194,6 +357,7 @@ main()
   })
   .finally(async () => {
     clients.forEach((client) => client.disconnect());
-    if (backend) backend.kill("SIGTERM");
+    await stop(frontend);
+    await stop(backend);
     await prisma.$disconnect();
   });

@@ -131,4 +131,6 @@ DATABASE_URL='postgresql://picasso:local_test_only@localhost:55433/picasso_integ
   node scripts/integration-smoke.cjs
 ```
 
-El script inicia un backend temporal en el puerto 3001 y lo detiene al acabar. El puerto debe estar libre. Comprueba CRUD, totales decimales, stock ante concurrencia, estados, desactivación de platos con historial, recetas, empleados e historial/entrega de chat. No debe ejecutarse contra la base del proyecto ni una base de producción.
+El script comprueba que estén libres los puertos 3001 y 5175, inicia un backend temporal y Vite en modo API y detiene ambos al acabar. Las peticiones HTTP y WebSocket pasan por el proxy de Vite. Comprueba CRUD, totales decimales, stock ante concurrencia, estados, desactivación de platos con historial, recetas, creación/edición de empleados, catálogos de puestos/mesas e historial/entrega de chat. Reinicia el backend y verifica persistencia y entrega de chat tras reconectar. No debe ejecutarse contra la base del proyecto ni una base de producción.
+
+Esta prueba usa servicios y PostgreSQL reales, pero no abre un navegador ni valida visualmente la interfaz. Resultados de la ejecución: [validación de integración](VALIDACION_INTEGRACION.md).
