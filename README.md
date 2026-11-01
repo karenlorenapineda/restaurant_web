@@ -1,57 +1,50 @@
 # restaurant_web
 
-Requires Docker and Node.js 22.12 or newer.
 
 ## Run locally
 
-Start PostgreSQL with its development port, without starting a second backend:
+Requires Docker and Node.js 22.
+
+Start PostgreSQL:
 
 ```bash
-docker compose -f compose.yaml -f compose.dev.yaml up -d database
-npm ci
+docker compose up -d database
 ```
 
-Configure `apps/backend/.env` with the database credentials from the root `.env`, using `localhost:5432` in `DATABASE_URL`. The root `.env` keeps `database:5432` for Docker. Never commit credentials.
-
-Before starting, inspect migration status:
+Set `DATABASE_URL` in `.env` to use `localhost:5432`, then start the frontend and backend:
 
 ```bash
-cd apps/backend
-npx prisma migrate status
-```
-
-Do not reset an existing database to resolve migration differences. Back up existing data and review migrations before applying them.
-
-From the repository root:
-
-```bash
+npm install
 npm run dev
 ```
 
-Frontend: http://localhost:5173
+Frontend: http://localhost:5173  
 Backend: http://localhost:3000/api/health
+
+Stop the app with `Ctrl+C`, then stop PostgreSQL:
+
+```bash
+docker compose down
+```
 
 ## Run everything with Docker
 
-Set `DATABASE_URL` in the root `.env` to use `database:5432`:
+Set `DATABASE_URL` in `.env` to use `database:5432`, then run:
 
 ```bash
 docker compose up -d --build
 ```
 
-Development PostgreSQL access is available only at `127.0.0.1:5432` with `compose.dev.yaml`.
-
-Stop the development environment while preserving data:
+Stop everything with:
 
 ```bash
-docker compose -f compose.yaml -f compose.dev.yaml down
+docker compose down
 ```
 
-## Checks
+## Run tests
 
 ```bash
-npm run build
-npm run test:ci
+npm run test
 ```
 
 ## Frontend modules: advanced search and three languages
