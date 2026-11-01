@@ -654,4 +654,131 @@ describe("backend integration", () => {
       fetch.mock.calls.some(([, options]) => options?.method === "POST"),
     ).toBe(false);
   });
+  it.each([201, 409])(
+    "creates an employee from an existing user ID and preserves the draft on HTTP %s",
+    async (status) => {
+      const fetch = panelFetch();
+      const base = fetch.getMockImplementation()!;
+      fetch.mockImplementation(async (url: string, options?: RequestInit) =>
+        url === "/api/employees" && options?.method === "POST"
+          ? response(
+              status === 201 ? { id: 99 } : { message: "User already linked" },
+              status,
+            )
+          : base(url, options),
+      );
+      vi.stubGlobal("fetch", fetch);
+      render(<BackendEmployeePanel />);
+      fireEvent.click(
+        screen.getByRole("button", { name: /Vista de administrador/ }),
+      );
+      await screen.findByText("Pizza API");
+      fireEvent.click(screen.getByRole("button", { name: "Empleados" }));
+      fireEvent.click(screen.getByRole("button", { name: "Anadir empleado" }));
+      fireEvent.change(screen.getAllByRole("textbox", { name: "Nombre" })[0]!, {
+        target: { value: " Ana " },
+      });
+      fireEvent.change(
+        screen.getAllByRole("textbox", { name: "Apellidos" })[0]!,
+        { target: { value: " García López " } },
+      );
+      fireEvent.change(
+        screen.getByRole("spinbutton", { name: "ID del usuario existente" }),
+        { target: { value: "123" } },
+      );
+      fireEvent.change(
+        screen.getAllByRole("combobox", { name: "Puesto" })[0]!,
+        { target: { value: "8" } },
+      );
+      fireEvent.click(
+        screen.getAllByRole("button", { name: "Guardar cambios" })[0]!,
+      );
+      await waitFor(() =>
+        expect(
+          fetch.mock.calls.some(
+            ([url, options]) =>
+              url === "/api/employees" && options?.method === "POST",
+          ),
+        ).toBe(true),
+      );
+      const call = fetch.mock.calls.find(
+        ([url, options]) =>
+          url === "/api/employees" && options?.method === "POST",
+      )!;
+      expect(JSON.parse(call[1].body)).toEqual({
+        firstName: "Ana",
+        lastName: "García López",
+        userId: 123,
+        positionId: 8,
+        restaurantId: 1,
+      });
+      expect(
+        fetch.mock.calls.some(([url]) => /\/api\/(users|auth)(\/|$)/.test(url)),
+      ).toBe(false);
+      if (status === 409) {
+        expect(await screen.findByRole("alert")).toHaveTextContent(
+          "User already linked",
+        );
+        expect(
+          screen.getAllByRole("textbox", { name: "Nombre" })[0],
+        ).toHaveValue(" Ana ");
+        expect(
+          screen.getByRole("spinbutton", { name: "ID del usuario existente" }),
+        ).toHaveValue(123);
+      } else {
+        await screen.findByText("Cambios guardados");
+      }
+    },
+  );
+  it("does not save an employee when their position is missing from the catalog", async () => {
+    const fetch = panelFetch();
+    const base = fetch.getMockImplementation()!;
+    fetch.mockImplementation(async (url: string, options?: RequestInit) =>
+      url === "/api/employees/positions" ? response([]) : base(url, options),
+    );
+    vi.stubGlobal("fetch", fetch);
+    render(<BackendEmployeePanel />);
+    fireEvent.click(
+      screen.getByRole("button", { name: /Vista de administrador/ }),
+    );
+    await screen.findByText("Pizza API");
+    fireEvent.click(screen.getByRole("button", { name: "Empleados" }));
+    expect(screen.getByRole("combobox", { name: "Puesto" })).toBeDisabled();
+    expect(screen.getByText("No hay puestos disponibles.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Guardar cambios" }));
+    await screen.findByRole("alert");
+    expect(
+      fetch.mock.calls.every(([, options]) => options?.method === "GET"),
+    ).toBe(true);
+  });
+  it("retains the selected table ID when switching English and Portuguese", async () => {
+    const fetch = panelFetch();
+    vi.stubGlobal("fetch", fetch);
+    render(<BackendEmployeePanel />);
+    fireEvent.click(
+      screen.getByRole("button", { name: /Vista de administrador/ }),
+    );
+    await screen.findByText("Pizza API");
+    fireEvent.click(screen.getByRole("button", { name: "Pedidos" }));
+    fireEvent.click(screen.getByRole("button", { name: "Anadir pedido" }));
+    fireEvent.change(screen.getByRole("combobox", { name: "Tipo" }), {
+      target: { value: "dine_in" },
+    });
+    fireEvent.change(screen.getByRole("combobox", { name: "Mesa" }), {
+      target: { value: "42" },
+    });
+    act(() => setLocale("en"));
+    expect(screen.getByRole("combobox", { name: "Table" })).toHaveValue("42");
+    expect(
+      screen.getByRole("option", { name: "Terraza 7 · 4 seats" }),
+    ).toHaveValue("42");
+    act(() => setLocale("pt"));
+    expect(screen.getByRole("combobox", { name: "Mesa" })).toHaveValue("42");
+    expect(
+      screen.getByRole("option", { name: "Terraza 7 · 4 lugares" }),
+    ).toHaveValue("42");
+    expect(
+      fetch.mock.calls.every(([, options]) => options?.method === "GET"),
+    ).toBe(true);
+  });
 });

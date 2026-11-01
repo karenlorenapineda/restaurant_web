@@ -69,4 +69,25 @@ describe("read-only employee and table catalogs", () => {
       expect(await response.json()).toEqual([]);
     }
   });
+  it.each([
+    ["POST", "tables"],
+    ["DELETE", "tables/42"],
+    ["POST", "employees/positions"],
+  ])(
+    "does not expose a catalog mutation through %s /api/%s",
+    async (method, path) => {
+      const response = await fetch(`${await app.getUrl()}/api/${path}`, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: "Injected",
+          tableNumber: "Injected",
+          capacity: 4,
+        }),
+      });
+      expect(response.status).toBe(404);
+      expect(positions).not.toHaveBeenCalled();
+      expect(tables).not.toHaveBeenCalled();
+    },
+  );
 });
