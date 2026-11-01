@@ -1,4 +1,4 @@
-import { T, t } from "../i18n";
+import { T, t, useLocale } from "../i18n";
 import { useEffect, useState } from "react";
 
 import { ChatWidget } from "../components/ChatWidget";
@@ -13,6 +13,7 @@ import {
 import type { NavigationHandlers } from "../navigation";
 
 export function HomePage({ navigate, goToContact }: NavigationHandlers) {
+  useLocale();
   const [sections, setSections] = useState<MenuSection[]>(
     loadStoredMenu() ?? menuSections,
   );
@@ -35,7 +36,7 @@ export function HomePage({ navigate, goToContact }: NavigationHandlers) {
     <>
       <section className="relative grid min-h-[100svh] place-items-center overflow-hidden px-5 py-28 text-center text-white sm:px-6 sm:py-36">
         <img
-          alt="Mesa familiar de restaurante con ambiente calido"
+          alt={t("Mesa familiar de restaurante con ambiente calido")}
           className="absolute inset-0 h-full w-full object-cover brightness-[0.55]"
           src="/images/restaurante_vacio.png"
         />
@@ -93,9 +94,7 @@ export function HomePage({ navigate, goToContact }: NavigationHandlers) {
                 <img
                   alt={t(dish.name)}
                   className="h-56 w-full object-cover sm:h-72"
-                  src={
-                    dish.image ?? "/images/Plato01.png"
-                  }
+                  src={dish.image ?? "/images/Plato01.png"}
                 />
                 <div className="p-5 sm:p-7">
                   <h3 className="text-base font-bold text-white sm:text-lg">
@@ -121,7 +120,7 @@ export function HomePage({ navigate, goToContact }: NavigationHandlers) {
 
       <section className="relative flex min-h-[100svh] items-center overflow-hidden bg-black px-5 py-24 sm:px-6 sm:py-32">
         <img
-          alt="Mesa servida para reservar en familia"
+          alt={t("Mesa servida para reservar en familia")}
           className="absolute inset-0 h-full w-full object-cover opacity-25"
           src="/images/Cocina.png"
         />
@@ -145,7 +144,7 @@ export function HomePage({ navigate, goToContact }: NavigationHandlers) {
             </a>
           </div>
           <img
-            alt="Fachada del asadero familiar"
+            alt={t("Fachada del asadero familiar")}
             className="h-72 w-full rounded-sm object-cover grayscale sm:h-[520px]"
             src="/images/restaurante_entrada.png"
           />
@@ -175,9 +174,7 @@ export function HomePage({ navigate, goToContact }: NavigationHandlers) {
                       ? "h-72 md:h-full md:min-h-[30rem]"
                       : "h-56 sm:h-64"
                   }`}
-                  src={
-                    dish.image ?? "/images/Plato01.png"
-                  }
+                  src={dish.image ?? "/images/Plato01.png"}
                 />
                 <figcaption className="p-4 text-left text-sm font-bold text-white sm:p-5 sm:text-base">
                   {t(dish.name)}

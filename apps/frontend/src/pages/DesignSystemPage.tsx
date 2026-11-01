@@ -9,7 +9,7 @@ import {
   StatusPill,
   TabButton,
 } from "../features/employee-panel/shared";
-import { useLocale } from "../i18n";
+import { useLocale, t } from "../i18n";
 
 const copy = {
   es: {
@@ -87,6 +87,7 @@ const copy = {
 };
 
 export function DesignSystemPage() {
+  useLocale();
   const labels = copy[useLocale()];
   const [checked, setChecked] = useState(true);
   const [active, setActive] = useState(true);

@@ -1,4 +1,4 @@
-import { T, t } from "../i18n";
+import { T, t, useLocale } from "../i18n";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import type { EditableDish } from "../menuStore";
@@ -118,6 +118,7 @@ function createEmptyOrder(dishes: EditableDish[]): OrderRecord {
 export function EmployeePanelPage({
   navigate,
 }: Pick<NavigationHandlers, "navigate">) {
+  useLocale();
   const [session, setSession] = useState<EmployeeSession | null>(null);
   const [activeTab, setActiveTab] = useState<DashboardTab>("menu");
   const [sections, setSections] = useState(getMenuForEditing);
@@ -724,7 +725,7 @@ export function EmployeePanelPage({
                   type="button"
                 >
                   <span className="block font-bold text-white">
-                    {previewSession.name}
+                    {t(previewSession.name)}
                   </span>
                   <span className="mt-1 block text-sm text-zinc-400">
                     <T>Role: </T>
@@ -754,7 +755,7 @@ export function EmployeePanelPage({
               <T>Sesion activa</T>
             </p>
             <h1 className="mt-3 whitespace-normal break-normal font-display text-[1.7rem] font-bold leading-tight tracking-[0.015em] text-white xl:text-3xl">
-              {session.name}
+              {t(session.name)}
             </h1>
             <p className="mt-3 text-xs font-bold uppercase tracking-[0.12em] text-[#e8b45f]">
               <T>Rol: </T>
@@ -828,10 +829,16 @@ export function EmployeePanelPage({
               </h2>
               <p className="mt-5 max-w-3xl text-lg leading-9 text-zinc-300">
                 {isAdmin
-                  ? "Carta, favoritos, galeria, equipo, inventario y chat interno preparados para conectarse despues a la base de datos."
+                  ? t(
+                      "Carta, favoritos, galeria, equipo, inventario y chat interno preparados para conectarse despues a la base de datos.",
+                    )
                   : session.role === "cocina"
-                    ? "Consulta la carta, revisa insumos, mira pedidos activos y conversa con el equipo desde el chat interno."
-                    : "Consulta insumos, mira pedidos activos y conversa con el equipo desde el chat interno."}
+                    ? t(
+                        "Consulta la carta, revisa insumos, mira pedidos activos y conversa con el equipo desde el chat interno.",
+                      )
+                    : t(
+                        "Consulta insumos, mira pedidos activos y conversa con el equipo desde el chat interno.",
+                      )}
               </p>
             </div>
 
@@ -844,7 +851,7 @@ export function EmployeePanelPage({
                 galleryKeys={galleryKeys}
                 isCreatingDish={isCreatingDish}
                 saveDish={saveDish}
-                saveMessage={saveMessage}
+                saveMessage={t(saveMessage)}
                 sections={sections}
                 selectedDishKey={selectedDishKey}
                 selectDish={selectDish}
