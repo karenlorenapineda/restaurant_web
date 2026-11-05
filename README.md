@@ -76,3 +76,11 @@ By default, menu and employee operations use the API. `VITE_DATA_MODE=demo` enab
 5. Run `npm run build --workspace @picasso/frontend` and `npm run test:ci --workspace @picasso/frontend`.
 
 The role selector is for development and does not authenticate users or enforce server permissions. The connected panel is disabled in production until authentication is integrated. See [the integration guide](docs/INTEGRACION.md) for the isolated test database and backend setup.
+
+## Privacidad y términos
+
+Las páginas públicas `/privacidad` y `/terminos` están enlazadas desde el pie de página y disponibles en español, inglés y portugués. También admiten `/privacy` y `/terms`, con o sin barra final.
+
+Los textos describen el entorno académico actual, los datos de pedidos/empleados/chat, el almacenamiento local, los registros técnicos, la conservación y el alcance de las demostraciones. No hay un correo público confirmado: las consultas se dirigen al equipo mediante el canal que facilita el acceso. Deben revisarse al definir un responsable comercial, un contacto público, plazos de conservación o nuevas funciones.
+
+Detalles y fuentes editoriales: [privacidad y términos](docs/PRIVACIDAD_Y_TERMINOS.md).
