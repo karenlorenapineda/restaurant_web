@@ -27,8 +27,13 @@ COPY --from=build --chown=node:node /app/apps/backend/prisma ./apps/backend/pris
 
 RUN mkdir -p /app/uploads && chown node:node /app/uploads
 
+COPY --chown=node:node apps/backend/entrypoint.sh ./entrypoint.sh
+
+RUN chmod +x ./entrypoint.sh
+
 USER node
 
 EXPOSE 3000
 
+ENTRYPOINT ["./entrypoint.sh"]
 CMD ["node", "apps/backend/dist/main.js"]

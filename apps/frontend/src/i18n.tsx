@@ -119,6 +119,12 @@ const enByEs: Record<string, string> = {
   "Preparado en agua o leche.": "Prepared with water or milk.",
   "Bizcocho suave, crema de leche y toque de canela.":
     "Soft sponge cake, cream and a touch of cinnamon.",
+  "Subir imagen del plato": "Upload dish image",
+  "Sin imagen asignada": "No image assigned",
+  "Subiendo...": "Uploading…",
+  "Quitar imagen": "Remove image",
+  "No se pudo subir la imagen.": "The image could not be uploaded.",
+  "Imagen (URL)": "Image (URL)",
 };
 
 const esByEn: Record<string, string> = {

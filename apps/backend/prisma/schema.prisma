@@ -361,14 +361,14 @@ model ResenasRestaurante {
 
 model StoredFile {
   id           String   @id @default(uuid()) @map("file_id") @db.Uuid
-  ownerId      Int      @map("owner_id")
+  ownerId      Int?      @map("owner_id")
   originalName String   @map("original_name") @db.VarChar(255)
   storedName   String   @unique @map("stored_name") @db.VarChar(255)
   mimeType     String   @map("mime_type") @db.VarChar(100)
   size         Int
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
 
-  owner Usuarios @relation(fields: [ownerId], references: [UsuarioID], onDelete: Cascade)
+  owner Usuarios? @relation(fields: [ownerId], references: [UsuarioID], onDelete: Cascade)
 
   @@index([ownerId])
   @@map("files")

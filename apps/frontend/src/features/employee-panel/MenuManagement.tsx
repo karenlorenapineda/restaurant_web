@@ -35,6 +35,7 @@ import {
   Panel,
   StatusPill,
 } from "./shared";
+import { DishImageUploader } from "./DishImageUploader";
 export function MenuManagement({
   canEdit,
   deleteDish,
@@ -205,16 +206,23 @@ export function MenuManagement({
                 </Field>
               </div>
 
-              <Field label={t("Imagen")}>
-                <input
-                  className={getInputClassName(canEdit)}
-                  onChange={(event) => updateDraft("image", event.target.value)}
-                  placeholder="/images/bandeja-paisa.jpg"
-                  readOnly={!canEdit}
-                  type="text"
-                  value={draft.image ?? ""}
+              <div className="grid gap-3">
+                <Field label={t("Imagen (URL)")}>
+                  <input
+                    className={getInputClassName(canEdit)}
+                    onChange={(event) => updateDraft("image", event.target.value)}
+                    placeholder="/images/bandeja-paisa.jpg o /api/files/12/raw"
+                    readOnly={!canEdit}
+                    type="text"
+                    value={draft.image ?? ""}
+                  />
+                </Field>
+                <DishImageUploader
+                  canEdit={canEdit}
+                  image={draft.image}
+                  onChange={(url) => updateDraft("image", url)}
                 />
-              </Field>
+              </div>
 
               <Field label={t("Descripcion")}>
                 <textarea

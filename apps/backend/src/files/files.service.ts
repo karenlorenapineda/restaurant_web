@@ -5,13 +5,18 @@ import {
   NotFoundException,
   UnsupportedMediaTypeException,
 } from "@nestjs/common";
-import type { StoredFile } from "@prisma/client";
 import { randomUUID } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { access, mkdir, unlink, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  readFile,
+  readdir,
+  stat,
+  unlink,
+  writeFile,
+} from "node:fs/promises";
 import { join } from "node:path";
 
-import { PrismaService } from "../database/prisma.service";
 import { detectMimeType } from "./file-signature";
 import {
   ALLOWED_FILE_TYPES,
@@ -28,15 +33,32 @@ export interface FileResponse {
   url: string;
 }
 
-function toResponse(file: StoredFile): FileResponse {
-  return {
-    id: file.id,
-    originalName: file.originalName,
-    mimeType: file.mimeType,
-    size: file.size,
-    createdAt: file.createdAt,
-    url: `/api/files/${file.id}/content`,
-  };
+interface FileMetadata {
+  originalName: string;
+  mimeType: string;
+  createdAt: string;
+}
+
+const METADATA_SUFFIX = ".meta.json";
+
+function metadataPath(id: string): string {
+  return join(UPLOAD_DIRECTORY, `${id}${METADATA_SUFFIX}`);
+}
+
+async function readMetadata(id: string): Promise<FileMetadata | null> {
+  try {
+    const raw = await readFile(metadataPath(id), "utf8");
+    return JSON.parse(raw) as FileMetadata;
+  } catch {
+    return null;
+  }
+}
+
+async function writeMetadata(
+  id: string,
+  metadata: FileMetadata,
+): Promise<void> {
+  await writeFile(metadataPath(id), JSON.stringify(metadata), "utf8");
 }
 
 // Multer decodes multipart filenames as latin1; restore UTF-8 and strip any
@@ -54,10 +76,11 @@ function normalizeOriginalName(name: string): string {
 
 @Injectable()
 export class FilesService {
-  constructor(private readonly prisma: PrismaService) {}
-
+  // `ownerId` is accepted to keep the controller signature stable, but it is
+  // ignored until authentication is merged. Files are stored on disk with a
+  // sidecar JSON; the `files` table is not used.
   async upload(
-    ownerId: number,
+    _ownerId: number | undefined,
     file: Express.Multer.File | undefined,
   ): Promise<FileResponse> {
     if (!file || file.size === 0) {
@@ -74,11 +97,10 @@ export class FilesService {
       );
     }
 
-    const storedCount = await this.prisma.storedFile.count({
-      where: { ownerId },
-    });
+    await mkdir(UPLOAD_DIRECTORY, { recursive: true });
 
-    if (storedCount >= MAX_FILES_PER_USER) {
+    const existing = await this.listAll();
+    if (existing.length >= MAX_FILES_PER_USER) {
       throw new ForbiddenException(
         `File limit reached (${MAX_FILES_PER_USER}). Delete a file first`,
       );
@@ -88,74 +110,128 @@ export class FilesService {
     const storedName = `${id}${ALLOWED_FILE_TYPES[mimeType]}`;
     const diskPath = join(UPLOAD_DIRECTORY, storedName);
 
-    await mkdir(UPLOAD_DIRECTORY, { recursive: true });
     await writeFile(diskPath, file.buffer, { flag: "wx" });
 
-    try {
-      const created = await this.prisma.storedFile.create({
-        data: {
-          id,
-          ownerId,
-          originalName: normalizeOriginalName(file.originalname),
-          storedName,
-          mimeType,
-          size: file.buffer.length,
-        },
-      });
+    const createdAt = new Date().toISOString();
+    const originalName = normalizeOriginalName(file.originalname);
 
-      return toResponse(created);
-    } catch (error) {
-      await unlink(diskPath).catch(() => undefined);
-      throw error;
-    }
+    await writeMetadata(id, { originalName, mimeType, createdAt });
+
+    return {
+      id,
+      originalName,
+      mimeType,
+      size: file.buffer.length,
+      createdAt: new Date(createdAt),
+      url: `/api/files/${id}/content`,
+    };
   }
 
-  async list(ownerId: number): Promise<FileResponse[]> {
-    const files = await this.prisma.storedFile.findMany({
-      where: { ownerId },
-      orderBy: { createdAt: "desc" },
-    });
-
-    return files.map(toResponse);
+  async list(_ownerId: number | undefined): Promise<FileResponse[]> {
+    return this.listAll();
   }
 
-  async get(ownerId: number, id: string): Promise<FileResponse> {
-    return toResponse(await this.findOwned(ownerId, id));
-  }
-
-  async openContent(ownerId: number, id: string) {
-    const file = await this.findOwned(ownerId, id);
-    const diskPath = join(UPLOAD_DIRECTORY, file.storedName);
+  private async listAll(): Promise<FileResponse[]> {
+    let entries: string[];
 
     try {
-      await access(diskPath);
+      entries = await readdir(UPLOAD_DIRECTORY);
     } catch {
-      throw new NotFoundException("File not found");
+      return [];
     }
 
-    return { file, stream: createReadStream(diskPath) };
-  }
+    const results: FileResponse[] = [];
 
-  async remove(ownerId: number, id: string): Promise<void> {
-    const file = await this.findOwned(ownerId, id);
+    for (const entry of entries) {
+      if (entry.endsWith(METADATA_SUFFIX)) continue;
 
-    await this.prisma.storedFile.delete({ where: { id: file.id } });
-    await unlink(join(UPLOAD_DIRECTORY, file.storedName)).catch(
-      () => undefined,
+      const id = entry.split(".")[0];
+      if (!id) continue;
+
+      const metadata = await readMetadata(id);
+      if (!metadata) continue;
+
+      const fileStat = await stat(join(UPLOAD_DIRECTORY, entry)).catch(
+        () => null,
+      );
+      if (!fileStat) continue;
+
+      results.push({
+        id,
+        originalName: metadata.originalName,
+        mimeType: metadata.mimeType,
+        size: fileStat.size,
+        createdAt: new Date(metadata.createdAt),
+        url: `/api/files/${id}/content`,
+      });
+    }
+
+    return results.sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
     );
   }
 
-  // Files owned by someone else are reported as missing, not forbidden,
-  // so ids cannot be probed.
-  private async findOwned(ownerId: number, id: string): Promise<StoredFile> {
-    const file = await this.prisma.storedFile.findFirst({
-      where: { id, ownerId },
-    });
+  async get(
+    _ownerId: number | undefined,
+    id: string,
+  ): Promise<FileResponse> {
+    const metadata = await readMetadata(id);
+    if (!metadata) throw new NotFoundException("File not found");
 
-    if (!file) {
-      throw new NotFoundException("File not found");
+    const storedName = await this.findStoredName(id);
+    if (!storedName) throw new NotFoundException("File not found");
+
+    const fileStat = await stat(join(UPLOAD_DIRECTORY, storedName)).catch(
+      () => null,
+    );
+    if (!fileStat) throw new NotFoundException("File not found");
+
+    return {
+      id,
+      originalName: metadata.originalName,
+      mimeType: metadata.mimeType,
+      size: fileStat.size,
+      createdAt: new Date(metadata.createdAt),
+      url: `/api/files/${id}/content`,
+    };
+  }
+
+  async openContent(_ownerId: number | undefined, id: string) {
+    const file = await this.get(_ownerId, id);
+    const storedName = await this.findStoredName(id);
+    if (!storedName) throw new NotFoundException("File not found");
+
+    return {
+      file,
+      stream: createReadStream(join(UPLOAD_DIRECTORY, storedName)),
+    };
+  }
+
+  async remove(
+    _ownerId: number | undefined,
+    id: string,
+  ): Promise<void> {
+    const storedName = await this.findStoredName(id);
+    if (!storedName) throw new NotFoundException("File not found");
+
+    await unlink(join(UPLOAD_DIRECTORY, storedName)).catch(() => undefined);
+    await unlink(metadataPath(id)).catch(() => undefined);
+  }
+
+  private async findStoredName(id: string): Promise<string | null> {
+    let entries: string[];
+
+    try {
+      entries = await readdir(UPLOAD_DIRECTORY);
+    } catch {
+      return null;
     }
 
-    return file;
+    for (const entry of entries) {
+      if (entry.endsWith(METADATA_SUFFIX)) continue;
+      if (entry.startsWith(`${id}.`)) return entry;
+    }
+
+    return null;
   }
 }
