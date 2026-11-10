@@ -425,7 +425,7 @@ function RecipeSuppliesEditor({
                 value={recipeSupply.supplyName}
               >
                 {supplies.map((supply) => (
-                  <option key={supply.id} value={t(supply.name)}>
+                  <option key={supply.id} value={supply.name}>
                     {t(supply.name)}
                   </option>
                 ))}
