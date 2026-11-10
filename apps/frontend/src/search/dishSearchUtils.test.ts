@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { setLocale } from "../i18n";
 import type { EditableDish } from "../menuStore";
-import { defaultSearch, dishPrice, searchDishes } from "./dishSearch";
+import { defaultSearch, dishPrice, searchDishes } from "./dishSearchUtils";
 const dishes: EditableDish[] = [
   {
     id: 1,
@@ -62,8 +62,40 @@ describe("dish search", () => {
       ).results.map((d) => d.id),
     ).toEqual([1, 3, 2]);
     expect(dishes.map((d) => d.id)).toEqual([1, 2, 3]);
-    expect(dishPrice("$28.000 COP")).toBe(28000);
-    expect(dishPrice("$1,234.50 COP")).toBe(1234.5);
+  });
+  it.each([
+    ["$12,5 COP", 12.5],
+    ["$999,99 COP", 999.99],
+    ["$0,01 COP", 0.01],
+    ["$1234,50 COP", 1234.5],
+    ["$1.234,50 COP", 1234.5],
+    ["$28.000 COP", 28000],
+    ["$1,234.50 COP", 1234.5],
+    ["$1,234 COP", 1234],
+    ["$12.50 COP", 12.5],
+  ])("parses %s as %s", (value, expected) => {
+    expect(dishPrice(value)).toBe(expected);
+  });
+  it("filters and sorts decimal COP prices below one thousand", () => {
+    const decimalDishes = [
+      { ...dishes[0]!, price: "$12,5 COP" },
+      { ...dishes[1]!, price: "$100 COP" },
+      { ...dishes[2]!, price: "$9,99 COP" },
+    ];
+    expect(
+      searchDishes(
+        decimalDishes,
+        { ...defaultSearch, sort: "price-asc" },
+        "es",
+      ).results.map((dish) => dish.id),
+    ).toEqual([3, 1, 2]);
+    expect(
+      searchDishes(
+        decimalDishes,
+        { ...defaultSearch, minPrice: "12.5", maxPrice: "12.5" },
+        "es",
+      ).results.map((dish) => dish.id),
+    ).toEqual([1]);
   });
   it("searches translated names in English and Portuguese", () => {
     setLocale("en");

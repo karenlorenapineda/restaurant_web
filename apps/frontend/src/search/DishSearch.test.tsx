@@ -26,6 +26,45 @@ function Harness({ items = dishes }: { items?: EditableDish[] }) {
   );
 }
 afterEach(() => setLocale("es"));
+it.each([
+  ["Buscar platos", "Plato 13", ""],
+  ["Filtrar por categoría", "Entradas", ""],
+  ["Disponibilidad", "available", "all"],
+  ["Precio mínimo (COP)", "5000", ""],
+  ["Precio máximo (COP)", "9000", ""],
+  ["Ordenar por", "price-desc", "name-asc"],
+  ["Resultados por página", "12", "6"],
+])(
+  "resets pagination when changing and restoring %s",
+  (label, value, initial) => {
+    render(<Harness />);
+    fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
+    expect(screen.getByText("Página 2 / 3")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(label), { target: { value } });
+    expect(screen.getByText(/^Página 1 \//)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(label), {
+      target: { value: initial },
+    });
+    expect(screen.getByText("Página 1 / 3")).toBeInTheDocument();
+  },
+);
+it("does not restore an old page when switching back to the original language", () => {
+  render(<Harness />);
+  fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
+  act(() => setLocale("en"));
+  expect(screen.getByText("Page 1 / 3")).toBeInTheDocument();
+  act(() => setLocale("es"));
+  expect(screen.getByText("Página 1 / 3")).toBeInTheDocument();
+});
+it("keeps the clamped page after deleted dishes are replaced", () => {
+  const view = render(<Harness />);
+  fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
+  view.rerender(<Harness items={dishes.slice(0, 2)} />);
+  expect(screen.getByText("Página 1 / 1")).toBeInTheDocument();
+  view.rerender(<Harness />);
+  expect(screen.getByText("Página 1 / 3")).toBeInTheDocument();
+});
 it("paginates, resets on filters, validates prices, clears and clamps after deletion", () => {
   const view = render(<Harness />);
   expect(screen.getAllByRole("listitem")).toHaveLength(6);

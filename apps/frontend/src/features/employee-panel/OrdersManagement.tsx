@@ -248,6 +248,11 @@ export function OrdersManagement({
                   : t(selectedOrder.table)}{" "}
                 · {selectedOrder.customer}
               </h4>
+              {apiMode && !isPendingOrder && selectedOrder.phone && (
+                <p className="mt-2 text-sm text-zinc-300">
+                  {labels.customerPhone}: {selectedOrder.phone}
+                </p>
+              )}
               <p className="mt-3 max-w-3xl leading-7 text-zinc-300">
                 {selectedIsOnline && isOnlineOrder(selectedOrder)
                   ? selectedOrder.cartItems

@@ -29,9 +29,10 @@ export function normalizeSearch(value: string) {
 // Menu prices are stored as COP strings (for example "$28.000 COP").
 export function dishPrice(value: string): number {
   const cleaned = value.replace(/[^\d.,]/g, "");
-  const normalized = /^\d{1,3}(\.\d{3})+(,\d+)?$/.test(cleaned)
-    ? cleaned.replace(/\./g, "").replace(",", ".")
-    : cleaned.replace(/,/g, "");
+  const normalized =
+    /^\d{1,3}(\.\d{3})+(,\d+)?$/.test(cleaned) || /^\d+,\d{1,2}$/.test(cleaned)
+      ? cleaned.replace(/\./g, "").replace(",", ".")
+      : cleaned.replace(/,/g, "");
   return normalized ? Number(normalized) : NaN;
 }
 export function searchDishes(
