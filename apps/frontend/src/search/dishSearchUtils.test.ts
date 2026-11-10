@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { setLocale } from "../i18n";
 import type { EditableDish } from "../menuStore";
-import { defaultSearch, dishPrice, searchDishes } from "./dishSearch";
+import { defaultSearch, dishPrice, searchDishes } from "./dishSearchUtils";
 const dishes: EditableDish[] = [
   {
     id: 1,

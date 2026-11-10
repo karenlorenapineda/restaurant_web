@@ -3,7 +3,11 @@ import { t, useLocale } from "../i18n";
 import type { EditableDish } from "../menuStore";
 import { Button, Input, Select } from "../components/ui/controls";
 import { Field } from "../features/employee-panel/shared";
-import { defaultSearch, searchDishes, type SearchOptions } from "./dishSearch";
+import {
+  defaultSearch,
+  searchDishes,
+  type SearchOptions,
+} from "./dishSearchUtils";
 
 export function useDishSearch(dishes: EditableDish[], publicMenu = false) {
   const locale = useLocale();
@@ -19,6 +23,10 @@ export function useDishSearch(dishes: EditableDish[], publicMenu = false) {
     pages,
     pageState.signature === signature ? pageState.page : 1,
   );
+  // Remember resets and clamped pages so old filters cannot restore an old page.
+  if (pageState.signature !== signature || pageState.page !== page) {
+    setPage({ signature, page });
+  }
   const change = (key: keyof SearchOptions, value: string | number) =>
     setOptions((current) => ({ ...current, [key]: value }));
   return {
