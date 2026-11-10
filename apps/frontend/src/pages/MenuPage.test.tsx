@@ -71,7 +71,9 @@ describe("MenuPage", () => {
       screen.queryByRole("img", { name: "Unavailable starter" }),
     ).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Mains" }));
+    fireEvent.change(screen.getByLabelText("Filtrar por categoría"), {
+      target: { value: "Mains" },
+    });
 
     expect(
       screen.queryByRole("img", { name: "Available starter" }),

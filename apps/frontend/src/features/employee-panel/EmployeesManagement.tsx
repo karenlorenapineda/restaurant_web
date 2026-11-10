@@ -1,5 +1,5 @@
 import { Button, Input, Select } from "../../components/ui/controls";
-import { T, t } from "../../i18n";
+import { T, t, useLocale } from "../../i18n";
 import type { FormEvent } from "react";
 
 import type { RecipeSupply } from "../../data/menu";
@@ -53,6 +53,7 @@ export function EmployeesManagement({
     value: string | boolean,
   ) => void;
 }) {
+  useLocale();
   return (
     <Panel className="mt-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -148,7 +149,7 @@ export function EmployeesManagement({
             </label>
             <div className="flex items-end justify-end pb-2">
               <DeleteButton
-                label={`Eliminar ${employee.name}`}
+                label={t("Eliminar {value0}", { value0: employee.name })}
                 onClick={() => onDelete(employee.id)}
               />
             </div>
