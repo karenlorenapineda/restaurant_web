@@ -145,6 +145,7 @@ describe("backend integration", () => {
         status: "queued",
         total: "$25.000 COP",
         tableOrLocation: "Para llevar",
+        customerPhone: "600987654",
         items: [],
       },
     ];
@@ -213,6 +214,16 @@ describe("backend integration", () => {
         return response(values[url] ?? []);
       });
   }
+  it("shows the customer phone on saved API orders", async () => {
+    vi.stubGlobal("fetch", panelFetch());
+    render(<BackendEmployeePanel />);
+    fireEvent.click(
+      screen.getByRole("button", { name: /Vista de administrador/ }),
+    );
+    await screen.findByText("Pizza API");
+    fireEvent.click(screen.getByRole("button", { name: "Pedidos" }));
+    expect(await screen.findByText(/600987654/)).toBeInTheDocument();
+  });
   it("maps stock display fields to numeric PATCH fields and keeps the unit ID", async () => {
     const fetch = panelFetch();
     vi.stubGlobal("fetch", fetch);

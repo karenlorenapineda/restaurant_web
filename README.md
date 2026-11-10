@@ -1,20 +1,20 @@
 # restaurant_web
 
-Requires Docker and Node.js 22.12 or newer.
 
 Frontend/backend integration, isolated test database and endpoint coverage:
 [step-by-step guide](docs/INTEGRACION.md).
 
 ## Run locally
 
-Start PostgreSQL with its development port, without starting a second backend:
+Requires Docker and Node.js 22.
+
+Start PostgreSQL:
 
 ```bash
-docker compose -f compose.yaml -f compose.dev.yaml up -d database
-npm ci
+docker compose up -d database
 ```
 
-Configure `apps/backend/.env` with the database credentials from the root `.env`, using `localhost:5432` in `DATABASE_URL`. The root `.env` keeps `database:5432` for Docker. Never commit credentials.
+Set `DATABASE_URL` in `.env` to use `localhost:5432`, then start the frontend and backend:
 
 Before starting, inspect migration status:
 

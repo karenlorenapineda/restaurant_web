@@ -111,7 +111,7 @@ export function SuppliesManagement({
                   onUpdate(supply.id, "name", event.target.value)
                 }
                 readOnly={!canEdit}
-                value={t(supply.name)}
+                value={canEdit ? supply.name : t(supply.name)}
               />
             </Field>
             <Field label={t("Unidad")}>
