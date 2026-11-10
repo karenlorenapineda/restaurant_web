@@ -1,4 +1,6 @@
 export const employeeEnByEs: Record<string, string> = {
+  "Carta, galeria, equipo, inventario y chat interno preparados para conectarse despues a la base de datos.":
+    "Menu, gallery, staff, inventory and team chat are ready for future database integration.",
   "PEDIR ONLINE": "ORDER ONLINE",
   "Pedir online": "Order online",
   "Pedido online": "Online order",

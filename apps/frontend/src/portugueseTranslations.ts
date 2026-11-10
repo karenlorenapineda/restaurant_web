@@ -1,5 +1,7 @@
 // Portuguese translations shared by the public pages and employee preview.
 export const ptBySource: Record<string, string> = {
+  "Carta, galeria, equipo, inventario y chat interno preparados para conectarse despues a la base de datos.":
+    "Menu, galeria, equipa, inventário e chat interno preparados para futura ligação à base de dados.",
   "Vista previa del panel de empleados":
     "Pré-visualização do painel de funcionários",
   "Vista previa de operaciones del restaurante":
@@ -34,6 +36,7 @@ export const ptBySource: Record<string, string> = {
   "Buena comida, grandes momentos": "Boa comida, grandes momentos",
   "Platos colombianos, carnes al asador y recetas de casa para sentarse en familia y compartir sin prisa.":
     "Pratos colombianos, carnes grelhadas e receitas caseiras para reunir a família e partilhar sem pressa.",
+  "Una selección de nuestra carta.": "Uma seleção do nosso menu.",
   "Especiales de hoy": "Especialidades de hoje",
   "Favoritos editables desde el panel de empleados.":
     "Favoritos editáveis no painel de funcionários.",

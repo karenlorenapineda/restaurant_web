@@ -42,7 +42,7 @@ export class MenuService {
 	async getMenuSections(){
 		const menu = await this.prisma.menuCategory.findMany({
 			include: {
-				items: true
+				items: { where: { isAvailable: true } }
 			}
 		});
 		return menu.map(category => ({
@@ -52,6 +52,10 @@ export class MenuService {
 				name: item.name,
 				description: item.description,
 				price: `$${Number(item.price).toLocaleString('es-CO')} COP`,
+				image: item.imageUrl,
+				available: item.isAvailable,
+				featured: item.isFavorite,
+				showImage: item.showImageInGallery,
 			})),
 		}));
 	}
@@ -82,6 +86,7 @@ export class MenuService {
 			id: item.id,
 			name: item.name,
 			category: item.category.name,
+			categoryId: item.categoryId,
 			description: item.description,
 			price: `$${Number(item.price).toLocaleString('es-CO')} COP`,
 			image: item.imageUrl,

@@ -52,7 +52,6 @@ it.each([
           canEdit
           dishes={[initialDish]}
           draft={draft}
-          featuredKeys={[]}
           galleryKeys={[]}
           isCreatingDish={false}
           saveMessage=""
@@ -65,7 +64,6 @@ it.each([
           saveDish={vi.fn()}
           selectDish={vi.fn()}
           startNewDish={vi.fn()}
-          toggleFeaturedDish={vi.fn()}
           toggleGalleryDish={vi.fn()}
           updateDraft={(field, value) =>
             setDraft((current) => ({ ...current, [field]: value }))

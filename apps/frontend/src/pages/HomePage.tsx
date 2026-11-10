@@ -1,39 +1,28 @@
 import { T, t, useLocale } from "../i18n";
-import { useEffect, useState } from "react";
 
 import { ChatWidget } from "../components/ChatWidget";
 import { ContactSection } from "../components/ContactSection";
-import { menuSections } from "../data/menu";
-import type { MenuSection } from "../data/menu";
-import {
-  getFeaturedDishes,
-  getGalleryDishes,
-  loadStoredMenu,
-} from "../menuStore";
+import { getGalleryDishes } from "../menuStore";
 import type { NavigationHandlers } from "../navigation";
+import { MenuStatus, usePublicMenu } from "../api/usePublicMenu";
+import { demoMode } from "../api/client";
 
 export function HomePage({ navigate, goToContact }: NavigationHandlers) {
   useLocale();
-  const [sections, setSections] = useState<MenuSection[]>(
-    loadStoredMenu() ?? menuSections,
-  );
-  const featuredDishes = getFeaturedDishes(sections);
-  const galleryDishes = getGalleryDishes(sections);
-
-  useEffect(() => {
-    function syncMenu() {
-      setSections(loadStoredMenu() ?? menuSections);
-    }
-
-    window.addEventListener("picasso-menu-updated", syncMenu);
-
-    return () => {
-      window.removeEventListener("picasso-menu-updated", syncMenu);
-    };
-  }, []);
+  const { sections, ...menuState } = usePublicMenu();
+  const homeDishes = sections
+    .flatMap((section) => section.items)
+    .filter((item) => item.available !== false)
+    .slice(0, 3);
+  const galleryDishes = demoMode()
+    ? getGalleryDishes(sections)
+    : sections
+        .flatMap((section) => section.items)
+        .filter((item) => item.showImage);
 
   return (
     <>
+      <MenuStatus {...menuState} />
       <section className="relative grid min-h-[100svh] place-items-center overflow-hidden px-5 py-28 text-center text-white sm:px-6 sm:py-36">
         <img
           alt={t("Mesa familiar de restaurante con ambiente calido")}
@@ -82,11 +71,11 @@ export function HomePage({ navigate, goToContact }: NavigationHandlers) {
             <T>Especiales de hoy</T>
           </p>
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-zinc-400 sm:mt-5 sm:text-base sm:leading-8">
-            <T>Favoritos editables desde el panel de empleados.</T>
+            <T>Una selección de nuestra carta.</T>
           </p>
 
           <div className="mt-10 grid gap-6 sm:mt-16 md:grid-cols-3 md:gap-10">
-            {featuredDishes.map((dish) => (
+            {homeDishes.map((dish) => (
               <article
                 className="overflow-hidden rounded-sm bg-[#333333] text-left shadow-xl shadow-black/25"
                 key={dish.id ?? dish.name}
@@ -186,7 +175,7 @@ export function HomePage({ navigate, goToContact }: NavigationHandlers) {
       </section>
 
       <ContactSection />
-      <ChatWidget />
+      {demoMode() && <ChatWidget />}
     </>
   );
 }

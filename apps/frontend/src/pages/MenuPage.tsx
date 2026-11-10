@@ -1,14 +1,14 @@
+import { MenuStatus, usePublicMenu } from "../api/usePublicMenu";
 import {
   DishSearch,
   SearchPagination,
   useDishSearch,
 } from "../search/DishSearch";
 import { T, t, useLocale } from "../i18n";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
-import { menuSections } from "../data/menu";
-import type { Dish, MenuSection } from "../data/menu";
-import { flattenMenu, getEditableDishKey, loadStoredMenu } from "../menuStore";
+import type { Dish } from "../data/menu";
+import { flattenMenu, getEditableDishKey } from "../menuStore";
 import type { NavigationHandlers } from "../navigation";
 
 function getDishKey(dish: Dish) {
@@ -17,22 +17,8 @@ function getDishKey(dish: Dish) {
 
 export function MenuPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
   useLocale();
-  const [sections, setSections] = useState<MenuSection[]>(
-    loadStoredMenu() ?? menuSections,
-  );
+  const { sections, ...menuState } = usePublicMenu();
   const [selectedDishKey, setSelectedDishKey] = useState<string | null>(null);
-
-  useEffect(() => {
-    function syncStoredMenu() {
-      setSections(loadStoredMenu() ?? menuSections);
-    }
-
-    window.addEventListener("picasso-menu-updated", syncStoredMenu);
-
-    return () => {
-      window.removeEventListener("picasso-menu-updated", syncStoredMenu);
-    };
-  }, []);
 
   const dishes = useMemo(
     () => flattenMenu(sections).filter((dish) => dish.available),
@@ -46,6 +32,7 @@ export function MenuPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
   return (
     <section className="min-h-[100svh] bg-[#242424] px-5 pb-20 pt-28 sm:px-6 sm:pb-28 sm:pt-36">
       <div className="mx-auto max-w-7xl">
+        <MenuStatus {...menuState} />
         <a
           className="text-sm font-semibold text-[#e8b45f] transition hover:text-white sm:text-base"
           href="/"
@@ -77,7 +64,7 @@ export function MenuPage({ navigate }: Pick<NavigationHandlers, "navigate">) {
         </div>
 
         <DishSearch search={search} publicMenu />
-        {!search.total && (
+        {!menuState.loading && !menuState.error && !search.total && (
           <p className="mt-6 text-zinc-300">
             {t("No hay platos que coincidan con los filtros.")}
           </p>

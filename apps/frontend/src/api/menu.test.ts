@@ -12,6 +12,7 @@ describe("fetchMenu", () => {
       {
         items: [
           {
+            id: 1,
             description: "API description",
             name: "API dish",
             price: "$10",

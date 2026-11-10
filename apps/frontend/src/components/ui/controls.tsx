@@ -9,6 +9,11 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "danger";
   loading?: boolean;
 }
+const buttonVariants = {
+  primary: "ui-button--primary",
+  secondary: "ui-button--secondary",
+  danger: "ui-button--danger",
+};
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   function Button(
     {
@@ -29,7 +34,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         type={type}
         disabled={disabled || loading}
         aria-busy={loading || undefined}
-        className={`ui-button ui-button--${variant} ${className}`}
+        className={`ui-button ${buttonVariants[variant]} ${className}`}
       >
         {loading && <span aria-hidden="true" className="ui-spinner" />}
         {children}

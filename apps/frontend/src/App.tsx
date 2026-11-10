@@ -12,6 +12,8 @@ import { HomePage } from "./pages/HomePage";
 import { MenuPage } from "./pages/MenuPage";
 import { OrderPage } from "./pages/OrderPage";
 import { DesignSystemPage } from "./pages/DesignSystemPage";
+import { BackendEmployeePanel } from "./pages/BackendEmployeePanel";
+import { demoMode } from "./api/client";
 
 export function App() {
   useLocale();
@@ -95,7 +97,11 @@ export function App() {
       {page === "design-system" ? (
         <DesignSystemPage />
       ) : page === "employees" ? (
-        <EmployeePanelPage navigate={navigate} />
+        demoMode() ? (
+          <EmployeePanelPage navigate={navigate} />
+        ) : (
+          <BackendEmployeePanel navigate={navigate} />
+        )
       ) : page === "menu" ? (
         <MenuPage navigate={navigate} />
       ) : page === "order" ? (
