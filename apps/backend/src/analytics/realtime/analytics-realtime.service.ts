@@ -77,6 +77,8 @@ export class AnalyticsRealtimeService implements OnModuleDestroy {
   private readonly logger = new Logger(AnalyticsRealtimeService.name);
   private readonly subscriptions = new Map<string, Subscription>();
   private readonly roomByClient = new Map<string, string>();
+  /** Monotonic request version prevents stale async subscribe calls winning. */
+  private readonly requestVersionByClient = new Map<string, number>();
   private readonly intervalMs = resolveIntervalMs(
     process.env.ANALYTICS_REALTIME_INTERVAL_MS,
   );
@@ -102,47 +104,95 @@ export class AnalyticsRealtimeService implements OnModuleDestroy {
   async subscribe(
     clientId: string,
     query: AnalyticsSubscribeDto,
-  ): Promise<{ room: string; snapshot: DashboardSnapshot }> {
-    // Fails with 400 on impossible dates before anything is stored.
+  ): Promise<{
+    room: string;
+    snapshot: DashboardSnapshot;
+    requestVersion: number;
+  }> {
+    // Validate synchronously before reserving a request version or any slot.
     this.analytics.resolveDateRange(query);
 
     const key = this.keyFor(query);
+    const requestVersion = (this.requestVersionByClient.get(clientId) ?? 0) + 1;
+    this.requestVersionByClient.set(clientId, requestVersion);
+
+    // Build first. A failed query must never leave a phantom subscription, and
+    // a failed filter change must not destroy the client's previous dashboard.
+    const snapshot = await this.buildSnapshot(query);
+
+    // A newer subscribe/unsubscribe arrived while the query was in flight.
+    // The gateway will discard this response rather than joining its room.
+    if (!this.isCurrentRequest(clientId, requestVersion)) {
+      return { room: key, snapshot, requestVersion };
+    }
+
     const previousRoom = this.roomByClient.get(clientId);
+    const existingTarget = this.subscriptions.get(key);
+    const previousSubscription = previousRoom
+      ? this.subscriptions.get(previousRoom)
+      : undefined;
+    const previousRoomWillBeRemoved =
+      previousRoom !== undefined &&
+      previousRoom !== key &&
+      previousSubscription?.clients.size === 1;
+    const projectedActiveCount =
+      this.subscriptions.size - (previousRoomWillBeRemoved ? 1 : 0);
 
+    if (
+      !existingTarget &&
+      projectedActiveCount >= MAX_ACTIVE_FILTER_SETS
+    ) {
+      throw new ServiceUnavailableException(
+        "Too many different live dashboards are open right now",
+      );
+    }
+
+    // Move the client only after the query and capacity check both succeeded.
     if (previousRoom !== key) {
-      if (
-        !this.subscriptions.has(key) &&
-        this.subscriptions.size >= MAX_ACTIVE_FILTER_SETS
-      ) {
-        throw new ServiceUnavailableException(
-          "Too many different live dashboards are open right now",
-        );
-      }
-
-      this.unsubscribe(clientId);
-
-      const subscription = this.subscriptions.get(key) ?? {
+      this.removeClientFromRoom(clientId);
+      const target = this.subscriptions.get(key) ?? {
         room: key,
         query,
         clients: new Set<string>(),
         lastHash: null,
       };
-      subscription.clients.add(clientId);
-      this.subscriptions.set(key, subscription);
+      target.clients.add(clientId);
+      this.subscriptions.set(key, target);
       this.roomByClient.set(clientId, key);
     }
 
-    const subscription = this.subscriptions.get(key);
-    const snapshot = await this.buildSnapshot(query);
-    if (subscription) {
-      subscription.lastHash = this.hashOf(snapshot);
+    // A second client joining an existing filter set may have fetched newer
+    // data. Push it to clients already in the shared room as well.
+    const targetSubscription = this.subscriptions.get(key);
+    if (targetSubscription) {
+      const hash = this.hashOf(snapshot);
+      if (targetSubscription.lastHash !== hash) {
+        targetSubscription.lastHash = hash;
+        if (targetSubscription.clients.size > 1) {
+          this.emitter(key, "analytics:update", snapshot);
+        }
+      }
     }
 
     this.ensureTimer();
-    return { room: key, snapshot };
+    return { room: key, snapshot, requestVersion };
+  }
+
+  /** True only while this is the latest subscribe request for the socket. */
+  isCurrentRequest(clientId: string, requestVersion: number): boolean {
+    return this.requestVersionByClient.get(clientId) === requestVersion;
   }
 
   unsubscribe(clientId: string): void {
+    // Also invalidates subscribe calls whose initial query has not completed.
+    this.requestVersionByClient.set(
+      clientId,
+      (this.requestVersionByClient.get(clientId) ?? 0) + 1,
+    );
+    this.removeClientFromRoom(clientId);
+  }
+
+  private removeClientFromRoom(clientId: string): void {
     const room = this.roomByClient.get(clientId);
     if (!room) {
       return;
@@ -209,12 +259,22 @@ export class AnalyticsRealtimeService implements OnModuleDestroy {
     this.stopTimer();
     this.subscriptions.clear();
     this.roomByClient.clear();
+    this.requestVersionByClient.clear();
   }
 
   private async refreshSubscription(
     subscription: Subscription,
-  ): Promise<DashboardSnapshot> {
+  ): Promise<DashboardSnapshot | null> {
     const snapshot = await this.buildSnapshot(subscription.query);
+
+    // The last client may have unsubscribed while the database query ran.
+    if (
+      this.subscriptions.get(subscription.room) !== subscription ||
+      subscription.clients.size === 0
+    ) {
+      return null;
+    }
+
     const hash = this.hashOf(snapshot);
 
     if (hash !== subscription.lastHash) {

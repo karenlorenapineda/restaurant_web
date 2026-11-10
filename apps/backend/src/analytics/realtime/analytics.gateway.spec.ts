@@ -22,10 +22,15 @@ function makeClient(id = "sock-1", rooms: string[] = []) {
 
 function makeGateway() {
   const realtime = {
-    subscribe: jest.fn().mockResolvedValue({ room: "analytics:abc", snapshot }),
+    subscribe: jest.fn().mockResolvedValue({
+      room: "analytics:abc",
+      snapshot,
+      requestVersion: 1,
+    }),
     unsubscribe: jest.fn(),
     refreshNow: jest.fn().mockResolvedValue(snapshot),
     setEmitter: jest.fn(),
+    isCurrentRequest: jest.fn().mockReturnValue(true),
     refreshIntervalMs: 15000,
   };
   const gateway = new AnalyticsGateway(
@@ -144,4 +149,18 @@ describe("AnalyticsGateway", () => {
     expect(to).toHaveBeenCalledWith("analytics:abc");
     expect(emit).toHaveBeenCalledWith("analytics:update", snapshot);
   });
+  it("does not join a room when a newer subscribe request superseded it", async () => {
+    const { gateway, realtime } = makeGateway();
+    const client = makeClient();
+    realtime.isCurrentRequest.mockReturnValue(false);
+
+    const ack = await gateway.handleSubscribe({}, client);
+
+    expect(ack).toEqual({
+      status: "error",
+      message: "Subscription request superseded",
+    });
+    expect(client.join).not.toHaveBeenCalled();
+  });
+
 });

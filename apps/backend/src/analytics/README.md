@@ -127,9 +127,17 @@ socket.emit("unsubscribe");
 A snapshot has everything the charts need: `summary`, `revenueOverTime`
 (line), `ordersByStatus` (bar/pie), `topMenuItems` (bar), `salesByCategory`
 (pie) and `paymentMethods` (pie), plus `generatedAt`. Calling `subscribe`
-again with other filters replaces the previous subscription. Bad filters
-(`to=2026-02-30`, `from > to`, unknown fields) answer
-`{ status: "error", message }` and nothing is subscribed.
+again with other filters replaces the previous subscription. The initial
+snapshot is loaded before a filter set is registered, so a database failure
+does not consume one of the 50 slots (and a failed filter change keeps the
+client's previous subscription). When another client joins an existing filter
+set, a newer initial snapshot is also pushed to the clients already in that
+room. Concurrent subscribe/unsubscribe requests are versioned per socket, so
+an older, slower query cannot replace a newer filter choice or rejoin a room
+after unsubscribe. Replacing a client's only active filter set is allowed even
+when the 50-set limit has been reached. Bad filters (`to=2026-02-30`,
+`from > to`, unknown fields) answer `{ status: "error", message }` and nothing
+new is subscribed.
 
 Configuration (environment variables, both optional):
 
@@ -193,8 +201,9 @@ demo orders.
 - CSV injection: formula-like text is neutralised (`csv.util.spec.ts`);
 - the demo-seed database guard (`demo-database.util.spec.ts`);
 - live updates: shared rooms, push only on change, timer on/off, limits, bad
-  filters (`realtime/*.spec.ts`); also checked once end-to-end with a real
-  socket.io server and clients;
+  filters, failed initial queries, filter replacement at capacity, stale
+  concurrent subscribe requests, unsubscribe during a pending query, and
+  refreshes after the last client leaves (`realtime/*.spec.ts`);
 - cancelled orders (enum `OrderStatus.cancelled`) excluded from summary,
   payments and the three raw SQL reports, and kept in `orders-by-status`.
 

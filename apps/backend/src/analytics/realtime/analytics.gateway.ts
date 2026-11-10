@@ -82,12 +82,27 @@ export class AnalyticsGateway implements OnGatewayInit, OnGatewayDisconnect {
 
     try {
       const previous = this.roomOf(client);
-      const { room, snapshot } = await this.realtime.subscribe(client.id, dto);
+      const { room, snapshot, requestVersion } = await this.realtime.subscribe(
+        client.id,
+        dto,
+      );
+
+      // A later filter change or unsubscribe may have overtaken this query.
+      if (!this.realtime.isCurrentRequest(client.id, requestVersion)) {
+        return { status: "error", message: "Subscription request superseded" };
+      }
 
       if (previous && previous !== room) {
         await client.leave(previous);
       }
       await client.join(room);
+
+      // Recheck after socket operations, which are asynchronous. If a newer
+      // request started meanwhile, do not leave this socket in the stale room.
+      if (!this.realtime.isCurrentRequest(client.id, requestVersion)) {
+        await client.leave(room);
+        return { status: "error", message: "Subscription request superseded" };
+      }
 
       return {
         status: "subscribed",

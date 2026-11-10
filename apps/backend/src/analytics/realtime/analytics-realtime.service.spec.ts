@@ -252,4 +252,160 @@ describe("AnalyticsRealtimeService", () => {
     ).resolves.toBeDefined();
     service.onModuleDestroy();
   });
+  it("does not retain a filter set when its initial snapshot query fails", async () => {
+    const { service, mock } = makeService();
+    mock.getSummary.mockRejectedValueOnce(new Error("database unavailable"));
+
+    await expect(
+      service.subscribe("c1", { restaurantId: 77 }),
+    ).rejects.toThrow("database unavailable");
+
+    expect(service.activeSubscriptions).toBe(0);
+    expect(service.isRunning).toBe(false);
+
+    // The same filter set can be subscribed once the database recovers.
+    mock.getSummary.mockResolvedValueOnce({
+      range: { from: "a", to: "b" },
+      totalRevenue: 100,
+      totalOrders: 4,
+      averageTicket: 25,
+      totalItemsSold: 9,
+    });
+    await expect(
+      service.subscribe("c2", { restaurantId: 77 }),
+    ).resolves.toBeDefined();
+    expect(service.activeSubscriptions).toBe(1);
+    service.onModuleDestroy();
+  });
+
+  it("allows a client to replace its only filter set when the limit is full", async () => {
+    const { service } = makeService();
+    for (let i = 1; i <= MAX_ACTIVE_FILTER_SETS; i++) {
+      await service.subscribe(`c${i}`, { restaurantId: i });
+    }
+
+    await expect(
+      service.subscribe("c1", { restaurantId: 1001 }),
+    ).resolves.toBeDefined();
+    expect(service.activeSubscriptions).toBe(MAX_ACTIVE_FILTER_SETS);
+    service.onModuleDestroy();
+  });
+
+  it("keeps the previous subscription when the replacement query fails", async () => {
+    const { service, mock } = makeService();
+    const original = await service.subscribe("c1", { restaurantId: 1 });
+    mock.getSummary.mockRejectedValueOnce(new Error("database unavailable"));
+
+    await expect(
+      service.subscribe("c1", { restaurantId: 2 }),
+    ).rejects.toThrow("database unavailable");
+
+    expect(service.activeSubscriptions).toBe(1);
+    expect(await service.refreshNow("c1")).toBeDefined();
+    expect(original.room).toMatch(/^analytics:/);
+    service.onModuleDestroy();
+  });
+
+  it("ignores an older subscribe result when a newer filter request finishes first", async () => {
+    const { service, mock } = makeService();
+    let releaseOld: (() => void) | undefined;
+    mock.getSummary.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          releaseOld = () =>
+            resolve({
+              range: { from: "a", to: "b" },
+              totalRevenue: 10,
+              totalOrders: 1,
+              averageTicket: 10,
+              totalItemsSold: 1,
+            });
+        }),
+    );
+
+    const oldRequest = service.subscribe("c1", { restaurantId: 1 });
+    const newRequest = await service.subscribe("c1", { restaurantId: 2 });
+    releaseOld?.();
+    const oldResult = await oldRequest;
+
+    expect(service.isCurrentRequest("c1", oldResult.requestVersion)).toBe(false);
+    expect(service.isCurrentRequest("c1", newRequest.requestVersion)).toBe(true);
+    expect(service.activeSubscriptions).toBe(1);
+    expect(await service.refreshNow("c1")).toBeDefined();
+    expect(mock.getSummary).toHaveBeenLastCalledWith({ restaurantId: 2 });
+    service.onModuleDestroy();
+  });
+
+  it("pushes a refreshed snapshot to existing clients when another joins the same filters", async () => {
+    const { service, state, emitter } = makeService();
+    const first = await service.subscribe("c1", { restaurantId: 5 });
+    state.revenue = 500;
+    const second = await service.subscribe("c2", { restaurantId: 5 });
+
+    expect(second.room).toBe(first.room);
+    expect(emitter).toHaveBeenCalledWith(
+      first.room,
+      "analytics:update",
+      expect.objectContaining({
+        summary: expect.objectContaining({ totalRevenue: 500 }),
+      }),
+    );
+    service.onModuleDestroy();
+  });
+
+  it("does not emit a refresh result after the last client unsubscribes mid-query", async () => {
+    const { service, mock, emitter } = makeService();
+    await service.subscribe("c1", {});
+    let release: (() => void) | undefined;
+    mock.getSummary.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          release = () =>
+            resolve({
+              range: { from: "a", to: "b" },
+              totalRevenue: 999,
+              totalOrders: 1,
+              averageTicket: 999,
+              totalItemsSold: 1,
+            });
+        }),
+    );
+    const pendingTick = service.tick();
+    service.unsubscribe("c1");
+    release?.();
+    await pendingTick;
+
+    expect(emitter).not.toHaveBeenCalled();
+    expect(service.activeSubscriptions).toBe(0);
+    service.onModuleDestroy();
+  });
+
+  it("invalidates a pending subscribe when the client unsubscribes", async () => {
+    const { service, mock } = makeService();
+    let release: (() => void) | undefined;
+    mock.getSummary.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          release = () =>
+            resolve({
+              range: { from: "a", to: "b" },
+              totalRevenue: 10,
+              totalOrders: 1,
+              averageTicket: 10,
+              totalItemsSold: 1,
+            });
+        }),
+    );
+
+    const pending = service.subscribe("c1", { restaurantId: 42 });
+    service.unsubscribe("c1");
+    release?.();
+    const result = await pending;
+
+    expect(service.isCurrentRequest("c1", result.requestVersion)).toBe(false);
+    expect(service.activeSubscriptions).toBe(0);
+    expect(service.isRunning).toBe(false);
+    service.onModuleDestroy();
+  });
+
 });
