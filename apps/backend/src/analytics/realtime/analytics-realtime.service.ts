@@ -77,8 +77,19 @@ export class AnalyticsRealtimeService implements OnModuleDestroy {
   private readonly logger = new Logger(AnalyticsRealtimeService.name);
   private readonly subscriptions = new Map<string, Subscription>();
   private readonly roomByClient = new Map<string, string>();
-  /** Monotonic request version prevents stale async subscribe calls winning. */
+  /**
+   * Latest subscribe request of each client that is connected. It makes a stale
+   * async subscribe lose against a newer one. The entry is DELETED when the
+   * client unsubscribes or disconnects, so the map never grows with sockets
+   * that are gone.
+   */
   private readonly requestVersionByClient = new Map<string, number>();
+  /**
+   * Versions come from ONE counter for the whole service, never per client:
+   * after an entry is deleted a per-client counter would start again at 1 and a
+   * still-running old request could be mistaken for the new one.
+   */
+  private nextRequestVersion = 0;
   private readonly intervalMs = resolveIntervalMs(
     process.env.ANALYTICS_REALTIME_INTERVAL_MS,
   );
@@ -113,7 +124,7 @@ export class AnalyticsRealtimeService implements OnModuleDestroy {
     this.analytics.resolveDateRange(query);
 
     const key = this.keyFor(query);
-    const requestVersion = (this.requestVersionByClient.get(clientId) ?? 0) + 1;
+    const requestVersion = ++this.nextRequestVersion;
     this.requestVersionByClient.set(clientId, requestVersion);
 
     // Build first. A failed query must never leave a phantom subscription, and
@@ -183,12 +194,14 @@ export class AnalyticsRealtimeService implements OnModuleDestroy {
     return this.requestVersionByClient.get(clientId) === requestVersion;
   }
 
+  /**
+   * Called when the client unsubscribes and when its socket disconnects.
+   * Deleting the version entry (instead of bumping it) frees the memory AND still
+   * invalidates a subscribe whose initial query has not finished: that request
+   * no longer finds its version, so it is treated as superseded.
+   */
   unsubscribe(clientId: string): void {
-    // Also invalidates subscribe calls whose initial query has not completed.
-    this.requestVersionByClient.set(
-      clientId,
-      (this.requestVersionByClient.get(clientId) ?? 0) + 1,
-    );
+    this.requestVersionByClient.delete(clientId);
     this.removeClientFromRoom(clientId);
   }
 
@@ -249,6 +262,11 @@ export class AnalyticsRealtimeService implements OnModuleDestroy {
 
   get activeSubscriptions(): number {
     return this.subscriptions.size;
+  }
+
+  /** Clients whose request version is being tracked (for tests and monitoring). */
+  get trackedClients(): number {
+    return this.requestVersionByClient.size;
   }
 
   get isRunning(): boolean {

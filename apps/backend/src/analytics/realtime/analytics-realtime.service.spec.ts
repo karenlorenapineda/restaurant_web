@@ -408,4 +408,106 @@ describe("AnalyticsRealtimeService", () => {
     service.onModuleDestroy();
   });
 
+  it("forgets a client's request version when it unsubscribes or disconnects", async () => {
+    const { service } = makeService();
+    await service.subscribe("c1", { restaurantId: 1 });
+    await service.subscribe("c2", { restaurantId: 1 });
+    await service.subscribe("c3", { restaurantId: 2 });
+    expect(service.trackedClients).toBe(3);
+
+    service.unsubscribe("c1");
+    service.unsubscribe("c2");
+    service.unsubscribe("c3");
+
+    expect(service.trackedClients).toBe(0);
+    expect(service.activeSubscriptions).toBe(0);
+    expect(service.isRunning).toBe(false);
+    service.onModuleDestroy();
+  });
+
+  it("does not keep a tracked client after a failed subscribe followed by a disconnect", async () => {
+    const { service, mock } = makeService();
+    mock.getSummary.mockRejectedValueOnce(new Error("db down"));
+
+    await expect(service.subscribe("c1", {})).rejects.toThrow("db down");
+    service.unsubscribe("c1"); // the socket disconnects
+
+    expect(service.trackedClients).toBe(0);
+    expect(service.activeSubscriptions).toBe(0);
+    service.onModuleDestroy();
+  });
+
+  it("does not leak memory across many connect/disconnect cycles", async () => {
+    const { service } = makeService();
+
+    for (let i = 0; i < 200; i++) {
+      await service.subscribe(`socket-${i}`, { restaurantId: i % 5 });
+      service.unsubscribe(`socket-${i}`);
+    }
+
+    expect(service.trackedClients).toBe(0);
+    expect(service.activeSubscriptions).toBe(0);
+    service.onModuleDestroy();
+  });
+
+  it("a request that was pending when its client left is never mistaken for a later one", async () => {
+    // Without ONE shared counter, the entry deleted on unsubscribe would restart
+    // at 1 for the next subscribe and the old request would look current.
+    const { service, mock } = makeService();
+    let releaseOld: (() => void) | undefined;
+    mock.getSummary.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          releaseOld = () =>
+            resolve({
+              range: { from: "a", to: "b" },
+              totalRevenue: 10,
+              totalOrders: 1,
+              averageTicket: 10,
+              totalItemsSold: 1,
+            });
+        }),
+    );
+
+    const oldRequest = service.subscribe("c1", { restaurantId: 1 });
+    service.unsubscribe("c1");
+    const newRequest = await service.subscribe("c1", { restaurantId: 2 });
+    releaseOld?.();
+    const oldResult = await oldRequest;
+
+    expect(oldResult.requestVersion).not.toBe(newRequest.requestVersion);
+    expect(service.isCurrentRequest("c1", oldResult.requestVersion)).toBe(false);
+    expect(service.isCurrentRequest("c1", newRequest.requestVersion)).toBe(true);
+    expect(service.activeSubscriptions).toBe(1); // only the new filters
+    service.onModuleDestroy();
+  });
+
+  it("a subscribe still running when the socket disconnects registers and tracks nothing", async () => {
+    const { service, mock } = makeService();
+    let release: (() => void) | undefined;
+    mock.getSummary.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          release = () =>
+            resolve({
+              range: { from: "a", to: "b" },
+              totalRevenue: 10,
+              totalOrders: 1,
+              averageTicket: 10,
+              totalItemsSold: 1,
+            });
+        }),
+    );
+
+    const pending = service.subscribe("c1", { restaurantId: 7 });
+    service.unsubscribe("c1"); // disconnect
+    release?.();
+    const result = await pending;
+
+    expect(service.isCurrentRequest("c1", result.requestVersion)).toBe(false);
+    expect(service.trackedClients).toBe(0);
+    expect(service.activeSubscriptions).toBe(0);
+    expect(service.isRunning).toBe(false);
+    service.onModuleDestroy();
+  });
 });

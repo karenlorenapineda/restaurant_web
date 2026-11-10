@@ -163,4 +163,59 @@ describe("AnalyticsGateway", () => {
     expect(client.join).not.toHaveBeenCalled();
   });
 
+  it("registers nothing for a socket that is already disconnected", async () => {
+    const { gateway, realtime } = makeGateway();
+    const client = makeClient();
+    Object.defineProperty(client, "disconnected", { value: true });
+
+    const ack = await gateway.handleSubscribe({}, client);
+
+    expect(ack).toEqual({ status: "error", message: "Socket disconnected" });
+    expect(realtime.subscribe).not.toHaveBeenCalled();
+    expect(client.join).not.toHaveBeenCalled();
+  });
+
+  it("releases the subscription when the socket drops while joining the room", async () => {
+    const { gateway, realtime } = makeGateway();
+    const client = makeClient();
+    client.join.mockImplementation(async () => {
+      Object.defineProperty(client, "disconnected", { value: true });
+    });
+
+    const ack = await gateway.handleSubscribe({}, client);
+
+    expect(ack.status).toBe("error");
+    expect(realtime.unsubscribe).toHaveBeenCalledWith("sock-1");
+  });
+
+  it("leaves nothing behind after many sockets connect, subscribe and disconnect (real service)", async () => {
+    const analytics = {
+      resolveDateRange: jest.fn(),
+      getSummary: jest.fn().mockResolvedValue({
+        range: { from: "a", to: "b" },
+        totalRevenue: 1,
+        totalOrders: 1,
+        averageTicket: 1,
+        totalItemsSold: 1,
+      }),
+      getRevenueOverTime: jest.fn().mockResolvedValue([]),
+      getOrdersByStatus: jest.fn().mockResolvedValue([]),
+      getTopMenuItems: jest.fn().mockResolvedValue([]),
+      getSalesByCategory: jest.fn().mockResolvedValue([]),
+      getPaymentMethodsBreakdown: jest.fn().mockResolvedValue([]),
+    };
+    const real = new AnalyticsRealtimeService(analytics as never);
+    const gateway = new AnalyticsGateway(real);
+
+    for (let i = 0; i < 50; i++) {
+      const client = makeClient(`sock-${i}`);
+      await gateway.handleSubscribe({ restaurantId: String(i % 3) }, client);
+      gateway.handleDisconnect(client);
+    }
+
+    expect(real.trackedClients).toBe(0);
+    expect(real.activeSubscriptions).toBe(0);
+    expect(real.isRunning).toBe(false);
+    real.onModuleDestroy();
+  });
 });

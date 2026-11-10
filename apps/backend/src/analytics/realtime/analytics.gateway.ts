@@ -80,6 +80,12 @@ export class AnalyticsGateway implements OnGatewayInit, OnGatewayDisconnect {
       };
     }
 
+    // Nothing is registered for a socket that is already gone: its disconnect
+    // handler has run, so nobody would ever release the subscription.
+    if (client.disconnected) {
+      return { status: "error", message: "Socket disconnected" };
+    }
+
     try {
       const previous = this.roomOf(client);
       const { room, snapshot, requestVersion } = await this.realtime.subscribe(
@@ -102,6 +108,12 @@ export class AnalyticsGateway implements OnGatewayInit, OnGatewayDisconnect {
       if (!this.realtime.isCurrentRequest(client.id, requestVersion)) {
         await client.leave(room);
         return { status: "error", message: "Subscription request superseded" };
+      }
+
+      // The socket may have dropped while it was joining the room.
+      if (client.disconnected) {
+        this.realtime.unsubscribe(client.id);
+        return { status: "error", message: "Socket disconnected" };
       }
 
       return {
