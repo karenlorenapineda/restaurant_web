@@ -12,6 +12,7 @@ import { HomePage } from "./pages/HomePage";
 import { MenuPage } from "./pages/MenuPage";
 import { OrderPage } from "./pages/OrderPage";
 import { DesignSystemPage } from "./pages/DesignSystemPage";
+import { UserActivityPage } from "./pages/UserActivityPage";
 import { BackendEmployeePanel } from "./pages/BackendEmployeePanel";
 import { demoMode } from "./api/client";
 
@@ -96,6 +97,8 @@ export function App() {
       <Header navigate={navigate} goToContact={goToContact} />
       {page === "design-system" ? (
         <DesignSystemPage />
+      ) : page === "user-activity" ? (
+        <UserActivityPage />
       ) : page === "employees" ? (
         demoMode() ? (
           <EmployeePanelPage navigate={navigate} />
