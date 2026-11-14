@@ -1,7 +1,14 @@
 import type { MouseEvent } from "react";
 
 export type Page =
-  "employees" | "home" | "menu" | "order" | "design-system" | "user-activity";
+  | "employees"
+  | "home"
+  | "menu"
+  | "order"
+  | "design-system"
+  | "user-activity"
+  | "privacy"
+  | "terms";
 
 export interface NavigationHandlers {
   navigate: (path: string, event: MouseEvent<HTMLAnchorElement>) => void;
@@ -9,6 +16,9 @@ export interface NavigationHandlers {
 }
 
 export function getPageFromPath(): Page {
+  const path = window.location.pathname.replace(/\/+$/, "");
+  if (path === "/privacidad" || path === "/privacy") return "privacy";
+  if (path === "/terminos" || path === "/terms") return "terms";
   if (window.location.pathname === "/design-system") return "design-system";
   if (
     window.location.pathname === "/pedido" ||

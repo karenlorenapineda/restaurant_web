@@ -1,3 +1,4 @@
+import { LegalPage } from "./pages/LegalPage";
 import { useEffect, useState } from "react";
 import type { MouseEvent } from "react";
 
@@ -95,7 +96,9 @@ export function App() {
   return (
     <main className="min-h-screen bg-[#242424] text-zinc-100 selection:bg-[#e8b45f] selection:text-zinc-950">
       <Header navigate={navigate} goToContact={goToContact} />
-      {page === "design-system" ? (
+      {page === "privacy" || page === "terms" ? (
+        <LegalPage kind={page} navigate={navigate} />
+      ) : page === "design-system" ? (
         <DesignSystemPage />
       ) : page === "user-activity" ? (
         <UserActivityPage />
@@ -112,7 +115,7 @@ export function App() {
       ) : (
         <HomePage navigate={navigate} goToContact={goToContact} />
       )}
-      <Footer status={status} statusText={statusText} />
+      <Footer navigate={navigate} status={status} statusText={statusText} />
     </main>
   );
 }
