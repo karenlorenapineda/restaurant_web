@@ -16,6 +16,7 @@ import { EmployeesModule } from "./employees/employees.module";
 import { OrdersModule } from "./orders/orders.module";
 import { RestaurantModule } from "./restaurant/restaurant.module";
 import { ChatModule } from "./chat/chat.module";
+import { SharedOrdersModule } from "./shared-orders/shared-orders.module";
 
 function validateEnvironment(config: Record<string, unknown>) {
   const databaseUrl = config.DATABASE_URL;
@@ -49,6 +50,7 @@ function validateEnvironment(config: Record<string, unknown>) {
     ChatModule,
     AnalyticsModule,
     UserActivityModule,
+    SharedOrdersModule,
   ],
 })
 export class AppModule {}

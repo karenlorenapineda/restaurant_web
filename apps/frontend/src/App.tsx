@@ -14,6 +14,7 @@ import { MenuPage } from "./pages/MenuPage";
 import { OrderPage } from "./pages/OrderPage";
 import { DesignSystemPage } from "./pages/DesignSystemPage";
 import { UserActivityPage } from "./pages/UserActivityPage";
+import { SharedOrderPage } from "./pages/SharedOrderPage";
 import { BackendEmployeePanel } from "./pages/BackendEmployeePanel";
 import { demoMode } from "./api/client";
 
@@ -102,6 +103,8 @@ export function App() {
         <DesignSystemPage />
       ) : page === "user-activity" ? (
         <UserActivityPage />
+      ) : page === "shared-order" ? (
+        <SharedOrderPage navigate={navigate} />
       ) : page === "employees" ? (
         demoMode() ? (
           <EmployeePanelPage navigate={navigate} />

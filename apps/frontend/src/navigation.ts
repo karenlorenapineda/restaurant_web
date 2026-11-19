@@ -7,6 +7,7 @@ export type Page =
   | "order"
   | "design-system"
   | "user-activity"
+  | "shared-order"
   | "privacy"
   | "terms";
 
@@ -31,6 +32,10 @@ export function getPageFromPath(): Page {
 
   if (window.location.pathname === "/menu") {
     return "menu";
+  }
+
+  if (window.location.pathname === "/mesa") {
+    return "shared-order";
   }
 
   if (window.location.pathname === "/actividad") {
